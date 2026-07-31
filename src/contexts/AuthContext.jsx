@@ -56,10 +56,55 @@ export function AuthProvider({ children }) {
           email,
           password,
         });
-        if (error) throw error;
+        if (error) {
+          // Provide more specific error messages
+          const errorMsg = typeof error.message === 'string' ? error.message : JSON.stringify(error);
+          if (errorMsg.includes("Invalid login credentials")) {
+            throw new Error("Email atau password salah. Silakan coba lagi.");
+          } else if (errorMsg.includes("Email not confirmed")) {
+            throw new Error("Email belum dikonfirmasi. Periksa email Anda untuk link konfirmasi.");
+          } else if (errorMsg.includes("rate limit")) {
+            throw new Error("Terlalu banyak percobaan login. Silakan tunggu beberapa saat.");
+          } else if (errorMsg.includes("network")) {
+            throw new Error("Tidak dapat terhubung ke server. Periksa koneksi internet Anda.");
+          } else {
+            throw new Error(`Login gagal: ${errorMsg}`);
+          }
+        }
 
-        const profile = await fetchUserProfile(data.user.email ?? email);
-        if (!profile) throw new Error("Profil user belum ada di tabel users.");
+         let profile = await fetchUserProfile(data.user.email ?? email);
+         if (!profile) {
+           // If user exists in auth but not in public.users, create the profile automatically
+           console.log(`🔄 User ${data.user.email} tidak ditemukan di public.users, membuat profil otomatis...`);
+           const { error: createError } = await supabase
+             .from('users')
+             .insert({
+               id: data.user.id,
+               name: data.user.email?.split('@')[0] || 'User',
+               email: data.user.email || email,
+               role: 'staff',
+               status: 'active',
+               is_first_login: true,
+               points: 0,
+               attendance_rate: 0
+             });
+
+           if (createError) {
+             throw new Error(
+               "Profil user belum ada di tabel users dan gagal membuat profil otomatis. " +
+               "Silakan hubungi administrator untuk menyinkronkan akun Anda. Error: " + createError.message
+             );
+           }
+
+           // Fetch the newly created profile
+           profile = await fetchUserProfile(data.user.email ?? email);
+           if (!profile) {
+             throw new Error(
+               "Profil user belum ada di tabel users. " +
+               "Silakan hubungi administrator untuk menyinkronkan akun Anda."
+             );
+           }
+         }
         setUser(profile);
         const storage = remember ? localStorage : sessionStorage;
         storage.setItem("umara_token", data.session.access_token);

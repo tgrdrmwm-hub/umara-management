@@ -198,8 +198,8 @@ export function ClientsPage() {
           onChange={(event) => setSearch(event.target.value)}
         />
       </div>
-      <Card className="overflow-hidden">
-        <table className="w-full min-w-[760px] text-left text-sm">
+      <Card className="overflow-x-auto">
+        <table className="w-full min-w-[720px] text-left text-sm">
           <thead className="bg-slate-100 text-xs uppercase text-slate-500 dark:bg-white/5">
             <tr>
               <th className="p-3">Client</th>

@@ -168,11 +168,11 @@ export function TasksPage() {
           </form>
         </Card>
       )}
-      <div className="grid gap-4 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {columns.map((column) => (
           <section
             key={column.key}
-            className="rounded-lg border border-slate-200 bg-slate-100/70 p-3 dark:border-white/10 dark:bg-white/5"
+            className="min-w-0 rounded-lg border border-slate-200 bg-slate-100/70 p-3 dark:border-white/10 dark:bg-white/5"
           >
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-bold">{column.label}</h2>

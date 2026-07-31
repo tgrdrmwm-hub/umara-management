@@ -156,7 +156,7 @@ export function DashboardPage() {
             />
           </LineChart>
         </ChartCard>
-        <ChartCard title="Kategori Layanan Pajak" dotColor="bg-purple-500">
+        <ChartCard title="Kategori & Point Layanan" dotColor="bg-purple-500">
           <BarChart data={taxCategoryChart}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="category" tick={{ fontSize: 12 }} />

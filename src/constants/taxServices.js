@@ -29,6 +29,15 @@ export const taxServiceDefinitions = [
       { name: "Badan", basePoints: 70 },
     ],
   },
+  {
+    category: "LAINNYA",
+    services: [
+      { name: "Accurate / Keuangan", basePoints: 80 },
+      { name: "Media", basePoints: 50 },
+      { name: "Admin Dosen", basePoints: 75 },
+      { name: "Surat Keluar", basePoints: 55 },
+    ],
+  },
 ];
 
 export const taxServices = taxServiceDefinitions.flatMap((group) =>

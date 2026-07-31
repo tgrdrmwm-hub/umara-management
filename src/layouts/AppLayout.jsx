@@ -20,7 +20,7 @@ export function AppLayout() {
   }, [dark]);
 
   return (
-    <div className="min-h-screen text-slate-900 dark:text-slate-100">
+    <div className="min-h-screen overflow-x-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       {sidebarOpen && (
         <button
           className="fixed inset-0 z-30 bg-slate-950/35 lg:hidden"
@@ -30,7 +30,7 @@ export function AppLayout() {
       )}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-72 border-r border-white/10 bg-[#1a1a2e] text-white shadow-2xl shadow-slate-950/20 transition-transform lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 w-72 max-w-[85vw] overflow-y-auto border-r border-white/10 bg-[#1a1a2e] text-white shadow-2xl shadow-slate-950/20 transition-transform lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -85,8 +85,8 @@ export function AppLayout() {
           ))}
         </nav>
       </aside>
-      <div className="lg:pl-72 bg-slate-50 min-h-screen dark:bg-slate-950">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-slate-200/70 bg-white/78 px-4 shadow-sm shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/72">
+      <div className="min-h-screen bg-slate-50 lg:pl-72 dark:bg-slate-950">
+        <header className="sticky top-0 z-30 flex h-16 flex-wrap items-center gap-3 border-b border-slate-200/70 bg-white/78 px-4 shadow-sm shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/72">
           <Button
             variant="ghost"
             size="icon"
@@ -96,14 +96,14 @@ export function AppLayout() {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <div className="relative hidden max-w-md flex-1 sm:block">
+          <div className="relative w-full max-w-md flex-1 sm:block">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Search client, task, staff..."
               className="pl-9"
             />
           </div>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
             <Button
               variant="secondary"
               size="icon"
@@ -135,7 +135,7 @@ export function AppLayout() {
             </Button>
           </div>
         </header>
-        <main className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
+        <main className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
           <Outlet />
         </main>
       </div>

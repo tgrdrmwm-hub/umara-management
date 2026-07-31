@@ -7,7 +7,7 @@ import { useAuth } from "../hooks/useAuth";
 
 const loginSchema = z.object({
   email: z.email("Email tidak valid"),
-  password: z.string().optional(),
+  password: z.string().min(1, "Password wajib diisi"),
 });
 
 export function AuthPage({ mode }) {
@@ -30,14 +30,16 @@ export function AuthPage({ mode }) {
       return;
     }
     try {
-      if (!values.password) {
-        toast.error("Password wajib diisi");
-        return;
-      }
       const user = await login(values.email, values.password, true);
       navigate(user.is_first_login ? "/change-password" : "/dashboard");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Login gagal");
+      console.error("Login error:", error);
+      const errorMessage = error instanceof Error
+        ? error.message
+        : typeof error === 'string'
+          ? error
+          : "Login gagal: Terjadi kesalahan yang tidak diketahui";
+      toast.error(errorMessage);
     }
   };
 

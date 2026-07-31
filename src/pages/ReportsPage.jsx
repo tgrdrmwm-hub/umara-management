@@ -87,7 +87,7 @@ export function ReportsPage() {
           PDF & Excel untuk Pajak, Staff, Absensi, Client, Point, dan Task.
         </p>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {appData.reportTypes.map((type) => (
           <Card key={type} className="p-4">
             <FileSpreadsheet className="h-6 w-6 text-green-700" />

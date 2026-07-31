@@ -13,16 +13,22 @@ import { useAppData } from "../hooks/useAppData";
 
 export function StaffPage() {
   const { data } = useAppData();
+  // Filter only staff role users (excluding other roles if any)
+  const staffUsers = data?.users?.filter(user => user.role === 'staff') || [];
+  const staffCount = staffUsers.length;
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold">Staff Management</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Kelola Manager, Staff, Staff Magang, point, absensi, dan ranking.
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Staff Management</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Kelola Manager, Staff, Staff Magang, point, absensi, dan ranking.
+          </p>
+        </div>
+        <Badge tone="blue" className="mt-1">Total: {staffCount} Staff</Badge>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
-        {data?.users.map((user, index) => (
+        {staffUsers.map((user, index) => (
           <Card key={user.id} className="p-4">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-md bg-green-700 font-bold text-white">
@@ -34,7 +40,7 @@ export function StaffPage() {
               </div>
               <Badge tone="green">#{index + 1}</Badge>
             </div>
-            <div className="mt-4 grid grid-cols-3 gap-3 text-sm">
+            <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
               <Metric
                 icon={<Award className="h-4 w-4" />}
                 label="Point"
@@ -54,7 +60,7 @@ export function StaffPage() {
         <h2 className="mb-4 font-bold">Grafik Point Staff</h2>
         <div className="h-72">
           <ResponsiveContainer>
-            <BarChart data={data?.users}>
+            <BarChart data={staffUsers}>
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />

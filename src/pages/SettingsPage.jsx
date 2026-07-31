@@ -69,7 +69,7 @@ export function SettingsPage() {
           Company Profile, SMTP, Backup, Restore, Activity Log.
         </p>
       </div>
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-4">
           <h2 className="mb-4 flex items-center gap-2 font-bold">
             <Mail className="h-5 w-5 text-green-700" />
@@ -129,7 +129,7 @@ export function SettingsPage() {
             />
           </div>
         </Card>
-        <Card className="p-4 xl:col-span-2">
+        <Card className="p-4 lg:col-span-2">
           <h2 className="mb-4 flex items-center gap-2 font-bold">
             <History className="h-5 w-5 text-green-700" />
             Activity Log

@@ -217,29 +217,29 @@ export function TaxPage() {
           </form>
         </Card>
       )}
-      <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+      <section className="grid gap-4 lg:grid-cols-[1fr_1.1fr]">
         <Card className="p-4">
-          <h2 className="text-base font-bold">Kategori & Point Layanan</h2>
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <h2 className="text-base font-bold mb-4">Kategori & Point Layanan</h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
             {taxServiceDefinitions.map((group) => (
               <div
                 key={group.category}
-                className="rounded-md border border-slate-200 p-3 dark:border-white/10"
+                className="rounded-md border border-slate-200 p-3 dark:border-white/10 bg-white dark:bg-slate-950/50"
               >
-                <div className="flex items-center justify-between gap-3">
-                  <Badge tone="green">{group.category}</Badge>
-                  <span className="text-xs font-semibold text-slate-500">
-                    {group.services.length} layanan
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <Badge tone="green" className="text-xs">{group.category}</Badge>
+                  <span className="text-xs font-semibold text-slate-500 flex-shrink-0">
+                    {group.services.length} layan
                   </span>
                 </div>
-                <div className="mt-3 space-y-2">
+                <div className="space-y-1">
                   {group.services.map((service) => (
                     <div
                       key={service.name}
-                      className="flex items-center justify-between gap-3 text-sm"
+                      className="flex items-center justify-between gap-2 text-xs"
                     >
-                      <span className="font-medium">{service.name}</span>
-                      <span className="rounded bg-slate-100 px-2 py-1 text-xs font-bold text-slate-700 dark:bg-white/10 dark:text-slate-200">
+                      <span className="font-medium text-slate-700 dark:text-slate-300 truncate">{service.name}</span>
+                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-bold text-slate-700 dark:bg-white/10 dark:text-slate-200 flex-shrink-0">
                         {service.basePoints} pt
                       </span>
                     </div>
@@ -250,12 +250,12 @@ export function TaxPage() {
           </div>
         </Card>
         <Card className="p-4">
-          <h2 className="text-base font-bold">Grafik Point Dasar</h2>
-          <div className="mt-4 h-72">
+          <h2 className="text-base font-bold mb-4">Grafik Point Dasar</h2>
+          <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={categoryChart}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="category" tick={{ fontSize: 12 }} />
+                <XAxis dataKey="category" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" height={80} />
                 <YAxis />
                 <Tooltip />
                 <Bar dataKey="point" fill="#15803d" radius={[4, 4, 0, 0]} />
