@@ -220,21 +220,35 @@ export async function updateUserPoints(id, points) {
 
 async function awardPointsToPic(pic, points) {
   if (!supabase || !pic || points <= 0) return;
+  
+  // Pisahkan nama PIC menggunakan koma atau "dan" untuk mendukung banyak staf sekaligus
+  const picNames = pic
+    .split(/,|\bdan\b/i)
+    .map(name => name.trim())
+    .filter(Boolean);
+    
+  if (picNames.length === 0) return;
+
   const { data, error } = await supabase
     .from("users")
-    .select("id,points")
-    .eq("name", pic)
-    .maybeSingle();
+    .select("id,name,points")
+    .in("name", picNames);
+    
   if (error) throw error;
-  if (!data) return;
-  const { error: updateError } = await supabase
-    .from("users")
-    .update({
-      points: Number(data.points ?? 0) + points,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", data.id);
-  if (updateError) throw updateError;
+  if (!data || data.length === 0) return;
+
+  // Berikan poin ke setiap PIC yang cocok
+  for (const user of data) {
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({
+        points: Number(user.points ?? 0) + points,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", user.id);
+      
+    if (updateError) throw updateError;
+  }
 }
 
 function toTaskRow(values) {

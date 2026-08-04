@@ -13,8 +13,13 @@ import { useAppData } from "../hooks/useAppData";
 
 export function StaffPage() {
   const { data } = useAppData();
-  // Filter only staff role users (excluding other roles if any)
-  const staffUsers = data?.users?.filter(user => user.role === 'staff') || [];
+  
+  // Tampilkan role staff, manager, staff_magang, magang, owner
+  // Khusus tegar@umaratax.com ditampilkan meskipun rolenya developer
+  const staffUsers = data?.users?.filter(user => 
+    ['staff', 'manager', 'staff_magang', 'magang', 'owner'].includes(user.role) || 
+    user.email === 'tegar@umaratax.com'
+  ) || [];
   const staffCount = staffUsers.length;
   return (
     <div className="space-y-5">
@@ -51,7 +56,10 @@ export function StaffPage() {
                 label="Absensi"
                 value={`${user.attendanceRate}%`}
               />
-              <Metric label="Role" value={user.role.replace("_", " ")} />
+              <Metric 
+                label="Role" 
+                value={user.email === 'tegar@umaratax.com' && user.role === 'developer' ? 'Developer & Staff' : user.role.replace("_", " ")} 
+              />
             </div>
           </Card>
         ))}

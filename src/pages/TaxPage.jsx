@@ -158,7 +158,7 @@ export function TaxPage() {
               }
             />
             <Input
-              placeholder="PIC penanggung jawab"
+              placeholder="PIC penanggung jawab (pisahkan dengan koma)"
               value={form.pic}
               onChange={(event) =>
                 setForm({ ...form, pic: event.target.value })

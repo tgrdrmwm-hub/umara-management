@@ -65,7 +65,18 @@ export function AppLayout() {
           </p>
         </div>
         <nav className="space-y-1 px-3 py-4">
-          {navigation.map((item) => (
+          {navigation.filter(item => {
+            if (user?.role === 'magang' || user?.role === 'staff_magang') {
+              // Menu khusus magang
+              return ["Dashboard", "UMARA TAX", "Task", "Client", "Absensi", "Point"].includes(item.label);
+            }
+            if (user?.role === 'owner') {
+              // Menu khusus owner
+              return ["Dashboard", "UMARA TAX", "Client", "Staff", "Task", "Absensi", "Point", "Report"].includes(item.label);
+            }
+            // Menu full untuk developer, manager, staff
+            return true;
+          }).map((item) => (
             <NavLink
               key={item.href}
               to={item.href}

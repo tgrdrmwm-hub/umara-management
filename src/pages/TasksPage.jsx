@@ -109,7 +109,7 @@ export function TasksPage() {
               }
             />
             <Input
-              placeholder="PIC staff"
+              placeholder="PIC (pisahkan dengan koma)"
               value={form.pic}
               onChange={(event) =>
                 setForm({ ...form, pic: event.target.value })
