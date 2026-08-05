@@ -14,6 +14,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  Legend,
   Line,
   LineChart,
   Pie,
@@ -29,231 +30,267 @@ import {
 } from "recharts";
 import { Badge } from "../components/ui/Badge";
 import { Card } from "../components/ui/Card";
+import {
+  PALETTE,
+  tooltipStyle,
+  axisTick,
+  gridStyle,
+  animationProps,
+  lineAnimationProps,
+} from "../components/ui/ChartWrapper";
 import { taxServiceDefinitions } from "../constants/taxServices";
 import { useAppData } from "../hooks/useAppData";
 
-const colors = ["#3b82f6", "#8b5cf6", "#f59e0b", "#10b981", "#ec4899"];
-const statColors = [
-  "bg-blue-100 text-blue-700 ring-blue-700/10 group-hover:bg-blue-600 dark:bg-blue-500/20 dark:text-blue-300",
-  "bg-purple-100 text-purple-700 ring-purple-700/10 group-hover:bg-purple-600 dark:bg-purple-500/20 dark:text-purple-300",
-  "bg-amber-100 text-amber-700 ring-amber-700/10 group-hover:bg-amber-600 dark:bg-amber-500/20 dark:text-amber-300",
-  "bg-emerald-100 text-emerald-700 ring-emerald-700/10 group-hover:bg-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300",
-  "bg-pink-100 text-pink-700 ring-pink-700/10 group-hover:bg-pink-600 dark:bg-pink-500/20 dark:text-pink-300",
-  "bg-indigo-100 text-indigo-700 ring-indigo-700/10 group-hover:bg-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300",
-  "bg-rose-100 text-rose-700 ring-rose-700/10 group-hover:bg-rose-600 dark:bg-rose-500/20 dark:text-rose-300",
-  "bg-teal-100 text-teal-700 ring-teal-700/10 group-hover:bg-teal-600 dark:bg-teal-500/20 dark:text-teal-300",
+const statConfig = [
+  { color: "text-indigo-600", bg: "bg-indigo-50 dark:bg-indigo-500/10" },
+  { color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-500/10" },
+  { color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-500/10" },
+  { color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-500/10" },
+  { color: "text-pink-600", bg: "bg-pink-50 dark:bg-pink-500/10" },
+  { color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-500/10" },
+  { color: "text-rose-600", bg: "bg-rose-50 dark:bg-rose-500/10" },
+  { color: "text-teal-600", bg: "bg-teal-50 dark:bg-teal-500/10" },
 ];
 
 export function DashboardPage() {
-  const { data } = useAppData();
+  const { data, isLoading, error } = useAppData();
   if (!data) return null;
 
-  const activeTaxWorks = data.taxWorks.filter(
-    (work) => work.status !== "Selesai",
-  );
-  const completedTaxWorks = data.taxWorks.filter(
-    (work) => work.status === "Selesai",
-  );
-  const picCount = new Set(
-    data.taxWorks.map((work) => work.pic).filter(Boolean),
-  ).size;
+  const activeTaxWorks = data.taxWorks.filter((w) => w.status !== "Selesai");
+  const completedTaxWorks = data.taxWorks.filter((w) => w.status === "Selesai");
+  const picCount = new Set(data.taxWorks.map((w) => w.pic).filter(Boolean)).size;
   const averageAttendance = data.users.length
-    ? Math.round(
-        data.users.reduce((sum, user) => sum + user.attendanceRate, 0) /
-          data.users.length,
-      )
+    ? Math.round(data.users.reduce((s, u) => s + u.attendanceRate, 0) / data.users.length)
     : 0;
-  const taxCategoryChart = taxServiceDefinitions.map((group) => ({
-    category: group.category.replace("Aktivasi ", ""),
-    layanan: group.services.length,
-    point: group.services.reduce((sum, service) => sum + service.basePoints, 0),
-    aktif: data.taxWorks.filter(
-      (work) => work.category === group.category && work.status !== "Selesai",
-    ).length,
+
+  const taxCategoryChart = taxServiceDefinitions.map((g) => ({
+    category: g.category.replace("Aktivasi ", ""),
+    layanan: g.services.length,
+    point: g.services.reduce((s, sv) => s + sv.basePoints, 0),
   }));
 
   const stats = [
     { label: "Total Client", value: data.clients.length, icon: Users },
     { label: "PIC Aktif", value: picCount, icon: Users },
-    {
-      label: "Layanan Pajak",
-      value: taxServiceDefinitions.reduce(
-        (sum, group) => sum + group.services.length,
-        0,
-      ),
-      icon: ShieldCheck,
-    },
+    { label: "Layanan Pajak", value: taxServiceDefinitions.reduce((s, g) => s + g.services.length, 0), icon: ShieldCheck },
     { label: "Pajak Berjalan", value: activeTaxWorks.length, icon: Clock3 },
-    {
-      label: "Pajak Selesai",
-      value: completedTaxWorks.length,
-      icon: CheckCircle2,
-    },
-    {
-      label: "Task Selesai",
-      value: data.tasks.filter((task) => task.status === "done").length,
-      icon: CheckCircle2,
-    },
+    { label: "Pajak Selesai", value: completedTaxWorks.length, icon: CheckCircle2 },
+    { label: "Task Selesai", value: data.tasks.filter((t) => t.status === "done").length, icon: CheckCircle2 },
     { label: "Kehadiran", value: `${averageAttendance}%`, icon: BellRing },
-    {
-      label: "Point",
-      value: data.users.reduce((sum, user) => sum + user.points, 0),
-      icon: Medal,
-    },
+    { label: "Total Point", value: data.users.reduce((s, u) => s + u.points, 0), icon: Medal },
   ];
+
+  const pieData = [
+    { name: "Selesai", value: completedTaxWorks.length || 1 },
+    { name: "Berjalan", value: data.taxWorks.filter((w) => w.status === "Berjalan").length || 0 },
+    { name: "Review", value: data.taxWorks.filter((w) => w.status === "Review").length || 0 },
+    { name: "Draft", value: data.taxWorks.filter((w) => w.status === "Draft").length || 0 },
+  ].filter((d) => d.value > 0);
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-white/70 bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.07)] backdrop-blur dark:border-white/10 dark:from-slate-900 dark:via-slate-900/95 dark:to-slate-800">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold sm:text-3xl">
-              Dashboard Operasional
-            </h1>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Ringkasan operasional UMARA TAX hari ini.
-            </p>
-          </div>
-          <Badge tone="blue">0 reminder deadline minggu ini</Badge>
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="flex flex-wrap items-start justify-between gap-3"
+      >
+        <div>
+          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+            Dashboard Operasional
+          </h1>
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+            Ringkasan operasional UMARA TAX — hari ini.
+          </p>
         </div>
-      </div>
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat, index) => (
+        <Badge tone="blue">
+          <BellRing className="h-3 w-3" />
+          0 deadline minggu ini
+        </Badge>
+      </motion.div>
+
+      {/* Stat cards */}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map((stat, i) => (
           <motion.div
             key={stat.label}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.03 }}
+            transition={{ delay: i * 0.06, duration: 0.4, ease: "easeOut" }}
           >
-            <Card className="group p-5 transition hover:-translate-y-0.5 hover:shadow-[0_20px_55px_rgba(15,23,42,0.10)]">
+            <Card className="p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
               <div className="flex items-center justify-between">
-                <p className="text-sm text-slate-500 dark:text-slate-400">
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                   {stat.label}
                 </p>
-                <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-xl ring-1 transition group-hover:text-white ${statColors[index % statColors.length]}`}
-                >
-                  <stat.icon className="h-5 w-5" />
+                <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${statConfig[i % statConfig.length].bg}`}>
+                  <stat.icon className={`h-4 w-4 ${statConfig[i % statConfig.length].color}`} />
                 </div>
               </div>
-              <p className="mt-4 text-2xl font-bold">{stat.value}</p>
+              <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+                {stat.value}
+              </p>
             </Card>
           </motion.div>
         ))}
-      </section>
-      <section className="grid gap-4 xl:grid-cols-2">
-        <ChartCard title="Pekerjaan Selesai" dotColor="bg-blue-500">
-          <LineChart data={data.analytics}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis />
-            <Tooltip />
+      </div>
+
+      {/* Charts */}
+      <div className="grid items-start gap-4 xl:grid-cols-2">
+        {/* Line chart */}
+        <ChartCard title="Pekerjaan Selesai per Bulan" subtitle="Tren penyelesaian pekerjaan pajak" delay={0}>
+          <LineChart data={data.analytics} margin={{ top: 8, right: 12, left: -12, bottom: 4 }}>
+            <defs>
+              <filter id="lineShadow">
+                <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor={PALETTE[0]} floodOpacity="0.3" />
+              </filter>
+            </defs>
+            <CartesianGrid {...gridStyle} vertical={false} />
+            <XAxis dataKey="month" tick={axisTick} axisLine={false} tickLine={false} />
+            <YAxis tick={axisTick} axisLine={false} tickLine={false} allowDecimals={false} />
+            <Tooltip {...tooltipStyle} />
             <Line
               type="monotone"
               dataKey="done"
-              stroke="#3b82f6"
+              name="Selesai"
+              stroke={PALETTE[0]}
               strokeWidth={3}
+              dot={{ r: 4, fill: "#fff", stroke: PALETTE[0], strokeWidth: 2.5 }}
+              activeDot={{ r: 6, fill: PALETTE[0], stroke: "#fff", strokeWidth: 2 }}
+              {...lineAnimationProps}
             />
           </LineChart>
         </ChartCard>
-        <ChartCard title="Kategori & Point Layanan" dotColor="bg-purple-500">
-          <BarChart data={taxCategoryChart}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="category" tick={{ fontSize: 12 }} />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="layanan" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+
+        {/* Bar chart layanan */}
+        <ChartCard title="Kategori Layanan Pajak" subtitle="Jumlah layanan per kategori" delay={0.1}>
+          <BarChart data={taxCategoryChart} margin={{ top: 8, right: 12, left: -12, bottom: 4 }}>
+            <CartesianGrid {...gridStyle} vertical={false} />
+            <XAxis dataKey="category" tick={{ ...axisTick, angle: -45, textAnchor: "end", height: 40 }} axisLine={false} tickLine={false} />
+            <YAxis tick={axisTick} axisLine={false} tickLine={false} allowDecimals={false} />
+            <Tooltip {...tooltipStyle} />
+            <Bar dataKey="layanan" name="Layanan" radius={[6, 6, 0, 0]} maxBarSize={52} {...animationProps}>
+              {taxCategoryChart.map((_, i) => (
+                <Cell key={i} fill={PALETTE[i % PALETTE.length]} fillOpacity={0.88} />
+              ))}
+            </Bar>
           </BarChart>
         </ChartCard>
-        <ChartCard title="Status Pajak" dotColor="bg-amber-500">
+
+        {/* Donut Pie */}
+        <ChartCard title="Status Pekerjaan Pajak" subtitle="Distribusi status saat ini" delay={0.2}>
           <PieChart>
             <Pie
-              data={[
-                { name: "Selesai", value: completedTaxWorks.length },
-                {
-                  name: "Berjalan",
-                  value: data.taxWorks.filter(
-                    (work) => work.status === "Berjalan",
-                  ).length,
-                },
-                {
-                  name: "Review",
-                  value: data.taxWorks.filter(
-                    (work) => work.status === "Review",
-                  ).length,
-                },
-                {
-                  name: "Draft",
-                  value: data.taxWorks.filter((work) => work.status === "Draft")
-                    .length,
-                },
-              ]}
+              data={pieData}
               dataKey="value"
               nameKey="name"
-              outerRadius={90}
+              outerRadius={100}
+              innerRadius={52}
+              paddingAngle={4}
+              strokeWidth={0}
+              {...animationProps}
+              animationDuration={1000}
             >
-              {colors.map((color) => (
-                <Cell key={color} fill={color} />
+              {pieData.map((_, i) => (
+                <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
               ))}
             </Pie>
-            <Tooltip />
+            <Tooltip {...tooltipStyle} />
+            <Legend
+              iconType="circle"
+              iconSize={8}
+              formatter={(value) => (
+                <span style={{ fontSize: 11, color: "#64748b" }}>{value}</span>
+              )}
+            />
           </PieChart>
         </ChartCard>
-        <ChartCard title="Point Staff" dotColor="bg-emerald-500">
-          <AreaChart data={data.analytics}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis />
-            <Tooltip />
+
+        {/* Area chart point */}
+        <ChartCard title="Tren Point Staff" subtitle="Akumulasi point bulanan" delay={0.3}>
+          <AreaChart data={data.analytics} margin={{ top: 8, right: 12, left: -12, bottom: 4 }}>
+            <defs>
+              <linearGradient id="gradPoints" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={PALETTE[2]} stopOpacity={0.25} />
+                <stop offset="100%" stopColor={PALETTE[2]} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid {...gridStyle} vertical={false} />
+            <XAxis dataKey="month" tick={axisTick} axisLine={false} tickLine={false} />
+            <YAxis tick={axisTick} axisLine={false} tickLine={false} />
+            <Tooltip {...tooltipStyle} />
             <Area
               type="monotone"
               dataKey="points"
-              stroke="#10b981"
-              fill="#10b981"
-              fillOpacity={0.2}
+              name="Point"
+              stroke={PALETTE[2]}
+              strokeWidth={3}
+              fill="url(#gradPoints)"
+              dot={{ r: 4, fill: "#fff", stroke: PALETTE[2], strokeWidth: 2.5 }}
+              activeDot={{ r: 6, fill: PALETTE[2], stroke: "#fff", strokeWidth: 2 }}
+              {...lineAnimationProps}
             />
           </AreaChart>
         </ChartCard>
-        <ChartCard title="Radar Operasional" dotColor="bg-pink-500">
+
+        {/* Radar */}
+        <ChartCard title="Radar Operasional" subtitle="Performa lintas dimensi" className="xl:col-span-2" delay={0.4}>
           <RadarChart
+            cx="50%"
+            cy="50%"
+            outerRadius="72%"
             data={[
               { item: "Client", score: data.clients.length },
               { item: "PIC", score: picCount },
               { item: "Pajak", score: data.taxWorks.length },
               { item: "Absensi", score: data.attendance.length },
-              {
-                item: "Point",
-                score: data.users.reduce((sum, user) => sum + user.points, 0),
-              },
+              { item: "Point", score: Math.max(1, Math.round(data.users.reduce((s, u) => s + u.points, 0) / 100)) },
             ]}
           >
-            <PolarGrid />
-            <PolarAngleAxis dataKey="item" />
+            <defs>
+              <linearGradient id="radarGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={PALETTE[4]} stopOpacity={0.3} />
+                <stop offset="100%" stopColor={PALETTE[4]} stopOpacity={0.05} />
+              </linearGradient>
+            </defs>
+            <PolarGrid stroke="#e2e8f0" />
+            <PolarAngleAxis dataKey="item" tick={{ fontSize: 12, fill: "#64748b", fontWeight: 500 }} />
             <Radar
               dataKey="score"
-              stroke="#ec4899"
-              fill="#ec4899"
-              fillOpacity={0.2}
+              stroke={PALETTE[4]}
+              fill="url(#radarGrad)"
+              strokeWidth={2.5}
+              dot={{ r: 4, fill: "#fff", stroke: PALETTE[4], strokeWidth: 2 }}
+              {...lineAnimationProps}
             />
+            <Tooltip {...tooltipStyle} />
           </RadarChart>
         </ChartCard>
-      </section>
+      </div>
     </div>
   );
 }
 
-function ChartCard({ title, children, dotColor = "bg-blue-500" }) {
+function ChartCard({ title, subtitle, children, className, delay = 0 }) {
   return (
-    <Card className="p-5">
-      <div className="mb-5 flex items-center justify-between gap-3">
-        <h2 className="text-base font-bold">{title}</h2>
-        <span className={`h-2.5 w-2.5 rounded-full ${dotColor}`} />
-      </div>
-      <div className="h-72">
-        <ResponsiveContainer width="100%" height="100%">
-          {children}
-        </ResponsiveContainer>
-      </div>
-    </Card>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 + delay, duration: 0.5, ease: "easeOut" }}
+      className={className}
+    >
+      <Card className="p-5 h-full">
+        <div className="mb-4">
+          <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200">{title}</h2>
+          {subtitle && <p className="mt-0.5 text-xs text-slate-400">{subtitle}</p>}
+        </div>
+        <div className="h-56 sm:h-64 lg:h-72 w-full min-w-0 min-h-0">
+          <ResponsiveContainer width="100%" height="100%">
+            {children}
+          </ResponsiveContainer>
+        </div>
+      </Card>
+    </motion.div>
   );
 }

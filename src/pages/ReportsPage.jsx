@@ -1,128 +1,100 @@
-import { Download, FileSpreadsheet } from "lucide-react";
+import { Download, FileSpreadsheet, Printer } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { useAppData } from "../hooks/useAppData";
 
+const reportMeta = {
+  Pajak: { desc: "Rekap pekerjaan pajak — kategori, layanan, status, PIC, deadline.", color: "text-blue-600 bg-blue-50 dark:bg-blue-500/10" },
+  Staff: { desc: "Data lengkap staff — nama, role, point, dan kehadiran.", color: "text-violet-600 bg-violet-50 dark:bg-violet-500/10" },
+  Absensi: { desc: "Log absensi — jam masuk, pulang, durasi, dan status.", color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10" },
+  Client: { desc: "Database client — NPWP, tipe, PIC, status, email.", color: "text-amber-600 bg-amber-50 dark:bg-amber-500/10" },
+  Point: { desc: "Ranking point staff dari pekerjaan pajak dan task.", color: "text-rose-600 bg-rose-50 dark:bg-rose-500/10" },
+  Task: { desc: "Rekap task kanban — judul, PIC, deadline, status, point.", color: "text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10" },
+};
+
 export function ReportsPage() {
-  const { data } = useAppData();
+  const { data, isLoading, error } = useAppData();
   if (!data) return null;
-  const appData = data;
 
   function exportCsv(type) {
     const rowsByType = {
       Pajak: [
         ["Kategori", "Layanan", "Client", "PIC", "Deadline", "Status"],
-        ...appData.taxWorks.map((item) => [
-          item.category,
-          item.service,
-          item.client,
-          item.pic,
-          item.deadline,
-          item.status,
-        ]),
+        ...data.taxWorks.map((i) => [i.category, i.service, i.client, i.pic, i.deadline, i.status]),
       ],
       Staff: [
         ["Nama", "Email", "Role", "Status", "Point", "Absensi"],
-        ...appData.users.map((user) => [
-          user.name,
-          user.email,
-          user.role,
-          user.status,
-          String(user.points),
-          String(user.attendanceRate),
-        ]),
+        ...data.users.map((u) => [u.name, u.email, u.role, u.status, String(u.points), String(u.attendanceRate)]),
       ],
       Absensi: [
         ["Staff", "Tanggal", "Masuk", "Pulang", "Status"],
-        ...appData.attendance.map((row) => [
-          row.staff,
-          row.date,
-          row.checkIn,
-          row.checkOut,
-          row.status,
-        ]),
+        ...data.attendance.map((r) => [r.staff, r.date, r.checkIn, r.checkOut, r.status]),
       ],
       Client: [
         ["Nama", "NPWP", "Type", "PIC", "Status", "Email"],
-        ...appData.clients.map((client) => [
-          client.name,
-          client.npwp,
-          client.type,
-          client.pic,
-          client.status,
-          client.email,
-        ]),
+        ...data.clients.map((c) => [c.name, c.npwp, c.type, c.pic, c.status, c.email]),
       ],
       Point: [
         ["Nama", "Role", "Point"],
-        ...appData.users.map((user) => [
-          user.name,
-          user.role,
-          String(user.points),
-        ]),
+        ...data.users.map((u) => [u.name, u.role, String(u.points)]),
       ],
       Task: [
         ["Judul", "Client", "PIC", "Deadline", "Status", "Point"],
-        ...appData.tasks.map((task) => [
-          task.title,
-          task.client,
-          task.pic,
-          task.deadline,
-          task.status,
-          String(task.points),
-        ]),
+        ...data.tasks.map((t) => [t.title, t.client, t.pic, t.deadline, t.status, String(t.points)]),
       ],
     };
-    downloadCsv(
-      `report-${type.toLowerCase()}-umara.csv`,
-      rowsByType[type] ?? [["Data"], ["Belum ada data"]],
-    );
+    downloadCsv(`report-${type.toLowerCase()}-umara.csv`, rowsByType[type] ?? [["Data"], ["Belum ada data"]]);
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">Report</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          PDF & Excel untuk Pajak, Staff, Absensi, Client, Point, dan Task.
+        <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Laporan</h1>
+        <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+          Ekspor data sebagai CSV atau cetak ke PDF untuk semua modul.
         </p>
       </div>
+
+      {/* Report cards */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {appData.reportTypes.map((type) => (
-          <Card key={type} className="p-4">
-            <FileSpreadsheet className="h-6 w-6 text-green-700" />
-            <h2 className="mt-3 font-bold">Report {type}</h2>
-            <div className="mt-4 flex gap-2">
-              <Button size="sm" onClick={() => window.print()}>
-                <Download className="h-4 w-4" />
-                PDF
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => exportCsv(type)}
-              >
-                <Download className="h-4 w-4" />
-                Excel
-              </Button>
-            </div>
-          </Card>
-        ))}
+        {(data.reportTypes ?? Object.keys(reportMeta)).map((type) => {
+          const meta = reportMeta[type] ?? { desc: `Data ${type}`, color: "text-slate-600 bg-slate-100 dark:bg-white/8" };
+          return (
+            <Card key={type} className="p-5">
+              <div className="flex items-start gap-3">
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${meta.color}`}>
+                  <FileSpreadsheet className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h2 className="font-semibold text-slate-900 dark:text-slate-100">Laporan {type}</h2>
+                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{meta.desc}</p>
+                </div>
+              </div>
+              <div className="mt-4 flex gap-2">
+                <Button size="sm" variant="secondary" onClick={() => window.print()}>
+                  <Printer className="h-3.5 w-3.5" />
+                  PDF
+                </Button>
+                <Button size="sm" onClick={() => exportCsv(type)}>
+                  <Download className="h-3.5 w-3.5" />
+                  CSV
+                </Button>
+              </div>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
 }
 
 function downloadCsv(filename, rows) {
-  const csv = rows
-    .map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(","))
-    .join("\n");
-  const url = URL.createObjectURL(
-    new Blob([csv], { type: "text/csv;charset=utf-8;" }),
-  );
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.click();
+  const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
   URL.revokeObjectURL(url);
 }

@@ -2,17 +2,17 @@ export const taxServiceDefinitions = [
   {
     category: "Coretax",
     services: [
-      { name: "Aktivasi Coretax", basePoints: 100 },
-      { name: "PKP", basePoints: 97 },
-      { name: "Non PKP", basePoints: 94 },
-      { name: "NE (Non Efektif)", basePoints: 91 },
+      { name: "Aktivasi Coretax", basePoints: 40 },
+      { name: "PKP", basePoints: 35 },
+      { name: "Non PKP", basePoints: 30 },
+      { name: "NE (Non Efektif)", basePoints: 25 },
     ],
   },
   {
     category: "SPT Tahunan",
     services: [
-      { name: "Pembentukan SPT Orang Pribadi", basePoints: 88 },
-      { name: "Pembentukan SPT Badan", basePoints: 85 },
+      { name: "SPT Orang Pribadi", basePoints: 88 },
+      { name: "SPT Badan", basePoints: 85 },
     ],
   },
   {
@@ -29,8 +29,8 @@ export const taxServiceDefinitions = [
   {
     category: "Akuntansi",
     services: [
-      { name: "Akuntan Internal", basePoints: 64 },
-      { name: "Akuntan Eksternal", basePoints: 61 },
+      { name: "Akuntan Internal", basePoints: 61 },
+      { name: "Akuntan Eksternal", basePoints: 64 },
     ],
   },
   {
@@ -50,8 +50,8 @@ export const taxServiceDefinitions = [
       { name: "Instagram", basePoints: 44 },
       { name: "TikTok", basePoints: 43 },
       { name: "YouTube", basePoints: 42 },
-      { name: "Facebook", basePoints: 41 },
-      { name: "WhatsApp", basePoints: 40 },
+      { name: "Facebook", basePoints: 5 },
+      { name: "WhatsApp", basePoints: 5 },
     ],
   },
 ];

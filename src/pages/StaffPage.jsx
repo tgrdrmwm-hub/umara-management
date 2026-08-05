@@ -1,7 +1,10 @@
-import { Award, TrendingUp } from "lucide-react";
+import { Award, Mail, TrendingUp } from "lucide-react";
+import { motion } from "framer-motion";
 import {
   Bar,
   BarChart,
+  CartesianGrid,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -9,86 +12,113 @@ import {
 } from "recharts";
 import { Badge } from "../components/ui/Badge";
 import { Card } from "../components/ui/Card";
+import { PALETTE, tooltipStyle, axisTick, gridStyle, animationProps } from "../components/ui/ChartWrapper";
 import { useAppData } from "../hooks/useAppData";
 
 export function StaffPage() {
-  const { data } = useAppData();
-  
-  // Tampilkan role staff, manager, staff_magang, magang, owner
-  // Khusus tegar@umaratax.com ditampilkan meskipun rolenya developer
-  const staffUsers = data?.users?.filter(user => 
-    ['staff', 'manager', 'staff_magang', 'magang', 'owner'].includes(user.role) || 
-    user.email === 'tegar@umaratax.com'
-  ) || [];
-  const staffCount = staffUsers.length;
+  const { data, isLoading, error } = useAppData();
+
+  const staffUsers =
+    data?.users?.filter(
+      (u) =>
+        ["staff", "manager", "staff_magang", "magang", "owner", "developer"].includes(u.role) ||
+        u.email === "tegar@umaratax.com",
+    ) || [];
+
   return (
-    <div className="space-y-5">
-      <div className="flex items-start justify-between">
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="flex flex-wrap items-start justify-between gap-3"
+      >
         <div>
-          <h1 className="text-2xl font-bold">Staff Management</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Kelola Manager, Staff, Staff Magang, point, absensi, dan ranking.
+          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Staff</h1>
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+            Manager, staff, dan magang — point, absensi, dan ranking.
           </p>
         </div>
-        <Badge tone="blue" className="mt-1">Total: {staffCount} Staff</Badge>
-      </div>
-      <div className="grid gap-4 lg:grid-cols-2">
-        {staffUsers.map((user, index) => (
-          <Card key={user.id} className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-md bg-green-700 font-bold text-white">
-                {user.avatar}
-              </div>
-              <div className="min-w-0 flex-1">
-                <h2 className="font-bold">{user.name}</h2>
-                <p className="text-sm text-slate-500">{user.email}</p>
-              </div>
-              <Badge tone="green">#{index + 1}</Badge>
-            </div>
-            <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-              <Metric
-                icon={<Award className="h-4 w-4" />}
-                label="Point"
-                value={user.points}
-              />
-              <Metric
-                icon={<TrendingUp className="h-4 w-4" />}
-                label="Absensi"
-                value={`${user.attendanceRate}%`}
-              />
-              <Metric 
-                label="Role" 
-                value={user.email === 'tegar@umaratax.com' && user.role === 'developer' ? 'Developer & Staff' : user.role.replace("_", " ")} 
-              />
-            </div>
-          </Card>
-        ))}
-      </div>
-      <Card className="p-4">
-        <h2 className="mb-4 font-bold">Grafik Point Staff</h2>
-        <div className="h-72">
-          <ResponsiveContainer>
-            <BarChart data={staffUsers}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="points" fill="#15803d" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </Card>
-    </div>
-  );
-}
+        <Badge tone="blue">{staffUsers.length} anggota</Badge>
+      </motion.div>
 
-function Metric({ icon, label, value }) {
-  return (
-    <div className="rounded-md bg-slate-50 p-3 dark:bg-white/5">
-      <div className="flex items-center gap-1 text-xs text-slate-500">
-        {icon}
-        {label}
-      </div>
-      <p className="mt-1 font-bold capitalize">{value}</p>
+      {/* Table */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
+      >
+        <Card className="overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[600px] text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 dark:border-white/8">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">#</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Nama</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Email</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Role</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Point</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Absensi</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-white/8">
+                {staffUsers.map((user, index) => {
+                  const roleLabel =
+                    user.email === "tegar@umaratax.com" && user.role === "developer"
+                      ? "Developer & Staff"
+                      : user.role.replace("_", " ");
+                  return (
+                    <tr key={user.id}>
+                      <td className="px-4 py-3 text-xs font-medium text-slate-400">#{index + 1}</td>
+                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{user.name}</td>
+                      <td className="px-4 py-3 text-xs text-slate-600 dark:text-slate-400">{user.email}</td>
+                      <td className="px-4 py-3"><Badge tone="slate" className="capitalize text-[10px]">{roleLabel}</Badge></td>
+                      <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100">{user.points.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-xs font-medium text-slate-600 dark:text-slate-400">{user.attendanceRate}%</td>
+                      <td className="px-4 py-3"><Badge tone="green" className="text-[10px]">{user.status || "Aktif"}</Badge></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </motion.div>
+
+      {/* Chart */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.5, ease: "easeOut" }}
+      >
+        <Card className="p-5">
+          <div className="mb-5">
+            <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200">Point Staff</h2>
+            <p className="mt-0.5 text-xs text-slate-400">Perbandingan total point antar staff</p>
+          </div>
+          {staffUsers.length === 0 ? (
+            <div className="flex h-48 items-center justify-center text-sm text-slate-400">Belum ada data staff</div>
+          ) : (
+            <div className="h-56 sm:h-64 lg:h-72 w-full min-w-0 min-h-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={staffUsers} margin={{ top: 8, right: 12, left: -12, bottom: 4 }}>
+                  <CartesianGrid {...gridStyle} vertical={false} />
+                  <XAxis dataKey="name" tick={{ ...axisTick, angle: -45, textAnchor: "end", height: 40 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={axisTick} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <Tooltip {...tooltipStyle} formatter={(v) => [v.toLocaleString(), "Point"]} />
+                  <Bar dataKey="points" name="Point" radius={[6, 6, 0, 0]} maxBarSize={56} {...animationProps}>
+                    {staffUsers.map((_, i) => (
+                      <Cell key={i} fill={PALETTE[i % PALETTE.length]} fillOpacity={0.88} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </Card>
+      </motion.div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { CalendarDays, Clock } from "lucide-react";
+import { CalendarDays, Clock, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -6,6 +6,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -15,69 +16,59 @@ import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
+import { PALETTE, tooltipStyle, axisTick, gridStyle, animationProps } from "../components/ui/ChartWrapper";
 import { useAppData } from "../hooks/useAppData";
-import {
-  createAttendance,
-  deleteAttendance,
-  updateAttendance,
-} from "../services/database";
+import { createAttendance, deleteAttendance, updateAttendance } from "../services/database";
 import { useAuth } from "../hooks/useAuth";
+
+const selectClass =
+  "h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-900/8 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-white/20";
 
 function getToday() {
   return new Date().toISOString().slice(0, 10);
 }
 
 function getEmptyAttendance(staff = "") {
-  return {
-    staff,
-    date: getToday(),
-    checkIn: "08:00",
-    checkOut: "17:00",
-    status: "Hadir",
-  };
+  return { staff, date: getToday(), checkIn: "08:00", checkOut: "17:00", status: "Hadir" };
 }
 
+const STATUS_COLOR = {
+  Hadir: "#059669", // emerald-600
+  Terlambat: "#d97706", // amber-600
+  Izin: "#4f46e5", // indigo-600
+  Remote: "#0d9488", // teal-600
+};
+
 export function AttendancePage() {
-  const { data } = useAppData();
+  const { data, isLoading, error } = useAppData();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(getEmptyAttendance());
-  const attendance = data?.attendance ?? [];
-  // Filter only complete attendance records (both checkIn and checkOut present)
-  const completeAttendance = attendance.filter(row => row.checkIn && row.checkOut);
-  const attendanceChart = completeAttendance.map((row) => ({
-    staff: row.staff,
-    jam: calculateWorkHours(row.checkIn, row.checkOut),
-  }));
-  const totalHours = attendanceChart.reduce((total, row) => total + row.jam, 0);
-  const averageHours = attendanceChart.length
-    ? totalHours / attendanceChart.length
-    : 0;
 
-  async function refresh(message) {
+  const attendance = data?.attendance ?? [];
+  const completeAttendance = attendance.filter((r) => r.checkIn && r.checkOut);
+  const attendanceChart = completeAttendance.map((r) => ({
+    staff: r.staff,
+    jam: calcHours(r.checkIn, r.checkOut),
+    status: r.status,
+  }));
+  const totalHours = attendanceChart.reduce((t, r) => t + r.jam, 0);
+  const avgHours = attendanceChart.length ? totalHours / attendanceChart.length : 0;
+  const nonHadir = attendance.filter((r) => r.status !== "Hadir").length;
+
+  async function refresh(msg) {
     await queryClient.invalidateQueries({ queryKey: ["umara-dashboard"] });
-    toast.success(message);
+    toast.success(msg);
   }
 
-  async function submit(event) {
-    event.preventDefault();
+  async function submit(e) {
+    e.preventDefault();
     try {
       if (!form.staff.trim()) return toast.error("Nama staff wajib diisi");
       if (!form.date) return toast.error("Tanggal wajib diisi");
       if (!form.checkIn) return toast.error("Jam masuk wajib diisi");
-      if (!form.checkOut) return toast.error("Jam pulang wajib diisi");
-      if (!form.status) return toast.error("Status wajib dipilih");
-
-      // Validate time format
-      if (!/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(form.checkIn)) {
-        return toast.error("Format jam masuk tidak valid (HH:MM)");
-      }
-      if (!/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(form.checkOut)) {
-        return toast.error("Format jam pulang tidak valid (HH:MM)");
-      }
-
       if (editing) {
         await updateAttendance(editing.id, form);
         setEditing(null);
@@ -88,23 +79,21 @@ export function AttendancePage() {
       }
       setForm(getEmptyAttendance());
       setShowForm(false);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Absensi gagal disimpan",
-      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Gagal menyimpan");
     }
   }
 
   function startEdit(row) {
     setEditing(row);
-    setForm({
-      staff: row.staff,
-      date: row.date,
-      checkIn: row.checkIn,
-      checkOut: row.checkOut,
-      status: row.status,
-    });
+    setForm({ staff: row.staff, date: row.date, checkIn: row.checkIn, checkOut: row.checkOut, status: row.status });
     setShowForm(true);
+  }
+
+  function closeForm() {
+    setShowForm(false);
+    setEditing(null);
+    setForm(getEmptyAttendance());
   }
 
   async function quickAttendance(type) {
@@ -113,308 +102,259 @@ export function AttendancePage() {
     const staff = user?.name || user?.email || "";
     const today = getToday();
     try {
-      if (!staff) {
-        toast.error("Profil staff belum terbaca. Gunakan Input Manual.");
-        return;
-      }
-      const existing = attendance.find(
-        (row) => row.staff === staff && row.date === today,
-      );
+      if (!staff) { toast.error("Profil staff belum terbaca."); return; }
+      const existing = attendance.find((r) => r.staff === staff && r.date === today);
       if (type === "in") {
         if (existing) {
-          // Update existing record with check-in time and proper status
-          const checkInTime = existing.checkIn || time;
-          const status = checkInTime > "08:00" ? "Terlambat" : existing.status === "Izin" || existing.status === "Remote" ? existing.status : "Hadir";
-          await updateAttendance(existing.id, {
-            ...existing,
-            checkIn: checkInTime,
-            status: status,
-          });
-          await refresh("Check in hari ini sudah tercatat");
+          await updateAttendance(existing.id, { ...existing, checkIn: existing.checkIn || time, status: (existing.checkIn || time) > "08:00" ? "Terlambat" : "Hadir" });
+          await refresh("Check in tercatat");
           return;
         }
-        // Create new attendance record
-        const status = time > "08:00" ? "Terlambat" : "Hadir";
-        await createAttendance({
-          staff,
-          date: today,
-          checkIn: time,
-          checkOut: "",
-          status: status,
-        });
+        await createAttendance({ staff, date: today, checkIn: time, checkOut: "", status: time > "08:00" ? "Terlambat" : "Hadir" });
         await refresh("Check in tersimpan");
         return;
       }
-      if (!existing) {
-        toast.error("Belum ada check in hari ini");
-        return;
-      }
-      if (!existing.checkIn) {
-        toast.error("Check in belum tercatat. Silakan check in terlebih dahulu.");
-        return;
-      }
-      await updateAttendance(existing.id, {
-        staff: existing.staff,
-        date: existing.date,
-        checkIn: existing.checkIn,
-        checkOut: time,
-        status: existing.status,
-      });
+      if (!existing) { toast.error("Belum ada check in hari ini"); return; }
+      await updateAttendance(existing.id, { ...existing, checkOut: time });
       await refresh("Check out tersimpan");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Absensi gagal diproses",
-      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Gagal memproses");
     }
   }
 
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const monthName = now.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
+
   return (
-    <div className="space-y-4 sm:space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-2 sm:gap-3">
-        <div className="w-full sm:w-auto">
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <h1 className="text-xl sm:text-2xl font-bold">Absensi</h1>
-            <Badge tone="green" className="text-xs sm:text-sm">Realtime aktif</Badge>
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Absensi</h1>
+            <Badge tone="green">Realtime</Badge>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Jam masuk, jam pulang, durasi kerja, dan status kehadiran staff.
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+            Jam masuk, pulang, durasi kerja, dan status kehadiran staff.
           </p>
         </div>
-        <div className="flex flex-wrap gap-1 sm:gap-2 w-full sm:w-auto justify-end mt-2 sm:mt-0">
-          <Button onClick={() => void quickAttendance("in")} className="w-full sm:w-auto text-xs sm:text-sm">
-            <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => void quickAttendance("in")}>
+            <Clock className="h-3.5 w-3.5" />
             Check In
           </Button>
-          <Button
-            variant="secondary"
-            onClick={() => void quickAttendance("out")}
-            className="w-full sm:w-auto text-xs sm:text-sm"
-          >
+          <Button variant="secondary" onClick={() => void quickAttendance("out")}>
             Check Out
           </Button>
           <Button
             variant="secondary"
             onClick={() => {
-              setShowForm((value) => !value);
-              setEditing(null);
-              setForm(getEmptyAttendance(user?.name || user?.email || ""));
+              if (showForm && !editing) { closeForm(); } else { setEditing(null); setForm(getEmptyAttendance(user?.name || "")); setShowForm(true); }
             }}
-            className="w-full sm:w-auto text-xs sm:text-sm"
           >
-            Input Manual
+            <Plus className="h-3.5 w-3.5" />
+            Manual
           </Button>
         </div>
       </div>
+
+      {/* Form */}
       {showForm && (
-        <Card className="p-3 sm:p-4">
-          <form
-            className="grid gap-2 sm:gap-3 md:grid-cols-2 lg:grid-cols-3"
-            onSubmit={(event) => void submit(event)}
-          >
-            <Input
-              placeholder="Nama staff"
-              value={form.staff}
-              onChange={(event) =>
-                setForm({ ...form, staff: event.target.value })
-              }
-              className="text-xs sm:text-sm"
-            />
-            <Input
-              type="date"
-              value={form.date}
-              onChange={(event) =>
-                setForm({ ...form, date: event.target.value })
-              }
-              className="text-xs sm:text-sm"
-            />
-            <Input
-              type="time"
-              value={form.checkIn}
-              onChange={(event) =>
-                setForm({ ...form, checkIn: event.target.value })
-              }
-              className="text-xs sm:text-sm"
-            />
-            <Input
-              type="time"
-              value={form.checkOut}
-              onChange={(event) =>
-                setForm({ ...form, checkOut: event.target.value })
-              }
-              className="text-xs sm:text-sm"
-            />
-            <select
-              className="h-9 sm:h-10 rounded-md border border-slate-200 bg-white px-2 sm:px-3 text-xs sm:text-sm dark:border-white/10 dark:bg-slate-950"
-              value={form.status}
-              onChange={(event) =>
-                setForm({ ...form, status: event.target.value })
-              }
-            >
-              <option value="Hadir">Hadir</option>
-              <option value="Terlambat">Terlambat</option>
-              <option value="Izin">Izin</option>
-              <option value="Remote">Remote</option>
-            </select>
-            <div className="flex gap-1 sm:gap-2 md:col-span-2 lg:col-span-3">
-              <Button className="text-xs sm:text-sm">{editing ? "Update Absensi" : "Simpan Absensi"}</Button>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  setShowForm(false);
-                  setEditing(null);
-                  setForm(getEmptyAttendance());
-                }}
-                className="text-xs sm:text-sm"
-              >
-                Batal
-              </Button>
+        <Card className="p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {editing ? "Edit Absensi" : "Input Absensi Manual"}
+            </h2>
+            <button onClick={closeForm} className="rounded-md p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/8">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" onSubmit={(e) => void submit(e)}>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Nama Staff *</label>
+              <Input placeholder="Nama lengkap" value={form.staff} onChange={(e) => setForm({ ...form, staff: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Tanggal *</label>
+              <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Jam Masuk</label>
+              <Input type="time" value={form.checkIn} onChange={(e) => setForm({ ...form, checkIn: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Jam Pulang</label>
+              <Input type="time" value={form.checkOut} onChange={(e) => setForm({ ...form, checkOut: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Status</label>
+              <select className={selectClass} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                <option value="Hadir">Hadir</option>
+                <option value="Terlambat">Terlambat</option>
+                <option value="Izin">Izin</option>
+                <option value="Remote">Remote</option>
+              </select>
+            </div>
+            <div className="flex items-end gap-2">
+              <Button type="submit" className="flex-1">{editing ? "Simpan" : "Tambah"}</Button>
+              <Button type="button" variant="secondary" onClick={closeForm}>Batal</Button>
             </div>
           </form>
         </Card>
       )}
-      <section className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-        <Card className="p-3 sm:p-4">
-          <p className="text-xs sm:text-sm text-slate-500">Total Jam Tercatat</p>
-          <p className="mt-1 sm:mt-2 text-lg sm:text-2xl font-bold">{totalHours.toFixed(1)} jam</p>
-        </Card>
-        <Card className="p-3 sm:p-4">
-          <p className="text-xs sm:text-sm text-slate-500">Rata-rata Jam/Staf</p>
-          <p className="mt-1 sm:mt-2 text-lg sm:text-2xl font-bold">
-            {averageHours.toFixed(1)} jam
-          </p>
-        </Card>
-        <Card className="p-3 sm:p-4">
-          <p className="text-xs sm:text-sm text-slate-500">Terlambat/Izin/Remote</p>
-          <p className="mt-1 sm:mt-2 text-lg sm:text-2xl font-bold">
-            {attendance.filter((row) => row.status !== "Hadir").length}
-          </p>
-        </Card>
-      </section>
-      <Card className="p-3 sm:p-4">
-        <div className="mb-3 sm:mb-4 flex items-center gap-1 sm:gap-2 font-bold">
-          <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5 text-green-700" />
-          <span className="text-sm sm:text-base">Kalender {new Date().toLocaleDateString("id-ID", { month: "long", year: "numeric" })}</span>
-        </div>
-        <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-xs sm:text-sm">
-          {Array.from(
-            { length: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() },
-            (_, index) => {
-              const date = index + 1;
-              const today = new Date().getDate();
-              const isToday = date === today;
-              const currentMonth = new Date().getMonth();
-              const currentYear = new Date().getFullYear();
-              const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
-              const hasAttendance = attendance.some(row => row.date === dateStr);
 
-              return (
-                <div
-                  key={index}
-                  className={`rounded-md p-2 sm:p-3 font-medium transition ${
-                    isToday
-                      ? "bg-green-500 text-white shadow-md"
-                      : hasAttendance
-                      ? "bg-teal-500 text-white shadow-sm"
-                      : "bg-slate-50 text-slate-700 dark:bg-white/5 dark:text-slate-300"
-                  }`}
-                  title={hasAttendance ? "Ada absensi" : isToday ? "Hari ini" : ""}
-                >
-                  {date}
-                </div>
-              );
-            }
-          )}
+      {/* Stats */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Card className="p-4">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total Jam Tercatat</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{totalHours.toFixed(1)}<span className="ml-1 text-sm font-normal text-slate-500">jam</span></p>
+        </Card>
+        <Card className="p-4">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Rata-rata / Staff</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{avgHours.toFixed(1)}<span className="ml-1 text-sm font-normal text-slate-500">jam</span></p>
+        </Card>
+        <Card className="p-4">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Tidak Hadir / Terlambat</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{nonHadir}<span className="ml-1 text-sm font-normal text-slate-500">kali</span></p>
+        </Card>
+      </div>
+
+      {/* Calendar */}
+      <Card className="p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <CalendarDays className="h-4 w-4 text-slate-500" />
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Kalender {monthName}</h2>
+          <div className="ml-auto flex items-center gap-3 text-xs text-slate-500">
+            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-slate-900 dark:bg-slate-100" />Hari ini</span>
+            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" />Ada absensi</span>
+          </div>
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"].map((d) => (
+            <div key={d} className="py-1 text-center text-[10px] font-medium text-slate-400">{d}</div>
+          ))}
+          {Array.from({ length: daysInMonth }, (_, i) => {
+            const date = i + 1;
+            const isToday = date === now.getDate();
+            const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(date).padStart(2, "0")}`;
+            const hasAttendance = attendance.some((r) => r.date === dateStr);
+            return (
+              <div
+                key={i}
+                className={`flex h-8 items-center justify-center rounded-md text-xs font-medium transition-colors ${
+                  isToday
+                    ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+                    : hasAttendance
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                    : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-white/8"
+                }`}
+              >
+                {date}
+              </div>
+            );
+          })}
         </div>
       </Card>
-      <Card className="p-3 sm:p-4">
-        <h2 className="mb-3 sm:mb-4 font-bold text-sm sm:text-base">Grafik Jam Kerja Staff</h2>
-        <div className="h-60 sm:h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={attendanceChart}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="staff" tick={{ fontSize: 10 }} />
-              <YAxis tick={{ fontSize: 10 }} />
-              <Tooltip />
-              <Bar dataKey="jam" fill="#0f766e" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+
+      {/* Chart */}
+      <Card className="p-5">
+        <div className="mb-5">
+          <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200">Jam Kerja Staff</h2>
+          <p className="mt-0.5 text-xs text-slate-400">Durasi jam kerja per sesi absensi</p>
+        </div>
+        {attendanceChart.length === 0 ? (
+          <div className="flex h-48 items-center justify-center text-sm text-slate-400">
+            Belum ada data jam kerja tercatat
+          </div>
+        ) : (
+          <div className="h-56 sm:h-64 lg:h-72 w-full min-w-0 min-h-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={attendanceChart} margin={{ top: 5, right: 10, left: -15, bottom: 5 }}>
+                <CartesianGrid {...gridStyle} vertical={false} />
+                <XAxis dataKey="staff" tick={{ ...axisTick, angle: -45, textAnchor: "end", height: 40 }} axisLine={false} tickLine={false} />
+                <YAxis tick={axisTick} axisLine={false} tickLine={false} allowDecimals={false} unit=" jam" />
+                <Tooltip {...tooltipStyle} formatter={(v) => [`${v.toFixed(1)} jam`, "Durasi"]} />
+                <Bar dataKey="jam" name="Jam Kerja" radius={[6, 6, 0, 0]} maxBarSize={56} {...animationProps}>
+                  {attendanceChart.map((entry, i) => (
+                    <Cell key={i} fill={STATUS_COLOR[entry.status] ?? PALETTE[0]} fillOpacity={0.85} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+        {/* Legend */}
+        <div className="mt-3 flex flex-wrap gap-3">
+          {Object.entries(STATUS_COLOR).map(([status, color]) => (
+            <span key={status} className="flex items-center gap-1.5 text-xs text-slate-500">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+              {status}
+            </span>
+          ))}
         </div>
       </Card>
-      <Card className="overflow-x-auto">
-        <table className="w-full min-w-[760px] text-left text-xs sm:text-sm">
-          <thead className="bg-slate-100 text-xs uppercase text-slate-500 dark:bg-white/5">
-            <tr>
-              <th className="p-2 sm:p-3 whitespace-nowrap">Staff</th>
-              <th className="p-2 sm:p-3 whitespace-nowrap">Tanggal</th>
-              <th className="p-2 sm:p-3 whitespace-nowrap">Masuk</th>
-              <th className="p-2 sm:p-3 whitespace-nowrap">Pulang</th>
-              <th className="p-2 sm:p-3 whitespace-nowrap">Durasi</th>
-              <th className="p-2 sm:p-3 whitespace-nowrap">Status</th>
-              <th className="p-2 sm:p-3 whitespace-nowrap">Aksi</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-white/10">
-            {attendance.map((row) => (
-              <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-white/5">
-                <td className="p-2 sm:p-3 font-medium sm:font-semibold whitespace-nowrap">{row.staff}</td>
-                <td className="p-2 sm:p-3 whitespace-nowrap">{row.date}</td>
-                <td className="p-2 sm:p-3 whitespace-nowrap">{row.checkIn}</td>
-                <td className="p-2 sm:p-3 whitespace-nowrap">{row.checkOut}</td>
-                <td className="p-2 sm:p-3 whitespace-nowrap">
-                  {calculateWorkHours(row.checkIn, row.checkOut).toFixed(1)} jam
-                </td>
-                <td className="p-2 sm:p-3 whitespace-nowrap">
-                  <Badge
-                    tone={
-                      row.status === "Hadir"
-                        ? "green"
-                        : row.status === "Terlambat"
-                          ? "amber"
-                          : "blue"
-                    }
-                    className="text-xs"
-                  >
-                    {row.status}
-                  </Badge>
-                </td>
-                <td className="p-2 sm:p-3 whitespace-nowrap">
-                  <div className="flex gap-1 sm:gap-2">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => startEdit(row)}
-                      className="text-xs px-2 py-1"
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() =>
-                        void deleteAttendance(row.id).then(() =>
-                          refresh("Absensi dihapus"),
-                        )
-                      }
-                      className="text-xs px-2 py-1"
-                    >
-                      Hapus
-                    </Button>
-                  </div>
-                </td>
+
+      {/* Table */}
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-xs sm:min-w-[640px] sm:text-sm">
+            <thead>
+              <tr className="border-b border-slate-100 dark:border-white/8">
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Staff</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Tanggal</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Masuk</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Pulang</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Durasi</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Aksi</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-white/8">
+              {attendance.length === 0 ? (
+                <tr><td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-400">Belum ada data absensi</td></tr>
+              ) : (
+                attendance.map((row) => (
+                  <tr key={row.id}>
+                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{row.staff}</td>
+                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{row.date}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-400">{row.checkIn || "—"}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-400">{row.checkOut || "—"}</td>
+                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
+                      {calcHours(row.checkIn, row.checkOut).toFixed(1)} jam
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge tone={row.status === "Hadir" ? "green" : row.status === "Terlambat" ? "amber" : "blue"}>
+                        {row.status}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1.5">
+                        <Button size="sm" variant="secondary" onClick={() => startEdit(row)}>Edit</Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10"
+                          onClick={() => void deleteAttendance(row.id).then(() => refresh("Absensi dihapus"))}
+                        >
+                          Hapus
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </Card>
     </div>
   );
 }
 
-function calculateWorkHours(checkIn, checkOut) {
+function calcHours(checkIn, checkOut) {
   if (!checkIn || !checkOut) return 0;
-  const [inHour = 0, inMinute = 0] = checkIn.split(":").map(Number);
-  const [outHour = 0, outMinute = 0] = checkOut.split(":").map(Number);
-  const minutes = outHour * 60 + outMinute - (inHour * 60 + inMinute);
-  return Math.max(minutes / 60, 0);
+  const [ih = 0, im = 0] = checkIn.split(":").map(Number);
+  const [oh = 0, om = 0] = checkOut.split(":").map(Number);
+  return Math.max((oh * 60 + om - (ih * 60 + im)) / 60, 0);
 }

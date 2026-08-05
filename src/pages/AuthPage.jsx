@@ -44,10 +44,10 @@ export function AuthPage({ mode }) {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#1a1a2e] p-4 sm:p-8">
-      <div className="flex w-full max-w-[1100px] overflow-hidden rounded-[2rem] bg-white shadow-2xl sm:rounded-[2.5rem]">
+    <main className="flex min-h-screen items-center justify-center bg-[#1a1a2e] p-3 sm:p-6 lg:p-8">
+      <div className="flex w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl sm:rounded-3xl lg:max-w-5xl xl:max-w-[1100px]">
         {/* ── Left: Image Panel ── */}
-        <section className="relative hidden w-[48%] shrink-0 overflow-hidden rounded-[2rem] bg-slate-50 lg:flex items-center justify-center p-12">
+        <section className="relative hidden w-[48%] shrink-0 items-center justify-center overflow-hidden bg-slate-50 p-8 lg:flex xl:p-12">
           <img
             src="https://umaratax.com/wp-content/uploads/2025/07/image-1.png"
             alt="Umara Tax Logo"
@@ -56,11 +56,11 @@ export function AuthPage({ mode }) {
         </section>
 
         {/* ── Right: Form Panel ── */}
-        <section className="flex w-full flex-col px-8 py-10 sm:px-12 lg:w-[52%] xl:px-16 xl:py-12">
+        <section className="flex w-full flex-col px-5 py-8 sm:px-8 sm:py-10 lg:w-[52%] xl:px-14 xl:py-12">
           {/* Center form */}
-          <div className="my-auto w-full max-w-[340px] self-center">
+          <div className="my-auto w-full max-w-sm self-center">
             <div className="text-center">
-              <h2 className="text-[2.5rem] font-extrabold leading-tight text-slate-900">
+              <h2 className="text-2xl font-bold leading-tight text-slate-900 sm:text-4xl">
                 {mode === "login"
                   ? "Selamat Datang"
                   : mode === "forgot"
@@ -72,7 +72,7 @@ export function AuthPage({ mode }) {
               </p>
             </div>
 
-            <form className="mt-9" onSubmit={handleSubmit(onSubmit)}>
+            <form className="mt-7 sm:mt-9" onSubmit={handleSubmit(onSubmit)}>
               <div className="space-y-3.5">
                 <div>
                   <input
