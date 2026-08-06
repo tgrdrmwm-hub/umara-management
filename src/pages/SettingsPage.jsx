@@ -12,7 +12,7 @@ export function SettingsPage() {
   const [settings, setSettings] = useState(() => ({
     company: localStorage.getItem("umara_company") ?? "UMARA TAX",
     smtp: localStorage.getItem("umara_smtp") ?? "smtp.umara.tax",
-    email: localStorage.getItem("umara_email") ?? "finance@umara.tax",
+    email: localStorage.getItem("umara_email") ?? "admin@example.com",
   }));
   const [activities, setActivities] = useState(() =>
     JSON.parse(localStorage.getItem("umara_activity_log") ?? "[]"),
@@ -99,7 +99,7 @@ export function SettingsPage() {
               <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Email Pengirim</label>
               <Input
                 type="email"
-                placeholder="finance@umara.tax"
+                placeholder="admin@example.com"
                 value={settings.email}
                 onChange={(e) => setSettings({ ...settings, email: e.target.value })}
               />

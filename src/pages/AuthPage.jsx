@@ -107,16 +107,7 @@ export function AuthPage({ mode }) {
                 )}
               </div>
 
-              {mode === "login" && (
-                <div className="mt-3 text-right">
-                  <Link
-                    to="/forgot-password"
-                    className="text-xs font-semibold text-[#e53e3e] transition hover:text-[#c53030]"
-                  >
-                    Lupa password ?
-                  </Link>
-                </div>
-              )}
+
 
               {/* Login button */}
               <button

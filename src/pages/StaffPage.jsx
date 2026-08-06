@@ -1,4 +1,3 @@
-import { Award, Mail, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   Bar,
@@ -16,13 +15,12 @@ import { PALETTE, tooltipStyle, axisTick, gridStyle, animationProps } from "../c
 import { useAppData } from "../hooks/useAppData";
 
 export function StaffPage() {
-  const { data, isLoading, error } = useAppData();
+  const { data } = useAppData();
 
   const staffUsers =
     data?.users?.filter(
       (u) =>
-        ["staff", "manager", "staff_magang", "magang", "owner", "developer"].includes(u.role) ||
-        u.email === "tegar@umaratax.com",
+        ["staff", "manager", "staff_magang", "magang", "owner", "developer"].includes(u.role),
     ) || [];
 
   return (
@@ -66,7 +64,7 @@ export function StaffPage() {
               <tbody className="divide-y divide-slate-100 dark:divide-white/8">
                 {staffUsers.map((user, index) => {
                   const roleLabel =
-                    user.email === "tegar@umaratax.com" && user.role === "developer"
+                    user.role === "developer"
                       ? "Developer & Staff"
                       : user.role.replace("_", " ");
                   return (

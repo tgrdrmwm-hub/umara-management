@@ -53,7 +53,7 @@ const statConfig = [
 ];
 
 export function DashboardPage() {
-  const { data, isLoading, error } = useAppData();
+  const { data } = useAppData();
   if (!data) return null;
 
   const activeTaxWorks = data.taxWorks.filter((w) => w.status !== "Selesai");

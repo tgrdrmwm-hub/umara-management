@@ -17,14 +17,13 @@ import { SuratLuarPage } from "./pages/SuratLuarPage";
 import { TasksPage } from "./pages/TasksPage";
 import { TaxPage } from "./pages/TaxPage";
 import { InternTasksPage } from "./pages/InternTasksPage";
+import { UsersManagementPage } from "./pages/UsersManagementPage";
 
 export default function App() {
   return (
     <>
       <Routes>
         <Route path="/login" element={<AuthPage mode="login" />} />
-        <Route path="/forgot-password" element={<AuthPage mode="forgot" />} />
-        <Route path="/reset-password" element={<AuthPage mode="reset" />} />
         <Route
           path="/change-password"
           element={
@@ -56,6 +55,7 @@ export default function App() {
           <Route path="/surat-keluar" element={<SuratLuarPage />} />
           <Route path="/media" element={<MediaPage />} />
           <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/users-management" element={<UsersManagementPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Routes>

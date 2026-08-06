@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Users,
   FileText,
+  UserCog,
 } from "lucide-react";
 
 export const navigation = [
@@ -22,6 +23,7 @@ export const navigation = [
   { label: "Task", href: "/tasks", icon: ClipboardList },
   { label: "Tugas Magang", href: "/intern-tasks", icon: FileText },
   { label: "Report", href: "/reports", icon: FileSpreadsheet },
+  { label: "Users", href: "/users-management", icon: UserCog },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 

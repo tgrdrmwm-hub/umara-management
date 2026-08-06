@@ -23,7 +23,7 @@ const selectClass =
   "h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-900/8 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-white/20";
 
 export function ClientsPage() {
-  const { data, isLoading, error } = useAppData();
+  const { data } = useAppData();
   const { user } = useAuth();
   const isAdmin = ["owner", "developer", "manager", "admin"].includes(user?.role);
   const queryClient = useQueryClient();

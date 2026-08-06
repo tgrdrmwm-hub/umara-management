@@ -28,10 +28,21 @@ export function AuthProvider({ children }) {
     void loadSession();
 
     const subscription = supabase?.auth.onAuthStateChange(
-      async (_, session) => {
+      async (event, session) => {
+        // Abaikan event USER_UPDATED karena bisa menyebabkan race condition saat ganti password
+        if (event === 'USER_UPDATED') return;
+        
         const email = session?.user.email;
         const profile = email ? await fetchUserProfile(email) : null;
-        if (mounted) setUser(profile);
+        if (mounted) {
+          setUser(prev => {
+            // Mencegah race condition dimana profile lama (is_first_login: true) menimpa state lokal (false)
+            if (prev && prev.is_first_login === false && profile && profile.is_first_login === true) {
+              return { ...profile, is_first_login: false };
+            }
+            return profile;
+          });
+        }
       },
     );
 
@@ -98,12 +109,16 @@ export function AuthProvider({ children }) {
 
            // Fetch the newly created profile
            profile = await fetchUserProfile(data.user.email ?? email);
-           if (!profile) {
-             throw new Error(
-               "Profil user belum ada di tabel users. " +
-               "Silakan hubungi administrator untuk menyinkronkan akun Anda."
-             );
-           }
+         }
+
+         if (profile?.status === 'inactive') {
+           await supabase.auth.signOut();
+           throw new Error("Akun Anda telah dinonaktifkan. Silakan hubungi administrator.");
+         } else if (!profile) {
+           throw new Error(
+             "Profil user belum ada di tabel users. " +
+             "Silakan hubungi administrator untuk menyinkronkan akun Anda."
+           );
          }
         setUser(profile);
         const storage = remember ? localStorage : sessionStorage;

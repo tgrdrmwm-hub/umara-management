@@ -22,6 +22,13 @@ export function AppLayout() {
   const filteredNav = navigation.filter((item) => {
     const isAdmin = ["owner", "developer", "manager", "admin"].includes(user?.role);
     
+    const isDeveloper = user?.role === "developer";
+    
+    // Khusus menu Users, hanya developer yang boleh melihat
+    if (item.label === "Users" && !isDeveloper) {
+      return false;
+    }
+    
     // Khusus menu Report, hanya admin/owner yang boleh melihat
     if (item.label === "Report" && !isAdmin) {
       return false;

@@ -13,7 +13,7 @@ const reportMeta = {
 };
 
 export function ReportsPage() {
-  const { data, isLoading, error } = useAppData();
+  const { data } = useAppData();
   if (!data) return null;
 
   function getRowsByType(type) {

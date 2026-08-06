@@ -40,7 +40,7 @@ const STATUS_COLOR = {
 };
 
 export function AttendancePage() {
-  const { data, isLoading, error } = useAppData();
+  const { data } = useAppData();
   const { user } = useAuth();
   const isAdmin = ["owner", "developer", "manager", "admin"].includes(user?.role);
   const isMagangRole = user?.role === "magang" || user?.role === "staff_magang";
@@ -82,7 +82,7 @@ export function AttendancePage() {
       if (!form.date) return toast.error("Tanggal wajib diisi");
       if (!form.checkIn) return toast.error("Jam masuk wajib diisi");
       
-      const isSharedMagang = user?.role === "magang" || user?.role === "staff_magang" || user?.email === "magang@umaratax.com";
+      const isSharedMagang = user?.role === "magang" || user?.role === "staff_magang";
       let finalStaff = form.staff.trim();
       if (isSharedMagang && !finalStaff.toLowerCase().includes("(magang)")) {
         finalStaff = `${finalStaff} (Magang)`;
@@ -123,7 +123,7 @@ export function AttendancePage() {
     let staff = user?.name || user?.email || "";
     const today = getToday();
     
-    const isSharedMagang = user?.role === "magang" || user?.role === "staff_magang" || user?.email === "magang@umaratax.com";
+    const isSharedMagang = user?.role === "magang" || user?.role === "staff_magang";
     
     if (isSharedMagang) {
       const inputName = window.prompt("Karena akun magang dipakai bersama, masukkan Nama Lengkap/Panggilan Anda:");
