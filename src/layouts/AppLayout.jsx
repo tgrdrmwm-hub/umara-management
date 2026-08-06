@@ -20,6 +20,13 @@ export function AppLayout() {
   }, [dark]);
 
   const filteredNav = navigation.filter((item) => {
+    const isAdmin = ["owner", "developer", "manager", "admin"].includes(user?.role);
+    
+    // Khusus menu Report, hanya admin/owner yang boleh melihat
+    if (item.label === "Report" && !isAdmin) {
+      return false;
+    }
+    
     if (user?.role === "magang" || user?.role === "staff_magang") {
       return ["Dashboard", "UMARA TAX", "Task", "Tugas Magang", "Client", "Absensi", "Point"].includes(item.label);
     }
@@ -27,7 +34,7 @@ export function AppLayout() {
       return ["Dashboard", "UMARA TAX", "Client", "Staff", "Task", "Tugas Magang", "Absensi", "Point"].includes(item.label);
     }
     if (user?.role === "owner") {
-      return ["Dashboard", "UMARA TAX", "Client", "Staff", "Task", "Tugas Magang", "Absensi", "Point", "Report"].includes(item.label);
+      return ["Dashboard", "UMARA TAX", "Client", "Staff", "Task", "Tugas Magang", "Absensi", "Point", "Report", "Settings"].includes(item.label);
     }
     return true;
   });

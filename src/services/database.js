@@ -244,9 +244,13 @@ export async function createAttendance(values) {
     .from("attendance")
     .insert(toAttendanceRow(values));
   if (error) throw error;
+  
+  if (values.status === "Hadir" || values.status === "Terlambat") {
+    await awardPointsToPic(values.staff, 1);
+  }
 }
 
-export async function updateAttendance(id, values) {
+export async function updateAttendance(id, values, previousStatus) {
   if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
   const { error } = await supabase
     .from("attendance")
@@ -256,6 +260,13 @@ export async function updateAttendance(id, values) {
     })
     .eq("id", id);
   if (error) throw error;
+  
+  const wasPresent = previousStatus === "Hadir" || previousStatus === "Terlambat";
+  const isPresent = values.status === "Hadir" || values.status === "Terlambat";
+  
+  if (!wasPresent && isPresent) {
+    await awardPointsToPic(values.staff, 1);
+  }
 }
 
 export async function deleteAttendance(id) {

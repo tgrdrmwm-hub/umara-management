@@ -91,7 +91,7 @@ export function AttendancePage() {
       const payload = { ...form, staff: finalStaff };
 
       if (editing) {
-        await updateAttendance(editing.id, payload);
+        await updateAttendance(editing.id, payload, editing.status);
         setEditing(null);
         await refresh("Absensi diperbarui");
       } else {
@@ -136,17 +136,18 @@ export function AttendancePage() {
       const existing = allAttendance.find((r) => r.staff === staff && r.date === today);
       if (type === "in") {
         if (existing) {
-          await updateAttendance(existing.id, { ...existing, checkIn: existing.checkIn || time, status: (existing.checkIn || time) > "08:00" ? "Terlambat" : "Hadir" });
+          const newStatus = (existing.checkIn || time) > "08:00" ? "Terlambat" : "Hadir";
+          await updateAttendance(existing.id, { ...existing, checkIn: existing.checkIn || time, status: newStatus }, existing.status);
           await refresh("Check in tercatat");
           return;
         }
         await createAttendance({ staff, date: today, checkIn: time, checkOut: "", status: time > "08:00" ? "Terlambat" : "Hadir" });
-        await refresh("Check in tersimpan");
+        await refresh("Check in berhasil");
         return;
       }
       if (!existing) { toast.error("Belum ada check in hari ini"); return; }
-      await updateAttendance(existing.id, { ...existing, checkOut: time });
-      await refresh("Check out tersimpan");
+      await updateAttendance(existing.id, { ...existing, checkOut: time }, existing.status);
+      await refresh("Check out tercatat");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Gagal memproses");
     }

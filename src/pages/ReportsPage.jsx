@@ -16,7 +16,7 @@ export function ReportsPage() {
   const { data, isLoading, error } = useAppData();
   if (!data) return null;
 
-  function exportCsv(type) {
+  function getRowsByType(type) {
     const rowsByType = {
       Pajak: [
         ["Kategori", "Layanan", "Client", "PIC", "Deadline", "Status"],
@@ -43,7 +43,58 @@ export function ReportsPage() {
         ...data.tasks.map((t) => [t.title, t.client, t.pic, t.deadline, t.status, String(t.points)]),
       ],
     };
-    downloadCsv(`report-${type.toLowerCase()}-umara.csv`, rowsByType[type] ?? [["Data"], ["Belum ada data"]]);
+    return rowsByType[type] ?? [["Data"], ["Belum ada data"]];
+  }
+
+  function exportCsv(type) {
+    downloadCsv(`report-${type.toLowerCase()}-umara.csv`, getRowsByType(type));
+  }
+
+  function exportPdf(type) {
+    const rows = getRowsByType(type);
+    const html = `
+      <html>
+        <head>
+          <title>Laporan ${type} - UMARA TAX</title>
+          <style>
+            body { font-family: sans-serif; padding: 20px; color: #111; }
+            h1 { text-align: center; margin-bottom: 20px; font-size: 24px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+            th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; }
+            th { background-color: #f8fafc; font-weight: 600; }
+            tr:nth-child(even) { background-color: #f8fafc; }
+            @media print {
+              @page { size: landscape; margin: 1cm; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Laporan ${type} - UMARA TAX</h1>
+          <table>
+            <thead>
+              <tr>${rows[0].map(h => "<th>" + h + "</th>").join('')}</tr>
+            </thead>
+            <tbody>
+              ${rows.slice(1).map(row => "<tr>" + row.map(cell => "<td>" + (cell || '-') + "</td>").join('') + "</tr>").join('')}
+            </tbody>
+          </table>
+          <script>
+            window.onload = () => { 
+              setTimeout(() => { window.print(); window.close(); }, 250);
+            }
+          </script>
+        </body>
+      </html>
+    `;
+    
+    const printWindow = window.open('', '', 'width=1000,height=800');
+    if (printWindow) {
+      printWindow.document.open();
+      printWindow.document.write(html);
+      printWindow.document.close();
+    } else {
+      alert("Gagal membuka jendela print. Mohon izinkan popup di browser Anda.");
+    }
   }
 
   return (
@@ -72,7 +123,7 @@ export function ReportsPage() {
                 </div>
               </div>
               <div className="mt-4 flex gap-2">
-                <Button size="sm" variant="secondary" onClick={() => window.print()}>
+                <Button size="sm" variant="secondary" onClick={() => exportPdf(type)}>
                   <Printer className="h-3.5 w-3.5" />
                   PDF
                 </Button>
