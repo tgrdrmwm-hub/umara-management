@@ -8,6 +8,7 @@ import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { useAppData } from "../hooks/useAppData";
 import { createClient, deleteClient, updateClient } from "../services/database";
+import { useAuth } from "../hooks/useAuth";
 
 const emptyClient = {
   name: "",
@@ -23,6 +24,8 @@ const selectClass =
 
 export function ClientsPage() {
   const { data, isLoading, error } = useAppData();
+  const { user } = useAuth();
+  const isAdmin = ["owner", "developer", "manager", "admin"].includes(user?.role);
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState(null);
@@ -216,14 +219,16 @@ export function ClientsPage() {
                     <td className="px-4 py-3">
                       <div className="flex gap-1.5">
                         <Button size="sm" variant="secondary" onClick={() => startEdit(client)}>Edit</Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10"
-                          onClick={() => void deleteClient(client.id).then(() => refresh("Client dihapus"))}
-                        >
-                          Hapus
-                        </Button>
+                        {isAdmin && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10"
+                            onClick={() => void deleteClient(client.id).then(() => refresh("Client dihapus"))}
+                          >
+                            Hapus
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>

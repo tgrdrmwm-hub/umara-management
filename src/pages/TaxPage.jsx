@@ -10,6 +10,7 @@ import { PALETTE } from "../components/ui/ChartWrapper";
 import { taxServiceDefinitions, getTaxServicePoint } from "../constants/taxServices";
 import { useAppData } from "../hooks/useAppData";
 import { createTaxWork, deleteTaxWork, updateTaxWork } from "../services/database";
+import { useAuth } from "../hooks/useAuth";
 
 const emptyTaxWork = {
   category: "Aktivasi Coretax",
@@ -34,6 +35,8 @@ const statusTone = {
 
 export function TaxPage() {
   const { data, isLoading, error } = useAppData();
+  const { user } = useAuth();
+  const isAdmin = ["owner", "developer", "manager", "admin"].includes(user?.role);
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -43,12 +46,18 @@ export function TaxPage() {
   const selectedServices =
     taxServiceDefinitions.find((g) => g.category === form.category)?.services ?? [];
 
-  const categoryChart = taxServiceDefinitions.map((g, i) => ({
-    category: g.category.replace("Aktivasi ", ""),
-    point: g.services.reduce((t, s) => t + s.basePoints, 0),
-    layanan: g.services.length,
-    colorIndex: i,
-  }));
+  const categoryChart = taxServiceDefinitions.map((g, i) => {
+    const totalPoints = g.services.reduce((total, service) => {
+      return total + service.basePoints;
+    }, 0);
+    
+    return {
+      category: g.category.replace("Aktivasi ", ""),
+      point: totalPoints,
+      layanan: g.services.length,
+      colorIndex: i,
+    };
+  });
   const maxCategoryPoint = Math.max(...categoryChart.map((item) => item.point), 1);
   const chartMaxPoint = Math.max(Math.ceil(maxCategoryPoint / 150) * 150, 600);
   const chartTicks = Array.from(
@@ -346,14 +355,16 @@ export function TaxPage() {
                       Tandai Selesai
                     </Button>
                   )}
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10"
-                    onClick={() => void deleteTaxWork(item.id).then(() => refresh("Pekerjaan dihapus"))}
-                  >
-                    Hapus
-                  </Button>
+                  {isAdmin && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10"
+                      onClick={() => void deleteTaxWork(item.id).then(() => refresh("Pekerjaan dihapus"))}
+                    >
+                      Hapus
+                    </Button>
+                  )}
                 </div>
               </Card>
             ))}

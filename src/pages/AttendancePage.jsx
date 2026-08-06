@@ -42,12 +42,24 @@ const STATUS_COLOR = {
 export function AttendancePage() {
   const { data, isLoading, error } = useAppData();
   const { user } = useAuth();
+  const isAdmin = ["owner", "developer", "manager", "admin"].includes(user?.role);
+  const isMagangRole = user?.role === "magang" || user?.role === "staff_magang";
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(getEmptyAttendance());
+  const [activeTab, setActiveTab] = useState(isMagangRole ? "magang" : "staff");
 
-  const attendance = data?.attendance ?? [];
+  const allAttendance = data?.attendance ?? [];
+  const users = data?.users ?? [];
+
+  const isMagang = (staffName) => {
+    if (staffName.toLowerCase().includes("(magang)")) return true;
+    const foundUser = users.find(u => u.name === staffName || u.email === staffName);
+    return foundUser && (foundUser.role === "magang" || foundUser.role === "staff_magang");
+  };
+
+  const attendance = allAttendance.filter(r => activeTab === "magang" ? isMagang(r.staff) : !isMagang(r.staff));
   const completeAttendance = attendance.filter((r) => r.checkIn && r.checkOut);
   const attendanceChart = completeAttendance.map((r) => ({
     staff: r.staff,
@@ -69,12 +81,21 @@ export function AttendancePage() {
       if (!form.staff.trim()) return toast.error("Nama staff wajib diisi");
       if (!form.date) return toast.error("Tanggal wajib diisi");
       if (!form.checkIn) return toast.error("Jam masuk wajib diisi");
+      
+      const isSharedMagang = user?.role === "magang" || user?.role === "staff_magang" || user?.email === "magang@umaratax.com";
+      let finalStaff = form.staff.trim();
+      if (isSharedMagang && !finalStaff.toLowerCase().includes("(magang)")) {
+        finalStaff = `${finalStaff} (Magang)`;
+      }
+      
+      const payload = { ...form, staff: finalStaff };
+
       if (editing) {
-        await updateAttendance(editing.id, form);
+        await updateAttendance(editing.id, payload);
         setEditing(null);
         await refresh("Absensi diperbarui");
       } else {
-        await createAttendance(form);
+        await createAttendance(payload);
         await refresh("Absensi ditambahkan");
       }
       setForm(getEmptyAttendance());
@@ -99,11 +120,20 @@ export function AttendancePage() {
   async function quickAttendance(type) {
     const now = new Date();
     const time = now.toTimeString().slice(0, 5);
-    const staff = user?.name || user?.email || "";
+    let staff = user?.name || user?.email || "";
     const today = getToday();
+    
+    const isSharedMagang = user?.role === "magang" || user?.role === "staff_magang" || user?.email === "magang@umaratax.com";
+    
+    if (isSharedMagang) {
+      const inputName = window.prompt("Karena akun magang dipakai bersama, masukkan Nama Lengkap/Panggilan Anda:");
+      if (!inputName || !inputName.trim()) return;
+      staff = `${inputName.trim()} (Magang)`;
+    }
+    
     try {
       if (!staff) { toast.error("Profil staff belum terbaca."); return; }
-      const existing = attendance.find((r) => r.staff === staff && r.date === today);
+      const existing = allAttendance.find((r) => r.staff === staff && r.date === today);
       if (type === "in") {
         if (existing) {
           await updateAttendance(existing.id, { ...existing, checkIn: existing.checkIn || time, status: (existing.checkIn || time) > "08:00" ? "Terlambat" : "Hadir" });
@@ -147,16 +177,44 @@ export function AttendancePage() {
           <Button variant="secondary" onClick={() => void quickAttendance("out")}>
             Check Out
           </Button>
-          <Button
-            variant="secondary"
-            onClick={() => {
-              if (showForm && !editing) { closeForm(); } else { setEditing(null); setForm(getEmptyAttendance(user?.name || "")); setShowForm(true); }
-            }}
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Manual
-          </Button>
+          {isAdmin && (
+            <Button
+              variant="secondary"
+              onClick={() => {
+                if (showForm && !editing) { closeForm(); } else { setEditing(null); setForm(getEmptyAttendance(user?.name || "")); setShowForm(true); }
+              }}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Manual
+            </Button>
+          )}
         </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-4 border-b border-slate-200 dark:border-white/10">
+        {!isMagangRole && (
+          <button
+            onClick={() => setActiveTab("staff")}
+            className={`px-1 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "staff"
+                ? "border-slate-900 text-slate-900 dark:border-white dark:text-white"
+                : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+            }`}
+          >
+            Staff & Karyawan
+          </button>
+        )}
+        <button
+          onClick={() => setActiveTab("magang")}
+          className={`px-1 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === "magang"
+              ? "border-slate-900 text-slate-900 dark:border-white dark:text-white"
+              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+          }`}
+        >
+          Anak Magang
+        </button>
       </div>
 
       {/* Form */}
@@ -307,12 +365,12 @@ export function AttendancePage() {
                 <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Pulang</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Durasi</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Aksi</th>
+                {isAdmin && <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Aksi</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-white/8">
               {attendance.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-400">Belum ada data absensi</td></tr>
+                <tr><td colSpan={isAdmin ? 7 : 6} className="px-4 py-10 text-center text-sm text-slate-400">Belum ada data absensi</td></tr>
               ) : (
                 attendance.map((row) => (
                   <tr key={row.id}>
@@ -328,19 +386,21 @@ export function AttendancePage() {
                         {row.status}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-1.5">
-                        <Button size="sm" variant="secondary" onClick={() => startEdit(row)}>Edit</Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10"
-                          onClick={() => void deleteAttendance(row.id).then(() => refresh("Absensi dihapus"))}
-                        >
-                          Hapus
-                        </Button>
-                      </div>
-                    </td>
+                    {isAdmin && (
+                      <td className="px-4 py-3">
+                        <div className="flex gap-1.5">
+                          <Button size="sm" variant="secondary" onClick={() => startEdit(row)}>Edit</Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10"
+                            onClick={() => void deleteAttendance(row.id).then(() => refresh("Absensi dihapus"))}
+                          >
+                            Hapus
+                          </Button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}

@@ -19,6 +19,7 @@ import { Input } from "../components/ui/Input";
 import { PALETTE, tooltipStyle, axisTick, gridStyle, animationProps } from "../components/ui/ChartWrapper";
 import { useAppData } from "../hooks/useAppData";
 import { updateUserPoints } from "../services/database";
+import { useAuth } from "../hooks/useAuth";
 
 const badgeConfig = {
   Elite: { tone: "indigo" },
@@ -37,6 +38,8 @@ const podiumColors = ["#d97706", "#64748b", "#9a3412"];
 
 export function PointsPage() {
   const { data, isLoading, error } = useAppData();
+  const { user: currentUser } = useAuth();
+  const isAdmin = ["owner", "developer", "manager", "admin"].includes(currentUser?.role);
   const queryClient = useQueryClient();
   const [draftPoints, setDraftPoints] = useState({});
 
@@ -143,8 +146,8 @@ export function PointsPage() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Role</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Badge</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Point</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Edit</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Aksi</th>
+                  {isAdmin && <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Edit</th>}
+                  {isAdmin && <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">Aksi</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-white/8">
@@ -166,17 +169,21 @@ export function PointsPage() {
                           {user.points.toLocaleString()}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
-                        <Input
-                          type="number"
-                          className="w-24 h-8 text-xs"
-                          value={draftPoints[user.id] ?? user.points}
-                          onChange={(e) => setDraftPoints({ ...draftPoints, [user.id]: Number(e.target.value) })}
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <Button size="sm" variant="secondary" onClick={() => void savePoints(user)}>Simpan</Button>
-                      </td>
+                      {isAdmin && (
+                        <td className="px-4 py-3">
+                          <Input
+                            type="number"
+                            className="w-24 h-8 text-xs"
+                            value={draftPoints[user.id] ?? user.points}
+                            onChange={(e) => setDraftPoints({ ...draftPoints, [user.id]: Number(e.target.value) })}
+                          />
+                        </td>
+                      )}
+                      {isAdmin && (
+                        <td className="px-4 py-3">
+                          <Button size="sm" variant="secondary" onClick={() => void savePoints(user)}>Simpan</Button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}

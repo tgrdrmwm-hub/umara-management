@@ -21,10 +21,13 @@ export function AppLayout() {
 
   const filteredNav = navigation.filter((item) => {
     if (user?.role === "magang" || user?.role === "staff_magang") {
-      return ["Dashboard", "UMARA TAX", "Task", "Client", "Absensi", "Point"].includes(item.label);
+      return ["Dashboard", "UMARA TAX", "Task", "Tugas Magang", "Client", "Absensi", "Point"].includes(item.label);
+    }
+    if (user?.role === "staff") {
+      return ["Dashboard", "UMARA TAX", "Client", "Staff", "Task", "Tugas Magang", "Absensi", "Point"].includes(item.label);
     }
     if (user?.role === "owner") {
-      return ["Dashboard", "UMARA TAX", "Client", "Staff", "Task", "Absensi", "Point", "Report"].includes(item.label);
+      return ["Dashboard", "UMARA TAX", "Client", "Staff", "Task", "Tugas Magang", "Absensi", "Point", "Report"].includes(item.label);
     }
     return true;
   });

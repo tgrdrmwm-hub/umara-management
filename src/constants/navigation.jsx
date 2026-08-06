@@ -9,6 +9,7 @@ import {
   Settings,
   ShieldCheck,
   Users,
+  FileText,
 } from "lucide-react";
 
 export const navigation = [
@@ -19,6 +20,7 @@ export const navigation = [
   { label: "Absensi", href: "/attendance", icon: CalendarCheck },
   { label: "Point", href: "/points", icon: Medal },
   { label: "Task", href: "/tasks", icon: ClipboardList },
+  { label: "Tugas Magang", href: "/intern-tasks", icon: FileText },
   { label: "Report", href: "/reports", icon: FileSpreadsheet },
   { label: "Settings", href: "/settings", icon: Settings },
 ];

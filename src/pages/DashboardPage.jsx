@@ -66,7 +66,6 @@ export function DashboardPage() {
   const taxCategoryChart = taxServiceDefinitions.map((g) => ({
     category: g.category.replace("Aktivasi ", ""),
     layanan: g.services.length,
-    point: g.services.reduce((s, sv) => s + sv.basePoints, 0),
   }));
 
   const stats = [
@@ -81,10 +80,10 @@ export function DashboardPage() {
   ];
 
   const pieData = [
-    { name: "Selesai", value: completedTaxWorks.length || 1 },
-    { name: "Berjalan", value: data.taxWorks.filter((w) => w.status === "Berjalan").length || 0 },
-    { name: "Review", value: data.taxWorks.filter((w) => w.status === "Review").length || 0 },
-    { name: "Draft", value: data.taxWorks.filter((w) => w.status === "Draft").length || 0 },
+    { name: "Selesai", value: completedTaxWorks.length },
+    { name: "Berjalan", value: data.taxWorks.filter((w) => w.status === "Berjalan").length },
+    { name: "Review", value: data.taxWorks.filter((w) => w.status === "Review").length },
+    { name: "Draft", value: data.taxWorks.filter((w) => w.status === "Draft").length },
   ].filter((d) => d.value > 0);
 
   return (

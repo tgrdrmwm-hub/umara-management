@@ -7,6 +7,7 @@ export const emptyAppData = {
   clients: [],
   reportTypes: ["Pajak", "Staff", "Absensi", "Client", "Point", "Task"],
   tasks: [],
+  internTasks: [],
   taxWorks: [],
   users: [],
 };
@@ -19,13 +20,14 @@ export async function fetchAppData() {
       users: [],
       clients: [],
       tasks: [],
+      internTasks: [],
       taxWorks: [],
       attendance: [],
       analytics: [],
     };
   }
 
-  const [usersResult, clientsResult, tasksResult, attendanceResult, taxResult] =
+  const [usersResult, clientsResult, tasksResult, attendanceResult, taxResult, internTasksResult] =
     await Promise.all([
       supabase
         .from("users")
@@ -41,6 +43,7 @@ export async function fetchAppData() {
         .select("*")
         .order("date", { ascending: false }),
       supabase.from("tax").select("*").order("deadline", { ascending: true }),
+      supabase.from("intern_tasks").select("*").order("date", { ascending: false }),
     ]);
 
   const firstError = [
@@ -49,6 +52,7 @@ export async function fetchAppData() {
     tasksResult,
     attendanceResult,
     taxResult,
+    internTasksResult,
   ].find((result) => result.error)?.error;
 
   // If error or all data is empty, return empty arrays (fallback to dummy in useAppData)
@@ -59,6 +63,7 @@ export async function fetchAppData() {
       users: [],
       clients: [],
       tasks: [],
+      internTasks: [],
       taxWorks: [],
       attendance: [],
       analytics: [],
@@ -67,14 +72,19 @@ export async function fetchAppData() {
 
   const users = (usersResult.data ?? []).map(toUser);
   const tasks = (tasksResult.data ?? []).map(toTask);
+  const internTasks = (internTasksResult.data ?? []).map(toInternTask);
+
+  const taxWorks = (taxResult.data ?? []).map(toTaxWork);
+  const attendance = (attendanceResult.data ?? []).map(toAttendance);
 
   return {
-    analytics: buildAnalytics(clientsResult.data ?? [], tasks, users),
-    attendance: (attendanceResult.data ?? []).map(toAttendance),
+    analytics: buildAnalytics(clientsResult.data ?? [], tasks, users, taxWorks, attendance),
+    attendance,
     clients: (clientsResult.data ?? []).map(toClient),
     reportTypes: emptyAppData.reportTypes,
     tasks,
-    taxWorks: (taxResult.data ?? []).map(toTaxWork),
+    internTasks,
+    taxWorks,
     users,
   };
 }
@@ -172,6 +182,27 @@ export async function updateTask(id, values, previousStatus) {
 export async function deleteTask(id) {
   if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
   const { error } = await supabase.from("tasks").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function createInternTask(values) {
+  if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
+  const { error } = await supabase.from("intern_tasks").insert(toInternTaskRow(values));
+  if (error) throw error;
+}
+
+export async function updateInternTask(id, values) {
+  if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
+  const { error } = await supabase
+    .from("intern_tasks")
+    .update({ ...toInternTaskRow(values), updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteInternTask(id) {
+  if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
+  const { error } = await supabase.from("intern_tasks").delete().eq("id", id);
   if (error) throw error;
 }
 
@@ -287,6 +318,17 @@ function toTaskRow(values) {
   };
 }
 
+function toInternTaskRow(values) {
+  return {
+    assigner: values.assigner,
+    intern: values.intern,
+    date: values.date,
+    title: values.title,
+    attachment: values.attachment,
+    status: values.status,
+  };
+}
+
 function toTaxRow(values) {
   return {
     category: values.category,
@@ -357,6 +399,18 @@ function toTask(row) {
   };
 }
 
+function toInternTask(row) {
+  return {
+    id: String(row.id),
+    assigner: String(row.assigner ?? ""),
+    intern: String(row.intern ?? ""),
+    date: String(row.date ?? ""),
+    title: String(row.title ?? ""),
+    attachment: String(row.attachment ?? ""),
+    status: String(row.status ?? "todo"),
+  };
+}
+
 function toAttendance(row) {
   return {
     id: String(row.id),
@@ -382,34 +436,35 @@ function toTaxWork(row) {
   };
 }
 
-function buildAnalytics(clients, tasks, users) {
-  const done = tasks.filter((task) => task.status === "done").length;
-  const running = tasks.filter((task) => task.status !== "done").length;
-  const points = users.reduce((total, user) => total + user.points, 0);
-
-  // If no data (empty clients, tasks, or users), generate fake data
-  if (clients.length === 0 || tasks.length === 0 || users.length === 0) {
-    return [
-      { month: "Jan", clients: 5, done: 5, running: 3, points: 1000 },
-      { month: "Feb", clients: 8, done: 8, running: 2, points: 1500 },
-      { month: "Mar", clients: 10, done: 6, running: 4, points: 1200 },
-      { month: "Apr", clients: 12, done: 10, running: 1, points: 1800 },
-      { month: "Mei", clients: 15, done: 7, running: 5, points: 1400 },
-      { month: "Jun", clients: 18, done: 9, running: 2, points: 1600 },
-    ];
-  }
-
-  // Generate data for last 6 months
+function buildAnalytics(clients, tasks, users, taxWorks, attendance) {
+  // Generate data for last 6 months using actual creation dates if available, or just empty arrays mapped.
+  // We don't have created_at on tasks/taxWorks objects after map (toTask, toTaxWork). 
+  // Let's use `deadline` for grouping since it exists. 
+  // If no deadline, fallback to current month.
+  
   const months = [];
   const now = new Date();
+  
   for (let i = 5; i >= 0; i--) {
-    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const targetMonth = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthStr = targetMonth.toLocaleString("id-ID", { month: "short" });
+    const yearMonthStr = `${targetMonth.getFullYear()}-${String(targetMonth.getMonth() + 1).padStart(2, '0')}`;
+    
+    // Hitung pekerjaan yang memiliki deadline di bulan ini (atau selesai di bulan ini)
+    const monthlyTasks = tasks.filter(t => t.deadline && t.deadline.startsWith(yearMonthStr));
+    const monthlyTaxWorks = taxWorks.filter(t => t.deadline && t.deadline.startsWith(yearMonthStr));
+    
+    // We will aggregate done tasks and running tasks for that month
+    const doneTasks = monthlyTasks.filter(t => t.status === "done").length;
+    const runningTasks = monthlyTasks.filter(t => t.status !== "done").length;
+    
+    // Untuk klien dan points, kita ambil nilai akumulatif/global, karena kita belum menyimpan riwayat per bulan.
     months.push({
-      month: date.toLocaleString("id-ID", { month: "short" }),
-      clients: clients.length,
-      done: Math.max(0, Math.floor(done * (i / 5))),
-      running: Math.max(0, Math.floor(running * (i / 5))),
-      points: Math.max(0, Math.floor(points * (i / 5))),
+      month: monthStr,
+      clients: clients.length, // kumulatif
+      done: doneTasks + monthlyTaxWorks.filter(w => w.status === "Selesai").length, // total task + tax selesai
+      running: runningTasks + monthlyTaxWorks.filter(w => w.status !== "Selesai").length,
+      points: users.reduce((sum, u) => sum + (u.points || 0), 0), // kumulatif saat ini
     });
   }
 

@@ -16,6 +16,7 @@ import { StaffPage } from "./pages/StaffPage";
 import { SuratLuarPage } from "./pages/SuratLuarPage";
 import { TasksPage } from "./pages/TasksPage";
 import { TaxPage } from "./pages/TaxPage";
+import { InternTasksPage } from "./pages/InternTasksPage";
 
 export default function App() {
   return (
@@ -50,6 +51,7 @@ export default function App() {
           <Route path="/attendance" element={<AttendancePage />} />
           <Route path="/points" element={<PointsPage />} />
           <Route path="/tasks" element={<TasksPage />} />
+          <Route path="/intern-tasks" element={<InternTasksPage />} />
           <Route path="/admin-dosen" element={<AdminDosenPage />} />
           <Route path="/surat-keluar" element={<SuratLuarPage />} />
           <Route path="/media" element={<MediaPage />} />
