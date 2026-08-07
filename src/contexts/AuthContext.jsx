@@ -30,14 +30,19 @@ export function AuthProvider({ children }) {
     const subscription = supabase?.auth.onAuthStateChange(
       async (event, session) => {
         // Abaikan event USER_UPDATED karena bisa menyebabkan race condition saat ganti password
-        if (event === 'USER_UPDATED') return;
-        
+        if (event === "USER_UPDATED") return;
+
         const email = session?.user.email;
         const profile = email ? await fetchUserProfile(email) : null;
         if (mounted) {
-          setUser(prev => {
+          setUser((prev) => {
             // Mencegah race condition dimana profile lama (is_first_login: true) menimpa state lokal (false)
-            if (prev && prev.is_first_login === false && profile && profile.is_first_login === true) {
+            if (
+              prev &&
+              prev.is_first_login === false &&
+              profile &&
+              profile.is_first_login === true
+            ) {
               return { ...profile, is_first_login: false };
             }
             return profile;
@@ -69,57 +74,69 @@ export function AuthProvider({ children }) {
         });
         if (error) {
           // Provide more specific error messages
-          const errorMsg = typeof error.message === 'string' ? error.message : JSON.stringify(error);
+          const errorMsg =
+            typeof error.message === "string"
+              ? error.message
+              : JSON.stringify(error);
           if (errorMsg.includes("Invalid login credentials")) {
             throw new Error("Email atau password salah. Silakan coba lagi.");
           } else if (errorMsg.includes("Email not confirmed")) {
-            throw new Error("Email belum dikonfirmasi. Periksa email Anda untuk link konfirmasi.");
+            throw new Error(
+              "Email belum dikonfirmasi. Periksa email Anda untuk link konfirmasi.",
+            );
           } else if (errorMsg.includes("rate limit")) {
-            throw new Error("Terlalu banyak percobaan login. Silakan tunggu beberapa saat.");
+            throw new Error(
+              "Terlalu banyak percobaan login. Silakan tunggu beberapa saat.",
+            );
           } else if (errorMsg.includes("network")) {
-            throw new Error("Tidak dapat terhubung ke server. Periksa koneksi internet Anda.");
+            throw new Error(
+              "Tidak dapat terhubung ke server. Periksa koneksi internet Anda.",
+            );
           } else {
             throw new Error(`Login gagal: ${errorMsg}`);
           }
         }
 
-         let profile = await fetchUserProfile(data.user.email ?? email);
-         if (!profile) {
-           // If user exists in auth but not in public.users, create the profile automatically
-           console.log(`🔄 User ${data.user.email} tidak ditemukan di public.users, membuat profil otomatis...`);
-           const { error: createError } = await supabase
-             .from('users')
-             .insert({
-               id: data.user.id,
-               name: data.user.email?.split('@')[0] || 'User',
-               email: data.user.email || email,
-               role: 'staff',
-               status: 'active',
-               is_first_login: true,
-               points: 0,
-               attendance_rate: 0
-             });
+        let profile = await fetchUserProfile(data.user.email ?? email);
+        if (!profile) {
+          // If user exists in auth but not in public.users, create the profile automatically
+          console.log(
+            `🔄 User ${data.user.email} tidak ditemukan di public.users, membuat profil otomatis...`,
+          );
+          const { error: createError } = await supabase.from("users").insert({
+            id: data.user.id,
+            name: data.user.email?.split("@")[0] || "User",
+            email: data.user.email || email,
+            role: "staff",
+            status: "active",
+            is_first_login: true,
+            points: 0,
+            attendance_rate: 0,
+          });
 
-           if (createError) {
-             throw new Error(
-               "Profil user belum ada di tabel users dan gagal membuat profil otomatis. " +
-               "Silakan hubungi administrator untuk menyinkronkan akun Anda. Error: " + createError.message
-             );
-           }
+          if (createError) {
+            throw new Error(
+              "Profil user belum ada di tabel users dan gagal membuat profil otomatis. " +
+                "Silakan hubungi administrator untuk menyinkronkan akun Anda. Error: " +
+                createError.message,
+            );
+          }
 
-           // Fetch the newly created profile
-           profile = await fetchUserProfile(data.user.email ?? email);
-         }
+          // Fetch the newly created profile
+          profile = await fetchUserProfile(data.user.email ?? email);
+        }
 
-         if (profile?.status === 'inactive') {
-           await supabase.auth.signOut();
-           throw new Error("Akun Anda telah dinonaktifkan. Silakan hubungi administrator.");
-         } else if (!profile) {
-           throw new Error(
-             "Profil user belum ada di tabel users. " +
-             "Silakan hubungi administrator untuk menyinkronkan akun Anda."
-           );
-         }
+        if (profile?.status === "inactive") {
+          await supabase.auth.signOut();
+          throw new Error(
+            "Akun Anda telah dinonaktifkan. Silakan hubungi administrator.",
+          );
+        } else if (!profile) {
+          throw new Error(
+            "Profil user belum ada di tabel users. " +
+              "Silakan hubungi administrator untuk menyinkronkan akun Anda.",
+          );
+        }
         setUser(profile);
         const storage = remember ? localStorage : sessionStorage;
         storage.setItem("umara_token", data.session.access_token);

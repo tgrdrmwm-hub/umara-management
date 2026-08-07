@@ -15,7 +15,15 @@ const addUserSchema = z.object({
   name: z.string().min(3, "Nama terlalu pendek"),
   email: z.string().email("Email tidak valid"),
   password: z.string().min(6, "Password minimal 6 karakter"),
-  role: z.enum(["owner", "developer", "manager", "admin", "staff", "staff_magang", "magang"]),
+  role: z.enum([
+    "owner",
+    "developer",
+    "manager",
+    "admin",
+    "staff",
+    "staff_magang",
+    "magang",
+  ]),
 });
 
 export function UsersManagementPage() {
@@ -52,16 +60,16 @@ export function UsersManagementPage() {
   const onSubmit = async (values) => {
     try {
       // Memanggil fungsi SQL (RPC) di Supabase
-      const { error } = await supabase.rpc('admin_create_user', {
+      const { error } = await supabase.rpc("admin_create_user", {
         p_email: values.email,
         p_password: values.password,
         p_name: values.name,
-        p_role: values.role
+        p_role: values.role,
       });
 
       if (error) {
-        if (error.message.includes('already exists')) {
-          throw new Error('Email tersebut sudah terdaftar.');
+        if (error.message.includes("already exists")) {
+          throw new Error("Email tersebut sudah terdaftar.");
         }
         throw error;
       }
@@ -70,7 +78,10 @@ export function UsersManagementPage() {
       setShowModal(false);
       reset();
     } catch (err) {
-      toast.error(err.message || "Gagal membuat user. Pastikan Anda telah menjalankan script SQL setup_admin_rpc.");
+      toast.error(
+        err.message ||
+          "Gagal membuat user. Pastikan Anda telah menjalankan script SQL setup_admin_rpc.",
+      );
       console.error(err);
     }
   };
@@ -84,7 +95,9 @@ export function UsersManagementPage() {
         .eq("id", userId);
 
       if (error) throw error;
-      toast.success(`User berhasil di-${newStatus === "active" ? "aktifkan" : "nonaktifkan"}!`);
+      toast.success(
+        `User berhasil di-${newStatus === "active" ? "aktifkan" : "nonaktifkan"}!`,
+      );
     } catch (err) {
       toast.error("Gagal mengubah status user.");
       console.error(err);
@@ -122,7 +135,10 @@ export function UsersManagementPage() {
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-white/8">
               {data.users.map((u) => (
-                <tr key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-white/5">
+                <tr
+                  key={u.id}
+                  className="hover:bg-slate-50/50 dark:hover:bg-white/5"
+                >
                   <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
                     {u.name}
                   </td>
@@ -149,7 +165,11 @@ export function UsersManagementPage() {
                         size="sm"
                         variant="secondary"
                         onClick={() => toggleUserStatus(u.id, u.status)}
-                        className={u.status === "active" ? "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10" : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"}
+                        className={
+                          u.status === "active"
+                            ? "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
+                            : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
+                        }
                       >
                         {u.status === "active" ? (
                           <>
@@ -209,7 +229,11 @@ export function UsersManagementPage() {
                 <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                   Email
                 </label>
-                <Input placeholder="user@example.com" type="email" {...register("email")} />
+                <Input
+                  placeholder="user@example.com"
+                  type="email"
+                  {...register("email")}
+                />
                 {errors.email && (
                   <p className="text-xs text-red-500">{errors.email.message}</p>
                 )}
@@ -219,9 +243,15 @@ export function UsersManagementPage() {
                 <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                   Password
                 </label>
-                <Input placeholder="Password minimal 6 karakter" type="text" {...register("password")} />
+                <Input
+                  placeholder="Password minimal 6 karakter"
+                  type="text"
+                  {...register("password")}
+                />
                 {errors.password && (
-                  <p className="text-xs text-red-500">{errors.password.message}</p>
+                  <p className="text-xs text-red-500">
+                    {errors.password.message}
+                  </p>
                 )}
               </div>
 
@@ -229,7 +259,7 @@ export function UsersManagementPage() {
                 <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                   Role
                 </label>
-                <select 
+                <select
                   className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/8 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-white/20 dark:focus:ring-white/8"
                   {...register("role")}
                 >

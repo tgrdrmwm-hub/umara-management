@@ -25,7 +25,7 @@ const schema = z
   });
 
 export function ChangePasswordPage() {
-  const { changePassword } = useAuth();
+  const { changePassword, logout } = useAuth();
   const navigate = useNavigate();
   const {
     register,
@@ -72,7 +72,9 @@ export function ChangePasswordPage() {
                 {...register("password")}
               />
               {errors.password && (
-                <p className="text-xs text-red-500">{errors.password.message}</p>
+                <p className="text-xs text-red-500">
+                  {errors.password.message}
+                </p>
               )}
             </div>
 
@@ -92,7 +94,9 @@ export function ChangePasswordPage() {
 
             {/* Password requirements */}
             <div className="rounded-lg bg-slate-50 p-3 dark:bg-white/5">
-              <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">Syarat password:</p>
+              <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+                Syarat password:
+              </p>
               <ul className="space-y-0.5">
                 {[
                   "Minimal 8 karakter",
@@ -101,7 +105,10 @@ export function ChangePasswordPage() {
                   "Angka (0–9)",
                   "Simbol (!@#$...)",
                 ].map((req) => (
-                  <li key={req} className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
+                  <li
+                    key={req}
+                    className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400"
+                  >
                     <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-white/20 shrink-0" />
                     {req}
                   </li>
@@ -109,9 +116,23 @@ export function ChangePasswordPage() {
               </ul>
             </div>
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? "Menyimpan..." : "Simpan Password"}
-            </Button>
+            <div className="flex gap-3">
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full text-slate-500 border-slate-200" 
+                onClick={async () => {
+                  await logout();
+                  navigate("/login");
+                }}
+                disabled={isSubmitting}
+              >
+                Batal
+              </Button>
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Menyimpan..." : "Simpan"}
+              </Button>
+            </div>
           </form>
         </div>
 

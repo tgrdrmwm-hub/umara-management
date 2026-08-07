@@ -1,71 +1,64 @@
 /**
  * Shared chart configuration for consistent, animated, professional styling.
- * Used across all pages — konsultan pajak management system.
+ * Custom tooltips and responsive styling for light/dark mode.
  */
 
 export const PALETTE = [
-  "#4f46e5", // indigo-600 (stronger)
-  "#2563eb", // blue-600 (stronger)
-  "#059669", // emerald-600 (stronger)
-  "#d97706", // amber-600 (stronger)
-  "#db2777", // pink-600 (stronger)
-  "#7c3aed", // violet-600 (stronger)
-  "#0d9488", // teal-600 (stronger)
-  "#dc2626", // rose-600/red-600 (stronger)
+  "#6366f1", // indigo-500
+  "#3b82f6", // blue-500
+  "#10b981", // emerald-500
+  "#f59e0b", // amber-500
+  "#ec4899", // pink-500
+  "#8b5cf6", // violet-500
+  "#14b8a6", // teal-500
+  "#f43f5e", // rose-500
 ];
 
-export const PALETTE_SOFT = [
-  "#818cf8",
-  "#60a5fa",
-  "#34d399",
-  "#fbbf24",
-  "#f472b6",
-  "#a78bfa",
-  "#2dd4bf",
-  "#fb7185",
-];
+export function CustomTooltip({ active, payload, label }) {
+  if (active && payload && payload.length) {
+    return (
+      <div className="rounded-xl border border-slate-200/80 bg-white/95 px-3.5 py-3 shadow-[0_8px_30px_rgb(0,0,0,0.08)] backdrop-blur-md dark:border-white/10 dark:bg-slate-900/95 dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)]">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+          {label}
+        </p>
+        <div className="space-y-1.5">
+          {payload.map((entry, index) => (
+            <div key={index} className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <div
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: entry.color }}
+                />
+                <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                  {entry.name}
+                </span>
+              </div>
+              <span className="text-xs font-bold text-slate-900 dark:text-white">
+                {entry.value}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return null;
+}
 
-/** Tooltip — clean white card */
-export const tooltipStyle = {
-  contentStyle: {
-    borderRadius: "12px",
-    border: "1px solid #e2e8f0",
-    boxShadow: "0 8px 24px -4px rgba(15,23,42,0.12), 0 2px 8px -2px rgba(15,23,42,0.08)",
-    fontSize: "12px",
-    padding: "10px 14px",
-    background: "#ffffff",
-    color: "#0f172a",
-  },
-  labelStyle: {
-    fontWeight: 700,
-    marginBottom: 6,
-    color: "#0f172a",
-    fontSize: "11px",
-    textTransform: "uppercase",
-    letterSpacing: "0.04em",
-  },
-  itemStyle: { color: "#475569", fontSize: "12px" },
-  cursor: { fill: "rgba(99,102,241,0.05)", rx: 4 },
-};
+export const axisTick = { fontSize: 11, fill: "currentColor", opacity: 0.4, fontWeight: 500 };
 
-/** Axis tick */
-export const axisTick = { fontSize: 11, fill: "#94a3b8", fontWeight: 500 };
+export const gridStyle = { stroke: "currentColor", strokeOpacity: 0.06, strokeDasharray: "4 4" };
 
-/** Grid */
-export const gridStyle = { stroke: "#f1f5f9", strokeDasharray: "4 4" };
-
-/** Animation props — applied to Bar, Line, Area, etc. */
 export const animationProps = {
   isAnimationActive: true,
   animationBegin: 0,
-  animationDuration: 900,
+  animationDuration: 1000,
   animationEasing: "ease-out",
 };
 
-/** Animation for Line/Area — slightly slower for smooth reveal */
 export const lineAnimationProps = {
   isAnimationActive: true,
   animationBegin: 100,
-  animationDuration: 1200,
+  animationDuration: 1400,
   animationEasing: "ease-out",
 };

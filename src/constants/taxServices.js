@@ -11,8 +11,10 @@ export const taxServiceDefinitions = [
   {
     category: "SPT Tahunan",
     services: [
-      { name: "SPT Orang Pribadi", basePoints: 88 },
-      { name: "SPT Badan", basePoints: 85 },
+      { name: "SPT Orang Pribadi", basePoints: 90 },
+      { name: "SPT Badan", basePoints: 93 },
+      { name: "SPT Orang Pribadi Pembetulan", basePoints: 96 },
+      { name: "SPT Badan Pembetulan", basePoints: 100 },
     ],
   },
   {
@@ -60,14 +62,14 @@ export const taxServices = taxServiceDefinitions.flatMap((group) =>
   group.services.map((service) => ({
     ...service,
     category: group.category,
-  }))
+  })),
 );
 
 export function getTaxServicePoint(category, serviceName) {
   return (
     taxServices.find(
       (service) =>
-        service.category === category && service.name === serviceName
+        service.category === category && service.name === serviceName,
     )?.basePoints ?? 0
   );
 }

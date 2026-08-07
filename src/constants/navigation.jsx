@@ -15,7 +15,7 @@ import {
 
 export const navigation = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "UMARA TAX", href: "/tax", icon: ShieldCheck },
+  { label: "Kategori & Layanan", href: "/tax", icon: ShieldCheck },
   { label: "Client", href: "/clients", icon: BriefcaseBusiness },
   { label: "Staff", href: "/staff", icon: Users },
   { label: "Absensi", href: "/attendance", icon: CalendarCheck },

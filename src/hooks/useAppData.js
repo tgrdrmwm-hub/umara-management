@@ -4,7 +4,6 @@ import { fetchAppData } from "../services/database";
 import { supabase } from "../services/supabase";
 import { emptyAppData } from "../services/database";
 
-
 export function useAppData() {
   const queryClient = useQueryClient();
 
@@ -56,6 +55,13 @@ export function useAppData() {
           void queryClient.invalidateQueries({ queryKey: ["umara-dashboard"] });
         },
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "activity_logs" },
+        () => {
+          void queryClient.invalidateQueries({ queryKey: ["umara-dashboard"] });
+        },
+      )
       .subscribe();
 
     return () => {
@@ -71,10 +77,10 @@ export function useAppData() {
     retry: 3,
   });
 
-  const hasEmptyData = data && Object.values(data).every(arr => Array.isArray(arr) && arr.length === 0);
-  const safeData = (!data || hasEmptyData)
-    ? emptyAppData
-    : data;
+  const hasEmptyData =
+    data &&
+    Object.values(data).every((arr) => Array.isArray(arr) && arr.length === 0);
+  const safeData = !data || hasEmptyData ? emptyAppData : data;
 
   return { data: safeData, isLoading, error };
 }

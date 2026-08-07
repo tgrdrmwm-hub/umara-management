@@ -31,7 +31,9 @@ export function SuratLuarPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Surat Keluar</h1>
+        <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+          Surat Keluar
+        </h1>
         <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
           Pantau pengajuan, status, dan arsip surat keluar.
         </p>
@@ -42,13 +44,19 @@ export function SuratLuarPage() {
         {stats.map((stat) => (
           <Card key={stat.label} className="p-5">
             <div className="flex items-center justify-between">
-              <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${stat.color}`}>
+              <div
+                className={`flex h-9 w-9 items-center justify-center rounded-lg ${stat.color}`}
+              >
                 <stat.icon className="h-4 w-4" />
               </div>
               <Badge tone={stat.badge.tone}>{stat.badge.label}</Badge>
             </div>
-            <p className="mt-3 text-2xl font-semibold text-slate-900 dark:text-slate-100">{stat.value}</p>
-            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{stat.label}</p>
+            <p className="mt-3 text-2xl font-semibold text-slate-900 dark:text-slate-100">
+              {stat.value}
+            </p>
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+              {stat.label}
+            </p>
           </Card>
         ))}
       </div>
@@ -58,9 +66,12 @@ export function SuratLuarPage() {
         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 dark:bg-white/8">
           <FilePlus className="h-6 w-6 text-slate-400" />
         </div>
-        <h2 className="mt-3 text-sm font-semibold text-slate-700 dark:text-slate-300">Manajemen Surat Keluar</h2>
+        <h2 className="mt-3 text-sm font-semibold text-slate-700 dark:text-slate-300">
+          Manajemen Surat Keluar
+        </h2>
         <p className="mt-1 max-w-xs text-xs text-slate-400">
-          Buat, lacak, dan arsipkan surat keluar dengan mudah. Fitur lengkap sedang dalam pengembangan.
+          Buat, lacak, dan arsipkan surat keluar dengan mudah. Fitur lengkap
+          sedang dalam pengembangan.
         </p>
       </Card>
     </div>

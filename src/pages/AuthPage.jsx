@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -11,7 +12,7 @@ const loginSchema = z.object({
 });
 
 export function AuthPage({ mode }) {
-  const { login, sendPasswordReset } = useAuth();
+  const { login, sendPasswordReset, user, loading } = useAuth();
   const navigate = useNavigate();
   const {
     register,
@@ -21,6 +22,12 @@ export function AuthPage({ mode }) {
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate(user.is_first_login ? "/change-password" : "/dashboard", { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   const onSubmit = async (values) => {
     if (mode !== "login") {
@@ -34,11 +41,12 @@ export function AuthPage({ mode }) {
       navigate(user.is_first_login ? "/change-password" : "/dashboard");
     } catch (error) {
       console.error("Login error:", error);
-      const errorMessage = error instanceof Error
-        ? error.message
-        : typeof error === 'string'
-          ? error
-          : "Login gagal: Terjadi kesalahan yang tidak diketahui";
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : typeof error === "string"
+            ? error
+            : "Login gagal: Terjadi kesalahan yang tidak diketahui";
       toast.error(errorMessage);
     }
   };
@@ -106,8 +114,6 @@ export function AuthPage({ mode }) {
                   </div>
                 )}
               </div>
-
-
 
               {/* Login button */}
               <button

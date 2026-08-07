@@ -10,6 +10,7 @@ export const emptyAppData = {
   internTasks: [],
   taxWorks: [],
   users: [],
+  activityLogs: [],
 };
 
 export async function fetchAppData() {
@@ -27,24 +28,36 @@ export async function fetchAppData() {
     };
   }
 
-  const [usersResult, clientsResult, tasksResult, attendanceResult, taxResult, internTasksResult] =
-    await Promise.all([
-      supabase
-        .from("users")
-        .select("*")
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("clients")
-        .select("*")
-        .order("created_at", { ascending: false }),
-      supabase.from("tasks").select("*").order("deadline", { ascending: true }),
-      supabase
-        .from("attendance")
-        .select("*")
-        .order("date", { ascending: false }),
-      supabase.from("tax").select("*").order("deadline", { ascending: true }),
-      supabase.from("intern_tasks").select("*").order("date", { ascending: false }),
-    ]);
+  const [
+    usersResult,
+    clientsResult,
+    tasksResult,
+    attendanceResult,
+    taxResult,
+    internTasksResult,
+    activityResult,
+  ] = await Promise.all([
+    supabase
+      .from("users")
+      .select("*")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("clients")
+      .select("*")
+      .order("created_at", { ascending: false }),
+    supabase.from("tasks").select("*").order("deadline", { ascending: true }),
+    supabase.from("attendance").select("*").order("date", { ascending: false }),
+    supabase.from("tax").select("*").order("deadline", { ascending: true }),
+    supabase
+      .from("intern_tasks")
+      .select("*")
+      .order("date", { ascending: false }),
+    supabase
+      .from("activity_logs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50),
+  ]);
 
   const firstError = [
     usersResult,
@@ -67,6 +80,7 @@ export async function fetchAppData() {
       taxWorks: [],
       attendance: [],
       analytics: [],
+      activityLogs: [],
     };
   }
 
@@ -76,9 +90,16 @@ export async function fetchAppData() {
 
   const taxWorks = (taxResult.data ?? []).map(toTaxWork);
   const attendance = (attendanceResult.data ?? []).map(toAttendance);
+  const activityLogs = activityResult.data ?? [];
 
   return {
-    analytics: buildAnalytics(clientsResult.data ?? [], tasks, users, taxWorks, attendance),
+    analytics: buildAnalytics(
+      clientsResult.data ?? [],
+      tasks,
+      users,
+      taxWorks,
+      attendance,
+    ),
     attendance,
     clients: (clientsResult.data ?? []).map(toClient),
     reportTypes: emptyAppData.reportTypes,
@@ -86,6 +107,7 @@ export async function fetchAppData() {
     internTasks,
     taxWorks,
     users,
+    activityLogs,
   };
 }
 
@@ -160,34 +182,74 @@ export async function deleteClient(id) {
   if (error) throw error;
 }
 
-export async function createTask(values) {
-  if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
-  const { error } = await supabase.from("tasks").insert(toTaskRow(values));
-  if (error) throw error;
-  if (values.status === "done")
-    await awardPointsToPic(values.pic, values.points);
+export async function logActivity(action, details) {
+  if (!supabase) return;
+
+  // Ambil user yang sedang login
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { data: userData } = await supabase
+    .from("users")
+    .select("name")
+    .eq("id", user.id)
+    .single();
+  const userName = userData?.name || user.email;
+
+  await supabase.from("activity_logs").insert([
+    {
+      user_name: userName,
+      action,
+      details,
+    },
+  ]);
 }
 
-export async function updateTask(id, values, previousStatus) {
-  if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
-  const { error } = await supabase
-    .from("tasks")
-    .update({ ...toTaskRow(values), updated_at: new Date().toISOString() })
-    .eq("id", id);
+// ==========================================
+// Tasks
+// ==========================================
+export async function createTask(task) {
+  if (!supabase) return;
+  const { error } = await supabase.from("tasks").insert([task]);
   if (error) throw error;
-  if (previousStatus !== "done" && values.status === "done")
-    await awardPointsToPic(values.pic, values.points);
+
+  await logActivity("Menambah Task", `Task: ${task.title}`);
 }
 
-export async function deleteTask(id) {
-  if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
+export async function updateTask(id, updates, oldStatus) {
+  if (!supabase) return;
+  const { error } = await supabase.from("tasks").update(updates).eq("id", id);
+  if (error) throw error;
+
+  if (oldStatus !== "done" && updates.status === "done") {
+    await awardPointsToPic(updates.pic, updates.points);
+    await logActivity(
+      "Menyelesaikan Task",
+      `Task: ${updates.title} (+${updates.points} pts)`,
+    );
+  } else if (oldStatus !== updates.status) {
+    await logActivity(
+      "Mengubah Status Task",
+      `Task: ${updates.title} menjadi ${updates.status}`,
+    );
+  }
+}
+
+export async function deleteTask(id, taskTitle = "Task") {
+  if (!supabase) return;
   const { error } = await supabase.from("tasks").delete().eq("id", id);
   if (error) throw error;
+
+  await logActivity("Menghapus Task", `Task ID: ${id}`);
 }
 
 export async function createInternTask(values) {
   if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
-  const { error } = await supabase.from("intern_tasks").insert(toInternTaskRow(values));
+  const { error } = await supabase
+    .from("intern_tasks")
+    .insert(toInternTaskRow(values));
   if (error) throw error;
 }
 
@@ -195,7 +257,10 @@ export async function updateInternTask(id, values) {
   if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
   const { error } = await supabase
     .from("intern_tasks")
-    .update({ ...toInternTaskRow(values), updated_at: new Date().toISOString() })
+    .update({
+      ...toInternTaskRow(values),
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", id);
   if (error) throw error;
 }
@@ -244,7 +309,7 @@ export async function createAttendance(values) {
     .from("attendance")
     .insert(toAttendanceRow(values));
   if (error) throw error;
-  
+
   if (values.status === "Hadir" || values.status === "Terlambat") {
     await awardPointsToPic(values.staff, 1);
   }
@@ -260,10 +325,11 @@ export async function updateAttendance(id, values, previousStatus) {
     })
     .eq("id", id);
   if (error) throw error;
-  
-  const wasPresent = previousStatus === "Hadir" || previousStatus === "Terlambat";
+
+  const wasPresent =
+    previousStatus === "Hadir" || previousStatus === "Terlambat";
   const isPresent = values.status === "Hadir" || values.status === "Terlambat";
-  
+
   if (!wasPresent && isPresent) {
     await awardPointsToPic(values.staff, 1);
   }
@@ -286,20 +352,20 @@ export async function updateUserPoints(id, points) {
 
 async function awardPointsToPic(pic, points) {
   if (!supabase || !pic || points <= 0) return;
-  
+
   // Pisahkan nama PIC menggunakan koma atau "dan" untuk mendukung banyak staf sekaligus
   const picNames = pic
     .split(/,|\bdan\b/i)
-    .map(name => name.trim())
+    .map((name) => name.trim())
     .filter(Boolean);
-    
+
   if (picNames.length === 0) return;
 
   const { data, error } = await supabase
     .from("users")
     .select("id,name,points")
     .in("name", picNames);
-    
+
   if (error) throw error;
   if (!data || data.length === 0) return;
 
@@ -312,7 +378,7 @@ async function awardPointsToPic(pic, points) {
         updated_at: new Date().toISOString(),
       })
       .eq("id", user.id);
-      
+
     if (updateError) throw updateError;
   }
 }
@@ -449,32 +515,40 @@ function toTaxWork(row) {
 
 function buildAnalytics(clients, tasks, users, taxWorks, attendance) {
   // Generate data for last 6 months using actual creation dates if available, or just empty arrays mapped.
-  // We don't have created_at on tasks/taxWorks objects after map (toTask, toTaxWork). 
-  // Let's use `deadline` for grouping since it exists. 
+  // We don't have created_at on tasks/taxWorks objects after map (toTask, toTaxWork).
+  // Let's use `deadline` for grouping since it exists.
   // If no deadline, fallback to current month.
-  
+
   const months = [];
   const now = new Date();
-  
+
   for (let i = 5; i >= 0; i--) {
     const targetMonth = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const monthStr = targetMonth.toLocaleString("id-ID", { month: "short" });
-    const yearMonthStr = `${targetMonth.getFullYear()}-${String(targetMonth.getMonth() + 1).padStart(2, '0')}`;
-    
+    const yearMonthStr = `${targetMonth.getFullYear()}-${String(targetMonth.getMonth() + 1).padStart(2, "0")}`;
+
     // Hitung pekerjaan yang memiliki deadline di bulan ini (atau selesai di bulan ini)
-    const monthlyTasks = tasks.filter(t => t.deadline && t.deadline.startsWith(yearMonthStr));
-    const monthlyTaxWorks = taxWorks.filter(t => t.deadline && t.deadline.startsWith(yearMonthStr));
-    
+    const monthlyTasks = tasks.filter(
+      (t) => t.deadline && t.deadline.startsWith(yearMonthStr),
+    );
+    const monthlyTaxWorks = taxWorks.filter(
+      (t) => t.deadline && t.deadline.startsWith(yearMonthStr),
+    );
+
     // We will aggregate done tasks and running tasks for that month
-    const doneTasks = monthlyTasks.filter(t => t.status === "done").length;
-    const runningTasks = monthlyTasks.filter(t => t.status !== "done").length;
-    
+    const doneTasks = monthlyTasks.filter((t) => t.status === "done").length;
+    const runningTasks = monthlyTasks.filter((t) => t.status !== "done").length;
+
     // Untuk klien dan points, kita ambil nilai akumulatif/global, karena kita belum menyimpan riwayat per bulan.
     months.push({
       month: monthStr,
       clients: clients.length, // kumulatif
-      done: doneTasks + monthlyTaxWorks.filter(w => w.status === "Selesai").length, // total task + tax selesai
-      running: runningTasks + monthlyTaxWorks.filter(w => w.status !== "Selesai").length,
+      done:
+        doneTasks +
+        monthlyTaxWorks.filter((w) => w.status === "Selesai").length, // total task + tax selesai
+      running:
+        runningTasks +
+        monthlyTaxWorks.filter((w) => w.status !== "Selesai").length,
       points: users.reduce((sum, u) => sum + (u.points || 0), 0), // kumulatif saat ini
     });
   }

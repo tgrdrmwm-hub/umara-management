@@ -20,34 +20,69 @@ export function AppLayout() {
   }, [dark]);
 
   const filteredNav = navigation.filter((item) => {
-    const isAdmin = ["owner", "developer", "manager", "admin"].includes(user?.role);
-    
+    const isAdmin = ["owner", "developer", "manager", "admin"].includes(
+      user?.role,
+    );
+
     const isDeveloper = user?.role === "developer";
-    
+
     // Khusus menu Users, hanya developer yang boleh melihat
     if (item.label === "Users" && !isDeveloper) {
       return false;
     }
-    
+
     // Khusus menu Report, hanya admin/owner yang boleh melihat
     if (item.label === "Report" && !isAdmin) {
       return false;
     }
-    
+
     if (user?.role === "magang" || user?.role === "staff_magang") {
-      return ["Dashboard", "UMARA TAX", "Task", "Tugas Magang", "Client", "Absensi", "Point"].includes(item.label);
+      return [
+        "Dashboard",
+        "Kategori & Layanan",
+        "Task",
+        "Tugas Magang",
+        "Client",
+        "Absensi",
+        "Point",
+      ].includes(item.label);
     }
     if (user?.role === "staff") {
-      return ["Dashboard", "UMARA TAX", "Client", "Staff", "Task", "Tugas Magang", "Absensi", "Point"].includes(item.label);
+      return [
+        "Dashboard",
+        "Kategori & Layanan",
+        "Client",
+        "Staff",
+        "Task",
+        "Tugas Magang",
+        "Absensi",
+        "Point",
+      ].includes(item.label);
     }
     if (user?.role === "owner") {
-      return ["Dashboard", "UMARA TAX", "Client", "Staff", "Task", "Tugas Magang", "Absensi", "Point", "Report", "Settings"].includes(item.label);
+      return [
+        "Dashboard",
+        "Kategori & Layanan",
+        "Client",
+        "Staff",
+        "Task",
+        "Tugas Magang",
+        "Absensi",
+        "Point",
+        "Report",
+        "Settings",
+      ].includes(item.label);
     }
     return true;
   });
 
   const userInitials = user?.name
-    ? user.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
     : "U";
 
   return (
@@ -87,8 +122,12 @@ export function AppLayout() {
               </svg>
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Umaratax</p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400">Management</p>
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                Umaratax
+              </p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                Management
+              </p>
             </div>
           </div>
           <button
@@ -157,10 +196,7 @@ export function AppLayout() {
 
           <div className="relative max-w-xs flex-1">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            <Input
-              placeholder="Cari..."
-              className="pl-8 h-8 text-xs"
-            />
+            <Input placeholder="Cari..." className="pl-8 h-8 text-xs" />
           </div>
 
           <div className="ml-auto flex items-center gap-1.5">
@@ -170,7 +206,11 @@ export function AppLayout() {
               onClick={() => setDark((v) => !v)}
               aria-label="Toggle theme"
             >
-              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              {dark ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
             </Button>
             <Button variant="ghost" size="icon" aria-label="Notifications">
               <Bell className="h-4 w-4" />
