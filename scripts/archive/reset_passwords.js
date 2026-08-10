@@ -13,7 +13,7 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
   }
 });
 
-const staffNames = ['aulia', 'anna', 'septi', 'nita', 'anggun', 'azizah', 'intan', 'magang'];
+const staffNames = ['owner', 'aulia', 'anna', 'septi', 'nita', 'anggun', 'azizah', 'intan', 'magang'];
 
 async function resetPasswords() {
   const { data, error } = await supabase.auth.admin.listUsers();
@@ -33,15 +33,22 @@ async function resetPasswords() {
     
     console.log(`Resetting password for ${name}...`);
     
+    const passwordToSet = name === 'magang' ? 'UmarataxMagang!' : '123456';
     const { error: updateError } = await supabase.auth.admin.updateUserById(
       user.id,
-      { password: '123456' }
+      { password: passwordToSet }
     );
     
     if (updateError) {
       console.error(`Failed to reset password for ${name}:`, updateError.message);
     } else {
-      console.log(`Successfully reset password for ${name} to 123456!`);
+      console.log(`Successfully reset password for ${name} to ${passwordToSet}!`);
+      const { error: dbError } = await supabase.from('users').update({ is_first_login: true }).eq('id', user.id);
+      if (dbError) {
+        console.error(`Failed to reset is_first_login for ${name}:`, dbError.message);
+      } else {
+        console.log(`Successfully reset is_first_login to true for ${name}!`);
+      }
     }
   }
 }

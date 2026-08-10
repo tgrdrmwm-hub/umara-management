@@ -18,6 +18,7 @@ import { TasksPage } from "./pages/TasksPage";
 import { TaxPage } from "./pages/TaxPage";
 import { InternTasksPage } from "./pages/InternTasksPage";
 import { UsersManagementPage } from "./pages/UsersManagementPage";
+import { NotFoundPage } from "./pages/NotFoundPage";
 
 export default function App() {
   return (
@@ -58,6 +59,9 @@ export default function App() {
           <Route path="/users-management" element={<UsersManagementPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
+        
+        {/* Fallback 404 */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <Toaster richColors />
     </>

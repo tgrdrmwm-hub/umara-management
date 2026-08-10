@@ -104,31 +104,12 @@ export function AppLayout() {
       >
         {/* Logo */}
         <div className="flex h-14 shrink-0 items-center justify-between border-b border-slate-100 px-4 dark:border-white/8">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 dark:bg-slate-100">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-white dark:text-slate-900"
-              >
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                Umaratax
-              </p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                Management
-              </p>
-            </div>
+          <div className="flex items-center">
+            <img 
+              src="https://umaratax.com/wp-content/uploads/2025/07/image-1.png" 
+              alt="Umaratax Logo" 
+              className="h-10 w-auto object-contain" 
+            />
           </div>
           <button
             className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 lg:hidden dark:hover:bg-white/8"

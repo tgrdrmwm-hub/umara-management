@@ -240,17 +240,7 @@ export function ClientsPage() {
                 <option value="Nonaktif">Nonaktif</option>
               </select>
             </div>
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                PIC
-              </label>
-              <Input
-                placeholder="Nama penanggung jawab"
-                value={form.pic}
-                onChange={(e) => setForm({ ...form, pic: e.target.value })}
-              />
-            </div>
-            <div className="space-y-1">
+            <div className="space-y-1 sm:col-span-2">
               <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
                 Email
               </label>
@@ -260,6 +250,50 @@ export function ClientsPage() {
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
               />
+            </div>
+            <div className="space-y-1 sm:col-span-2">
+              <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                PIC (Pilih yang menangani client ini)
+              </label>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {data?.users?.filter(u => u.role !== 'owner' && u.name.toLowerCase() !== 'tegar' && u.name.toLowerCase() !== 'owner').map((user) => {
+                  const isSelected = form.pic.includes(user.name);
+                  return (
+                    <label
+                      key={user.id}
+                      className={`cursor-pointer select-none rounded-full px-3 py-1.5 text-xs font-medium transition-colors border ${
+                        isSelected
+                          ? "bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white"
+                          : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="hidden"
+                        checked={isSelected}
+                        onChange={(e) => {
+                          let currentPics = form.pic
+                            .split(/,|\bdan\b/i)
+                            .map((p) => p.trim())
+                            .filter(Boolean);
+                            
+                          if (e.target.checked) {
+                            if (!currentPics.includes(user.name)) {
+                              currentPics.push(user.name);
+                            }
+                          } else {
+                            currentPics = currentPics.filter(
+                              (p) => p !== user.name
+                            );
+                          }
+                          setForm({ ...form, pic: currentPics.join(", ") });
+                        }}
+                      />
+                      {user.name}
+                    </label>
+                  );
+                })}
+              </div>
             </div>
             <div className="flex gap-2 pt-1 sm:col-span-2">
               <Button type="submit">
@@ -474,21 +508,55 @@ export function ClientsPage() {
                 <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
                   Tugaskan Kepada (PIC) *
                 </label>
-                <select
-                  className={selectClass}
-                  value={delegateForm.pic}
-                  onChange={(e) => setDelegateForm({ ...delegateForm, pic: e.target.value })}
-                  required
-                >
-                  <option value="">-- Pilih Staf --</option>
+                <div className="flex flex-wrap gap-2 pt-1">
                   {data?.users
-                    ?.filter((u) => u.role === "staff" || u.role === "staff_magang" || u.role === "magang" || u.role === "owner" || u.role === "manager" || u.role === "admin")
-                    .map((user) => (
-                      <option key={user.id} value={user.name}>
-                        {user.name} ({user.role})
-                      </option>
-                    ))}
-                </select>
+                    ?.filter(
+                      (u) =>
+                        u.role !== "owner" &&
+                        u.name.toLowerCase() !== "tegar" &&
+                        u.name.toLowerCase() !== "owner"
+                    )
+                    .map((user) => {
+                      const isSelected = delegateForm.pic.includes(user.name);
+                      return (
+                        <label
+                          key={user.id}
+                          className={`cursor-pointer select-none rounded-full px-3 py-1.5 text-xs font-medium transition-colors border ${
+                            isSelected
+                              ? "bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white"
+                              : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700 dark:hover:bg-slate-800"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            className="hidden"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              let currentPics = delegateForm.pic
+                                .split(/,|\bdan\b/i)
+                                .map((p) => p.trim())
+                                .filter(Boolean);
+
+                              if (e.target.checked) {
+                                if (!currentPics.includes(user.name)) {
+                                  currentPics.push(user.name);
+                                }
+                              } else {
+                                currentPics = currentPics.filter(
+                                  (p) => p !== user.name
+                                );
+                              }
+                              setDelegateForm({
+                                ...delegateForm,
+                                pic: currentPics.join(", "),
+                              });
+                            }}
+                          />
+                          {user.name}
+                        </label>
+                      );
+                    })}
+                </div>
               </div>
 
               <div className="space-y-1">

@@ -67,6 +67,7 @@ export function AttendancePage() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(getEmptyAttendance());
   const [activeTab, setActiveTab] = useState(isMagangRole ? "magang" : "staff");
+  const [internPrompt, setInternPrompt] = useState({ show: false, type: null, name: "" });
 
   const allAttendance = data?.attendance ?? [];
   const users = data?.users ?? [];
@@ -151,22 +152,10 @@ export function AttendancePage() {
     setForm(getEmptyAttendance());
   }
 
-  async function quickAttendance(type) {
+  async function processAttendance(type, staff) {
     const now = new Date();
     const time = now.toTimeString().slice(0, 5);
-    let staff = user?.name || user?.email || "";
     const today = getToday();
-
-    const isSharedMagang =
-      user?.role === "magang" || user?.role === "staff_magang";
-
-    if (isSharedMagang) {
-      const inputName = window.prompt(
-        "Karena akun magang dipakai bersama, masukkan Nama Lengkap/Panggilan Anda:",
-      );
-      if (!inputName || !inputName.trim()) return;
-      staff = `${inputName.trim()} (Magang)`;
-    }
 
     try {
       if (!staff) {
@@ -215,6 +204,28 @@ export function AttendancePage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Gagal memproses");
     }
+  }
+
+  async function quickAttendance(type) {
+    const isSharedMagang = user?.role === "magang" || user?.role === "staff_magang";
+
+    if (isSharedMagang) {
+      setInternPrompt({ show: true, type, name: "" });
+      return;
+    }
+
+    const staff = user?.name || user?.email || "";
+    await processAttendance(type, staff);
+  }
+
+  async function submitInternAttendance() {
+    if (!internPrompt.name || !internPrompt.name.trim()) {
+      toast.error("Nama wajib diisi");
+      return;
+    }
+    const staff = `${internPrompt.name.trim()} (Magang)`;
+    await processAttendance(internPrompt.type, staff);
+    setInternPrompt({ show: false, type: null, name: "" });
   }
 
   const now = new Date();
@@ -275,8 +286,8 @@ export function AttendancePage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-4 border-b border-slate-200 dark:border-white/10">
-        {!isMagangRole && (
+      {isAdmin && (
+        <div className="flex gap-4 border-b border-slate-200 dark:border-white/10">
           <button
             onClick={() => setActiveTab("staff")}
             className={`px-1 py-2 text-sm font-medium border-b-2 transition-colors ${
@@ -287,18 +298,18 @@ export function AttendancePage() {
           >
             Staff & Karyawan
           </button>
-        )}
-        <button
-          onClick={() => setActiveTab("magang")}
-          className={`px-1 py-2 text-sm font-medium border-b-2 transition-colors ${
-            activeTab === "magang"
-              ? "border-slate-900 text-slate-900 dark:border-white dark:text-white"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-          }`}
-        >
-          Anak Magang
-        </button>
-      </div>
+          <button
+            onClick={() => setActiveTab("magang")}
+            className={`px-1 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "magang"
+                ? "border-slate-900 text-slate-900 dark:border-white dark:text-white"
+                : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+            }`}
+          >
+            Anak Magang
+          </button>
+        </div>
+      )}
 
       {/* Form */}
       {showForm && (
@@ -652,6 +663,46 @@ export function AttendancePage() {
           </table>
         </div>
       </Card>
+
+      {/* Intern Prompt Modal */}
+      {internPrompt.show && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
+          <div
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity dark:bg-slate-900/80"
+            onClick={() => setInternPrompt({ show: false, type: null, name: "" })}
+          />
+          <div className="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-white/10 sm:scale-100">
+            <div className="p-5 sm:p-6">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                Identitas Magang
+              </h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                Karena akun ini dipakai bersama, mohon ketik nama panggilan Anda sebelum melakukan absensi.
+              </p>
+              <Input
+                placeholder="Nama panggilan (contoh: Budi)"
+                value={internPrompt.name}
+                onChange={(e) => setInternPrompt({ ...internPrompt, name: e.target.value })}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") submitInternAttendance();
+                }}
+                autoFocus
+              />
+              <div className="mt-6 flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setInternPrompt({ show: false, type: null, name: "" })}
+                >
+                  Batal
+                </Button>
+                <Button onClick={submitInternAttendance}>
+                  {internPrompt.type === "in" ? "Check In" : "Check Out"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

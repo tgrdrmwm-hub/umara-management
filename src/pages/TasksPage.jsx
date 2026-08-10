@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
+import { taxServiceDefinitions } from "../constants/taxServices";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { useAppData } from "../hooks/useAppData";
@@ -245,13 +246,26 @@ export function TasksPage() {
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                PIC
+                Layanan (Otomatis Menentukan Point)
               </label>
-              <Input
-                placeholder="Pisahkan dengan koma"
-                value={form.pic}
-                onChange={(e) => setForm({ ...form, pic: e.target.value })}
-              />
+              <select
+                className={selectClass}
+                value={form.points}
+                onChange={(e) =>
+                  setForm({ ...form, points: Number(e.target.value) })
+                }
+              >
+                <option value={10} disabled>-- Pilih Layanan --</option>
+                {taxServiceDefinitions.map((cat) => (
+                  <optgroup key={cat.category} label={cat.category}>
+                    {cat.services.map((svc) => (
+                      <option key={svc.name} value={svc.basePoints}>
+                        {svc.name} ({svc.basePoints} pts)
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
@@ -279,18 +293,49 @@ export function TasksPage() {
                 ))}
               </select>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1 sm:col-span-2">
               <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                Point
+                PIC (Pilih yang bertugas)
               </label>
-              <Input
-                type="number"
-                min={0}
-                value={form.points}
-                onChange={(e) =>
-                  setForm({ ...form, points: Number(e.target.value) })
-                }
-              />
+              <div className="flex flex-wrap gap-2 pt-1">
+                {data?.users?.filter(u => u.role !== 'owner' && u.name.toLowerCase() !== 'tegar' && u.name.toLowerCase() !== 'owner').map((user) => {
+                  const isSelected = form.pic.includes(user.name);
+                  return (
+                    <label
+                      key={user.id}
+                      className={`cursor-pointer select-none rounded-full px-3 py-1.5 text-xs font-medium transition-colors border ${
+                        isSelected
+                          ? "bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white"
+                          : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="hidden"
+                        checked={isSelected}
+                        onChange={(e) => {
+                          let currentPics = form.pic
+                            .split(/,|\bdan\b/i)
+                            .map((p) => p.trim())
+                            .filter(Boolean);
+                            
+                          if (e.target.checked) {
+                            if (!currentPics.includes(user.name)) {
+                              currentPics.push(user.name);
+                            }
+                          } else {
+                            currentPics = currentPics.filter(
+                              (p) => p !== user.name
+                            );
+                          }
+                          setForm({ ...form, pic: currentPics.join(", ") });
+                        }}
+                      />
+                      {user.name}
+                    </label>
+                  );
+                })}
+              </div>
             </div>
             <div className="space-y-1 sm:col-span-2">
               <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
