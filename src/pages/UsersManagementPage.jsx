@@ -30,6 +30,8 @@ export function UsersManagementPage() {
   const { data } = useAppData();
   const { user: currentUser } = useAuth();
   const [showModal, setShowModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const {
     register,
@@ -104,19 +106,27 @@ export function UsersManagementPage() {
     }
   };
 
-  const deleteUser = async (userId) => {
-    if (!window.confirm("Apakah Anda yakin ingin menghapus user ini secara permanen?")) return;
+  const confirmDelete = (userId) => {
+    setUserToDelete(userId);
+  };
+
+  const executeDelete = async () => {
+    if (!userToDelete) return;
+    setIsDeleting(true);
 
     try {
       const { error } = await supabase.rpc("admin_delete_user", {
-        p_user_id: userId,
+        p_user_id: userToDelete,
       });
 
       if (error) throw error;
       toast.success("User berhasil dihapus secara permanen!");
+      setUserToDelete(null);
     } catch (err) {
       toast.error("Gagal menghapus user.");
       console.error(err);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -203,7 +213,7 @@ export function UsersManagementPage() {
                         <Button
                           size="sm"
                           variant="secondary"
-                          onClick={() => deleteUser(u.id)}
+                          onClick={() => confirmDelete(u.id)}
                           className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -317,6 +327,53 @@ export function UsersManagementPage() {
                 </Button>
               </div>
             </form>
+          </Card>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {userToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm"
+            onClick={() => !isDeleting && setUserToDelete(null)}
+          />
+          <Card className="relative w-full max-w-sm p-6">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                  Hapus User
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Tindakan ini tidak dapat dibatalkan.
+                </p>
+              </div>
+            </div>
+            
+            <p className="mb-6 text-sm text-slate-600 dark:text-slate-300">
+              Apakah Anda yakin ingin menghapus user ini secara permanen? Semua data yang terkait dengan user ini juga mungkin akan terhapus.
+            </p>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setUserToDelete(null)}
+                disabled={isDeleting}
+              >
+                Batal
+              </Button>
+              <Button 
+                onClick={executeDelete} 
+                disabled={isDeleting}
+                className="bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 border-transparent"
+              >
+                {isDeleting ? "Menghapus..." : "Ya, Hapus"}
+              </Button>
+            </div>
           </Card>
         </div>
       )}
