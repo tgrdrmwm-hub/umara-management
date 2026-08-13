@@ -123,8 +123,8 @@ export function UsersManagementPage() {
       toast.success("User berhasil dihapus secara permanen!");
       setUserToDelete(null);
     } catch (err) {
-      toast.error("Gagal menghapus user.");
-      console.error(err);
+      toast.error(err.message || "Gagal menghapus user. Pastikan script SQL sudah dijalankan di Supabase.");
+      console.error("Delete user error:", err);
     } finally {
       setIsDeleting(false);
     }
