@@ -1,4 +1,4 @@
-import { ShieldCheck, Plus, UserX, UserCheck, AlertCircle } from "lucide-react";
+import { ShieldCheck, Plus, UserX, UserCheck, AlertCircle, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -104,6 +104,22 @@ export function UsersManagementPage() {
     }
   };
 
+  const deleteUser = async (userId) => {
+    if (!window.confirm("Apakah Anda yakin ingin menghapus user ini secara permanen?")) return;
+
+    try {
+      const { error } = await supabase.rpc("admin_delete_user", {
+        p_user_id: userId,
+      });
+
+      if (error) throw error;
+      toast.success("User berhasil dihapus secara permanen!");
+    } catch (err) {
+      toast.error("Gagal menghapus user.");
+      console.error(err);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -161,28 +177,39 @@ export function UsersManagementPage() {
                   </td>
                   <td className="px-4 py-3">
                     {u.id !== currentUser.id && (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => toggleUserStatus(u.id, u.status)}
-                        className={
-                          u.status === "active"
-                            ? "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
-                            : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
-                        }
-                      >
-                        {u.status === "active" ? (
-                          <>
-                            <UserX className="h-3.5 w-3.5" />
-                            Nonaktifkan
-                          </>
-                        ) : (
-                          <>
-                            <UserCheck className="h-3.5 w-3.5" />
-                            Aktifkan
-                          </>
-                        )}
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => toggleUserStatus(u.id, u.status)}
+                          className={
+                            u.status === "active"
+                              ? "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
+                              : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
+                          }
+                        >
+                          {u.status === "active" ? (
+                            <>
+                              <UserX className="h-3.5 w-3.5" />
+                              Nonaktifkan
+                            </>
+                          ) : (
+                            <>
+                              <UserCheck className="h-3.5 w-3.5" />
+                              Aktifkan
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => deleteUser(u.id)}
+                          className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Hapus
+                        </Button>
+                      </div>
                     )}
                   </td>
                 </tr>
