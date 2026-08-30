@@ -428,52 +428,93 @@ export function AttendancePage() {
       </div>
 
       {/* Calendar */}
-      <Card className="p-5">
-        <div className="mb-4 flex items-center gap-2">
-          <CalendarDays className="h-4 w-4 text-slate-500" />
-          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-            Kalender {monthName}
-          </h2>
-          <div className="ml-auto flex items-center gap-3 text-xs text-slate-500">
-            <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-slate-900 dark:bg-slate-100" />
+      <Card className="p-6 relative overflow-hidden bg-gradient-to-b from-white to-slate-50/50 dark:from-slate-900 dark:to-slate-900/50">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+        
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner dark:bg-indigo-500/10 dark:text-indigo-400">
+              <CalendarDays className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                {monthName} {now.getFullYear()}
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Log absensi bulan ini</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4 text-xs font-medium text-slate-600 dark:text-slate-400">
+            <span className="flex items-center gap-2 px-2 py-1 rounded-md bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-white/5">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
+              </span>
               Hari ini
             </span>
-            <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="flex items-center gap-2 px-2 py-1 rounded-md bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-white/5">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
               Ada absensi
             </span>
           </div>
         </div>
-        <div className="grid grid-cols-7 gap-1">
+        
+        <div className="grid grid-cols-7 gap-y-4 gap-x-2 relative z-10">
           {["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"].map((d) => (
             <div
               key={d}
-              className="py-1 text-center text-[10px] font-medium text-slate-400"
+              className="pb-2 text-center text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500"
             >
               {d}
             </div>
           ))}
-          {Array.from({ length: daysInMonth }, (_, i) => {
-            const date = i + 1;
-            const isToday = date === now.getDate();
-            const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(date).padStart(2, "0")}`;
-            const hasAttendance = attendance.some((r) => r.date === dateStr);
-            return (
-              <div
-                key={i}
-                className={`flex h-8 items-center justify-center rounded-md text-xs font-medium transition-colors ${
-                  isToday
-                    ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-                    : hasAttendance
-                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
-                      : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-white/8"
-                }`}
-              >
-                {date}
-              </div>
-            );
-          })}
+          
+          {(() => {
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            const firstDayOfMonth = new Date(year, month, 1).getDay();
+            const daysInPrevMonth = new Date(year, month, 0).getDate();
+            const firstDayIndex = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+            
+            const days = [];
+            for (let i = 0; i < firstDayIndex; i++) {
+              days.push({ type: 'prev', date: daysInPrevMonth - firstDayIndex + i + 1 });
+            }
+            for (let i = 1; i <= daysInMonth; i++) {
+              days.push({ type: 'current', date: i });
+            }
+            const remainingDays = 42 - days.length;
+            for (let i = 1; i <= remainingDays; i++) {
+              days.push({ type: 'next', date: i });
+            }
+            
+            return days.map((day, idx) => {
+              const isToday = day.type === 'current' && day.date === now.getDate();
+              const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day.date).padStart(2, "0")}`;
+              const hasAttendance = day.type === 'current' && attendance.some((r) => r.date === dateStr);
+              
+              return (
+                <div key={idx} className="flex justify-center">
+                  <div
+                    className={`relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl text-sm font-semibold transition-all duration-300 ${
+                      day.type !== 'current'
+                        ? 'text-slate-300 dark:text-slate-700'
+                        : isToday
+                          ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 scale-110 z-10'
+                          : hasAttendance
+                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 hover:bg-emerald-100 hover:scale-105 ring-1 ring-inset ring-emerald-200 dark:ring-emerald-500/30'
+                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105'
+                    } cursor-default group`}
+                  >
+                    {day.date}
+                    {hasAttendance && !isToday && (
+                      <span className="absolute bottom-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500 transition-transform group-hover:scale-150"></span>
+                    )}
+                  </div>
+                </div>
+              );
+            });
+          })()}
         </div>
       </Card>
 

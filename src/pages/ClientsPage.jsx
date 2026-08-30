@@ -276,7 +276,7 @@ export function ClientsPage() {
             Client
           </h1>
           <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-            Manajemen data client Ã¢â‚¬â€ {clients.length} entri
+            Manajemen data client - {clients.length} entri
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
