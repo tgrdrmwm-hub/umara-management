@@ -134,20 +134,7 @@ export function TasksPage() {
             <History className="h-4 w-4" />
             Riwayat
           </Button>
-          <Button
-            onClick={() => {
-              if (showForm && !editing) {
-                closeForm();
-              } else {
-                setEditing(null);
-                setForm(emptyTask);
-                setShowForm(true);
-              }
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            Tambah Task
-          </Button>
+
         </div>
       </div>
 

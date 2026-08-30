@@ -6,6 +6,10 @@ export const taxServiceDefinitions = [
       { name: "PKP", basePoints: 35 },
       { name: "Non PKP", basePoints: 30 },
       { name: "NE (Non Efektif)", basePoints: 25 },
+      { name: "Pembuatan NPWP", basePoints: 40 },
+      { name: "Pengurangan Sanksi", basePoints: 25 },
+      { name: "Restitusi Pajak", basePoints: 35 },
+      { name: "Administrasi Lainnya", basePoints: 20 },
     ],
   },
   {
@@ -54,6 +58,23 @@ export const taxServiceDefinitions = [
       { name: "YouTube", basePoints: 42 },
       { name: "Facebook", basePoints: 5 },
       { name: "WhatsApp", basePoints: 5 },
+    ],
+  },
+  {
+    category: "Administrasi Pajak",
+    services: [
+      { name: "Surat Kuasa", basePoints: 25 },
+      { name: "Surat Kontrak", basePoints: 25 },
+      { name: "Penawaran", basePoints: 30 },
+    ],
+  },
+  {
+    category: "Masenger",
+    services: [
+      { name: "Pengiriman Dokumen", basePoints: 20 },
+      { name: "Tanda Tangan Dokumen", basePoints: 20 },
+      { name: "Lainnya", basePoints: 20 },
+      { name: "KBM", basePoints: 79 },
     ],
   },
 ];

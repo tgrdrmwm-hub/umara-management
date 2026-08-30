@@ -1,4 +1,4 @@
-import { Bell, LogOut, Menu, Moon, Search, Sun, X } from "lucide-react";
+import { Bell, LogOut, Menu, Moon, Search, Sun, X, LayoutPanelLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { Button } from "../components/ui/Button";
@@ -10,6 +10,7 @@ import { cn } from "../utils/cn";
 export function AppLayout() {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [dark, setDark] = useState(
     () => localStorage.getItem("umara_theme") === "dark",
   );
@@ -26,12 +27,10 @@ export function AppLayout() {
 
     const isDeveloper = user?.role === "developer";
 
-    // Khusus menu Users, hanya developer yang boleh melihat
     if (item.label === "Users" && !isDeveloper) {
       return false;
     }
 
-    // Khusus menu Report, hanya admin/owner yang boleh melihat
     if (item.label === "Report" && !isAdmin) {
       return false;
     }
@@ -86,7 +85,7 @@ export function AppLayout() {
     : "U";
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 overflow-x-hidden">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
@@ -98,21 +97,25 @@ export function AppLayout() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform duration-200 dark:border-white/8 dark:bg-slate-900 lg:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+          "fixed inset-y-0 left-0 z-40 flex flex-col border-r border-slate-200 bg-white transition-all duration-300 dark:border-white/8 dark:bg-slate-900",
+          sidebarOpen ? "translate-x-0 w-64" : "-translate-x-full lg:translate-x-0",
+          sidebarCollapsed ? "lg:w-16" : "lg:w-64 w-64"
         )}
       >
         {/* Logo */}
-        <div className="flex h-14 shrink-0 items-center justify-between border-b border-slate-100 px-4 dark:border-white/8">
-          <div className="flex items-center">
+        <div className="flex h-14 shrink-0 items-center justify-between border-b border-slate-100 px-4 dark:border-white/8 overflow-hidden">
+          <div className="flex items-center w-full justify-center lg:justify-start">
             <img 
               src="https://umaratax.com/wp-content/uploads/2025/07/image-1.png" 
               alt="Umaratax Logo" 
-              className="h-10 w-auto object-contain" 
+              className={cn("h-10 w-auto object-contain transition-opacity duration-200", sidebarCollapsed ? "hidden lg:hidden" : "block")} 
             />
+            {sidebarCollapsed && (
+              <div className="hidden lg:flex mx-auto font-bold text-xl text-slate-900 dark:text-white">U</div>
+            )}
           </div>
           <button
-            className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 lg:hidden dark:hover:bg-white/8"
+            className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 lg:hidden dark:hover:bg-white/8 absolute right-4"
             onClick={() => setSidebarOpen(false)}
           >
             <X className="h-4 w-4" />
@@ -120,24 +123,26 @@ export function AppLayout() {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto px-3 py-3">
-          <div className="space-y-0.5">
+        <nav className="flex-1 overflow-y-auto px-3 py-3 overflow-x-hidden">
+          <div className="space-y-1">
             {filteredNav.map((item) => (
               <NavLink
                 key={item.href}
                 to={item.href}
                 onClick={() => setSidebarOpen(false)}
+                title={sidebarCollapsed ? item.label : undefined}
                 className={({ isActive }) =>
                   cn(
-                    "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    "flex items-center rounded-lg transition-colors overflow-hidden",
+                    sidebarCollapsed ? "justify-center py-3 px-0" : "gap-2.5 px-3 py-2",
                     isActive
                       ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/8 dark:hover:text-slate-100",
                   )
                 }
               >
-                <item.icon className="h-4 w-4 shrink-0" />
-                <span>{item.label}</span>
+                <item.icon className={cn("shrink-0", sidebarCollapsed ? "h-5 w-5" : "h-4 w-4")} />
+                {!sidebarCollapsed && <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>}
               </NavLink>
             ))}
           </div>
@@ -145,24 +150,26 @@ export function AppLayout() {
 
         {/* User info at bottom */}
         <div className="shrink-0 border-t border-slate-100 p-3 dark:border-white/8">
-          <div className="flex items-center gap-2.5 rounded-lg px-2 py-2">
+          <div className={cn("flex items-center rounded-lg py-2", sidebarCollapsed ? "justify-center px-0" : "gap-2.5 px-2")}>
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white dark:bg-slate-100 dark:text-slate-900">
               {userInitials}
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-semibold text-slate-900 dark:text-slate-100">
-                {user?.name}
-              </p>
-              <p className="truncate text-[10px] capitalize text-slate-500 dark:text-slate-400">
-                {user?.role?.replace("_", " ")}
-              </p>
-            </div>
+            {!sidebarCollapsed && (
+              <div className="min-w-0 flex-1 overflow-hidden">
+                <p className="truncate text-xs font-semibold text-slate-900 dark:text-slate-100">
+                  {user?.name}
+                </p>
+                <p className="truncate text-[10px] capitalize text-slate-500 dark:text-slate-400">
+                  {user?.role?.replace("_", " ")}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </aside>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-16" : "lg:pl-64")}>
         {/* Top header */}
         <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-slate-200/80 bg-white/95 px-4 backdrop-blur-md dark:border-white/8 dark:bg-slate-950/95">
           <Button
@@ -173,6 +180,16 @@ export function AppLayout() {
             aria-label="Open menu"
           >
             <Menu className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="hidden lg:flex"
+            aria-label="Toggle sidebar"
+          >
+            <LayoutPanelLeft className="h-4 w-4" />
           </Button>
 
           <div className="relative max-w-xs flex-1">

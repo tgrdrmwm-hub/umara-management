@@ -265,23 +265,21 @@ export function AttendancePage() {
           >
             Check Out
           </Button>
-          {isAdmin && (
-            <Button
-              variant="secondary"
-              onClick={() => {
-                if (showForm && !editing) {
-                  closeForm();
-                } else {
-                  setEditing(null);
-                  setForm(getEmptyAttendance(user?.name || ""));
-                  setShowForm(true);
-                }
-              }}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Manual
-            </Button>
-          )}
+          <Button
+            variant="secondary"
+            onClick={() => {
+              if (showForm && !editing) {
+                closeForm();
+              } else {
+                setEditing(null);
+                setForm(getEmptyAttendance(user?.name || ""));
+                setShowForm(true);
+              }
+            }}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Manual
+          </Button>
         </div>
       </div>
 
