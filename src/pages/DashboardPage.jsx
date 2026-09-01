@@ -64,7 +64,21 @@ export function DashboardPage() {
       )
     : 0;
 
-  const taxCategoryChart = taxServiceDefinitions.map((g) => ({
+  const categories = (() => {
+    if (!data?.taxServices || data.taxServices.length === 0) return taxServiceDefinitions;
+    const grouped = data.taxServices.reduce((acc, service) => {
+      if (!acc[service.category]) acc[service.category] = [];
+      acc[service.category].push(service);
+      return acc;
+    }, {});
+    
+    return Object.entries(grouped).map(([category, services]) => ({
+      category,
+      services: services.sort((a, b) => a.name.localeCompare(b.name)),
+    }));
+  })();
+
+  const taxCategoryChart = categories.map((g) => ({
     category: g.category.replace("Aktivasi ", ""),
     layanan: g.services.length,
   }));
@@ -74,7 +88,7 @@ export function DashboardPage() {
     { label: "Total Staff", value: staffCount, icon: Users },
     {
       label: "Layanan Pajak",
-      value: taxServiceDefinitions.reduce((s, g) => s + g.services.length, 0),
+      value: categories.reduce((s, g) => s + g.services.length, 0),
       icon: ShieldCheck,
     },
     { 

@@ -62,6 +62,13 @@ export function useAppData() {
           void queryClient.invalidateQueries({ queryKey: ["umara-dashboard"] });
         },
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tax_services_catalog" },
+        () => {
+          void queryClient.invalidateQueries({ queryKey: ["umara-dashboard"] });
+        },
+      )
       .subscribe();
 
     return () => {

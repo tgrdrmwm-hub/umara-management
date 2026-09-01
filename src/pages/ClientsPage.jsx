@@ -1,4 +1,4 @@
-﻿import { Download, FileDown, FileUp, Plus, Search, X } from "lucide-react";
+import { Download, FileDown, FileUp, Plus, Search, X } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -71,6 +71,20 @@ export function ClientsPage() {
       .includes(search.toLowerCase()),
   );
 
+  const categories = (() => {
+    if (!data?.taxServices || data.taxServices.length === 0) return taxServiceDefinitions;
+    const grouped = data.taxServices.reduce((acc, service) => {
+      if (!acc[service.category]) acc[service.category] = [];
+      acc[service.category].push(service);
+      return acc;
+    }, {});
+    
+    return Object.entries(grouped).map(([category, services]) => ({
+      category,
+      services: services.sort((a, b) => a.name.localeCompare(b.name)),
+    }));
+  })();
+
   async function refresh(message) {
     await queryClient.invalidateQueries({ queryKey: ["umara-dashboard"] });
     toast.success(message);
@@ -102,7 +116,7 @@ export function ClientsPage() {
       return toast.error("Kategori, layanan, dan PIC wajib diisi");
     }
 
-    const catObj = taxServiceDefinitions.find((c) => c.category === delegateForm.category);
+    const catObj = categories.find((c) => c.category === delegateForm.category);
     const srvObj = catObj?.services.find((i) => i.name === delegateForm.service);
     const points = srvObj ? srvObj.basePoints : 0;
 
@@ -540,7 +554,7 @@ export function ClientsPage() {
                   required
                 >
                   <option value="">-- Pilih Kategori --</option>
-                  {taxServiceDefinitions.map((cat) => (
+                  {categories.map((cat) => (
                     <option key={cat.category} value={cat.category}>
                       {cat.category}
                     </option>
@@ -560,7 +574,7 @@ export function ClientsPage() {
                   disabled={!delegateForm.category}
                 >
                   <option value="">-- Pilih Layanan --</option>
-                  {taxServiceDefinitions
+                  {categories
                     .find((c) => c.category === delegateForm.category)
                     ?.services.map((srv) => (
                       <option key={srv.name} value={srv.name}>

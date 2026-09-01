@@ -1,4 +1,3 @@
-import { getTaxServicePoint } from "../constants/taxServices";
 import { supabase } from "./supabase";
 
 export const emptyAppData = {
@@ -11,6 +10,7 @@ export const emptyAppData = {
   taxWorks: [],
   users: [],
   activityLogs: [],
+  taxServices: [],
 };
 
 export async function fetchAppData() {
@@ -25,6 +25,7 @@ export async function fetchAppData() {
       taxWorks: [],
       attendance: [],
       analytics: [],
+      taxServices: [],
     };
   }
 
@@ -36,6 +37,7 @@ export async function fetchAppData() {
     taxResult,
     internTasksResult,
     activityResult,
+    taxServicesResult,
   ] = await Promise.all([
     supabase
       .from("users")
@@ -57,6 +59,11 @@ export async function fetchAppData() {
       .select("*")
       .order("created_at", { ascending: false })
       .limit(50),
+    supabase
+      .from("tax_services_catalog")
+      .select("*")
+      .order("category", { ascending: true })
+      .order("service_name", { ascending: true }),
   ]);
 
   const firstError = [
@@ -66,6 +73,7 @@ export async function fetchAppData() {
     attendanceResult,
     taxResult,
     internTasksResult,
+    taxServicesResult,
   ].find((result) => result.error)?.error;
 
   // If error or all data is empty, return empty arrays (fallback to dummy in useAppData)
@@ -81,6 +89,7 @@ export async function fetchAppData() {
       attendance: [],
       analytics: [],
       activityLogs: [],
+      taxServices: [],
     };
   }
 
@@ -91,6 +100,7 @@ export async function fetchAppData() {
   const taxWorks = (taxResult.data ?? []).map(toTaxWork);
   const attendance = (attendanceResult.data ?? []).map(toAttendance);
   const activityLogs = activityResult.data ?? [];
+  const taxServices = (taxServicesResult.data ?? []).map(toTaxService);
 
   return {
     analytics: buildAnalytics(
@@ -108,6 +118,7 @@ export async function fetchAppData() {
     taxWorks,
     users,
     activityLogs,
+    taxServices,
   };
 }
 
@@ -313,18 +324,16 @@ export async function deleteInternTask(id) {
   if (error) throw error;
 }
 
-export async function createTaxWork(values) {
+export async function createTaxWork(values, points = 0) {
   if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
   const { error } = await supabase.from("tax").insert(toTaxRow(values));
   if (error) throw error;
-  if (values.status === "Selesai")
-    await awardPointsToPic(
-      values.pic,
-      getTaxServicePoint(values.category, values.service),
-    );
+  if (values.status === "Selesai") {
+    await awardPointsToPic(values.pic, points);
+  }
 }
 
-export async function updateTaxWork(id, values, previousStatus) {
+export async function updateTaxWork(id, values, previousStatus, points = 0) {
   if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
   const { error } = await supabase
     .from("tax")
@@ -332,10 +341,7 @@ export async function updateTaxWork(id, values, previousStatus) {
     .eq("id", id);
   if (error) throw error;
   if (previousStatus !== "Selesai" && values.status === "Selesai") {
-    await awardPointsToPic(
-      values.pic,
-      getTaxServicePoint(values.category, values.service),
-    );
+    await awardPointsToPic(values.pic, points);
   }
 }
 
@@ -381,6 +387,39 @@ export async function deleteAttendance(id) {
   if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
   const { error } = await supabase.from("attendance").delete().eq("id", id);
   if (error) throw error;
+}
+
+export async function createTaxService(values) {
+  if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
+  const { error } = await supabase.from("tax_services_catalog").insert({
+    category: values.category,
+    service_name: values.service_name,
+    base_points: values.base_points,
+  });
+  if (error) throw error;
+  await logActivity("Menambah Layanan", `Layanan: ${values.service_name}`);
+}
+
+export async function updateTaxService(id, values) {
+  if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
+  const { error } = await supabase
+    .from("tax_services_catalog")
+    .update({
+      category: values.category,
+      service_name: values.service_name,
+      base_points: values.base_points,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (error) throw error;
+  await logActivity("Mengubah Layanan", `Layanan: ${values.service_name}`);
+}
+
+export async function deleteTaxService(id, serviceName) {
+  if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
+  const { error } = await supabase.from("tax_services_catalog").delete().eq("id", id);
+  if (error) throw error;
+  await logActivity("Menghapus Layanan", `Layanan: ${serviceName}`);
 }
 
 export async function updateUserPoints(id, points) {
@@ -573,6 +612,15 @@ function toTaxWork(row) {
     status: String(row.status ?? "Draft"),
     attachment: String(row.attachment ?? ""),
     notes: String(row.notes ?? ""),
+  };
+}
+
+function toTaxService(row) {
+  return {
+    id: String(row.id),
+    category: String(row.category ?? ""),
+    name: String(row.service_name ?? ""),
+    basePoints: Number(row.base_points ?? 0),
   };
 }
 

@@ -73,6 +73,20 @@ export function TasksPage() {
   const tasks = data?.tasks ?? [];
   const activityLogs = data?.activityLogs ?? [];
 
+  const categories = (() => {
+    if (!data?.taxServices || data.taxServices.length === 0) return taxServiceDefinitions;
+    const grouped = data.taxServices.reduce((acc, service) => {
+      if (!acc[service.category]) acc[service.category] = [];
+      acc[service.category].push(service);
+      return acc;
+    }, {});
+    
+    return Object.entries(grouped).map(([category, services]) => ({
+      category,
+      services: services.sort((a, b) => a.name.localeCompare(b.name)),
+    }));
+  })();
+
   async function refresh(message) {
     await queryClient.invalidateQueries({ queryKey: ["umara-dashboard"] });
     toast.success(message);
@@ -243,7 +257,7 @@ export function TasksPage() {
                 }
               >
                 <option value={10} disabled>-- Pilih Layanan --</option>
-                {taxServiceDefinitions.map((cat) => (
+                {categories.map((cat) => (
                   <optgroup key={cat.category} label={cat.category}>
                     {cat.services.map((svc) => (
                       <option key={svc.name} value={svc.basePoints}>
