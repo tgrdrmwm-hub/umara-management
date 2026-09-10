@@ -20,10 +20,10 @@ export function TaxPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({
+    const [form, setForm] = useState({
     category: "",
     service_name: "",
-    base_points: 0,
+    base_points: 0.25,
   });
 
   const categories = useMemo(() => {
@@ -61,7 +61,7 @@ export function TaxPage() {
       }
       setShowForm(false);
       setEditing(null);
-      setForm({ category: "", service_name: "", base_points: 0 });
+      setForm({ category: "", service_name: "", base_points: 0.25 });
     } catch (err) {
       toast.error("Gagal menyimpan layanan");
     }
@@ -72,7 +72,7 @@ export function TaxPage() {
     setForm({
       category: service.category,
       service_name: service.name,
-      base_points: service.basePoints,
+      base_points: service.basePoints ?? 0.25,
     });
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -80,7 +80,7 @@ export function TaxPage() {
 
   function startAdd() {
     setEditing(null);
-    setForm({ category: "", service_name: "", base_points: 0 });
+    setForm({ category: "", service_name: "", base_points: 0.25 });
     setShowForm(true);
   }
 
@@ -94,7 +94,7 @@ export function TaxPage() {
             Kategori & Layanan
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Katalog lengkap layanan UMARA TAX beserta poin operasionalnya.
+            Katalog lengkap layanan UMARA TAX beserta bonus poin ketepatan waktunya.
           </p>
         </div>
         {isAdmin && (
@@ -150,14 +150,15 @@ export function TaxPage() {
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                Poin Dasar
+                Bonus Ketepatan Waktu (Poin)
               </label>
               <Input
                 type="number"
                 required
                 min="0"
+                step="0.25"
                 value={form.base_points}
-                onChange={(e) => setForm({ ...form, base_points: parseInt(e.target.value) || 0 })}
+                onChange={(e) => setForm({ ...form, base_points: parseFloat(e.target.value) || 0 })}
               />
             </div>
             <div className="sm:col-span-3 flex gap-2">
@@ -185,27 +186,33 @@ export function TaxPage() {
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
                   {category}
                 </h2>
-                <Badge variant="blue" className="px-2 py-0.5 rounded-full">
+                <Badge tone="blue" className="px-2 py-0.5 rounded-full">
                   {services.length} Layanan
                 </Badge>
               </div>
 
               {/* Services List */}
-              <div className="p-5 flex-1 flex flex-col gap-3">
+              <div className="p-5 flex-1 flex flex-col gap-2">
                 {services.map((service) => (
-                  <div key={service.id} className="flex items-center justify-between group">
-                    <div className="flex items-center gap-2">
-                      <ArrowRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-500 transition-colors" />
-                      <span className="text-sm text-slate-700 dark:text-slate-300 font-medium">
+                  <div
+                    key={service.id}
+                    className="flex items-center justify-between gap-3 group py-1.5 border-b border-slate-100/80 dark:border-white/5 last:border-0"
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <ArrowRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-500 transition-colors shrink-0" />
+                      <span className="text-sm text-slate-700 dark:text-slate-300 font-medium leading-snug">
                         {service.name}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="emerald" className="font-mono">
-                        {service.basePoints} pts
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Badge
+                        tone="green"
+                        className="font-mono text-xs whitespace-nowrap shrink-0"
+                      >
+                        +{service.basePoints} pts
                       </Badge>
                       {isAdmin && (
-                        <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => startEdit(service)}
                             className="rounded p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10"
@@ -234,8 +241,8 @@ export function TaxPage() {
 
               {/* Category Footer (Total points) */}
               <div className="bg-slate-50/50 dark:bg-slate-800/20 px-5 py-3 border-t border-slate-200 dark:border-white/10 flex justify-between items-center text-xs text-slate-500">
-                <span>Total Poin Kategori</span>
-                <span className="font-semibold text-slate-700 dark:text-slate-300">{totalPoints} pts</span>
+                <span>Total Bonus Kategori</span>
+                <span className="font-semibold text-slate-700 dark:text-slate-300">{Number(totalPoints).toFixed(2)} pts</span>
               </div>
             </Card>
           );

@@ -34,16 +34,24 @@ const badgeConfig = {
 };
 
 function getBadge(points) {
-  if (points > 800) return "Elite";
-  if (points > 600) return "Pro";
+  if (points >= 50) return "Elite";
+  if (points >= 20) return "Pro";
   return "Rising";
+}
+
+function formatPoints(pts) {
+  const num = Number(pts || 0);
+  return num.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
 }
 
 // Gold, silver, bronze then palette - stronger colors
 const podiumColors = ["#d97706", "#64748b", "#9a3412"];
 
 export function PointsPage() {
-  const { data, isLoading, error } = useAppData();
+  const { data } = useAppData();
   const { user: currentUser } = useAuth();
   const isAdmin = ["owner", "developer", "manager", "admin"].includes(
     currentUser?.role,
@@ -52,9 +60,9 @@ export function PointsPage() {
   const [draftPoints, setDraftPoints] = useState({});
 
   const ranked = [...(data?.users ?? [])].sort((a, b) => b.points - a.points);
-  const totalPoints = ranked.reduce((s, u) => s + u.points, 0);
+  const totalPoints = Math.round(ranked.reduce((s, u) => s + (u.points || 0), 0) * 100) / 100;
   const topStaff = ranked[0];
-  const avgPoints = ranked.length ? Math.round(totalPoints / ranked.length) : 0;
+  const avgPoints = ranked.length ? Math.round((totalPoints / ranked.length) * 100) / 100 : 0;
 
   async function savePoints(user) {
     const newPoints = draftPoints[user.id] ?? user.points;
@@ -79,20 +87,20 @@ export function PointsPage() {
           Point & Leaderboard
         </h1>
         <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-          Point dari pekerjaan pajak dan task yang diselesaikan staff.
+          Bonus poin dari ketepatan waktu pengerjaan tugas dan kehadiran staf.
         </p>
       </motion.div>
 
       {/* Stats */}
       <div className="grid gap-3 sm:grid-cols-3">
         {[
-          { label: "Total Point", value: totalPoints.toLocaleString() },
+          { label: "Total Point", value: formatPoints(totalPoints) },
           {
             label: "Staff Terunggul",
             value: topStaff?.name ?? "—",
-            sub: topStaff ? `${topStaff.points} poin` : undefined,
+            sub: topStaff ? `${formatPoints(topStaff.points)} poin` : undefined,
           },
-          { label: "Rata-rata Point", value: avgPoints.toLocaleString() },
+          { label: "Rata-rata Point", value: formatPoints(avgPoints) },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
@@ -265,19 +273,20 @@ export function PointsPage() {
                           className="text-base font-semibold"
                           style={{ color: i < 3 ? podiumColors[i] : undefined }}
                         >
-                          {user.points.toLocaleString()}
+                          {formatPoints(user.points)}
                         </span>
                       </td>
                       {isAdmin && (
                         <td className="px-4 py-3">
                           <Input
                             type="number"
+                            step="0.25"
                             className="w-24 h-8 text-xs"
                             value={draftPoints[user.id] ?? user.points}
                             onChange={(e) =>
                               setDraftPoints({
                                 ...draftPoints,
-                                [user.id]: Number(e.target.value),
+                                [user.id]: parseFloat(e.target.value) || 0,
                               })
                             }
                           />

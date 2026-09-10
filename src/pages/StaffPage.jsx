@@ -112,7 +112,10 @@ export function StaffPage() {
                         </Badge>
                       </td>
                       <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100">
-                        {user.points.toLocaleString()}
+                        {Number(user.points ?? 0).toLocaleString(undefined, {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 2,
+                        })}
                       </td>
                       <td className="px-4 py-3 text-xs font-medium text-slate-600 dark:text-slate-400">
                         {user.attendanceRate}%

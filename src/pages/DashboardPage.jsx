@@ -104,7 +104,13 @@ export function DashboardPage() {
     { label: "Kehadiran", value: `${averageAttendance}%`, icon: BellRing },
     {
       label: "Total Point",
-      value: data.users.reduce((s, u) => s + u.points, 0),
+      value: (
+        Math.round(data.users.reduce((s, u) => s + (u.points || 0), 0) * 100) /
+        100
+      ).toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      }),
       icon: Medal,
     },
   ];
@@ -368,7 +374,7 @@ export function DashboardPage() {
                 score: Math.max(
                   1,
                   Math.round(
-                    data.users.reduce((s, u) => s + u.points, 0) / 100,
+                    data.users.reduce((s, u) => s + (u.points || 0), 0),
                   ),
                 ),
               },

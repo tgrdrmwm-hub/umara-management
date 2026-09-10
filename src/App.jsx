@@ -5,6 +5,7 @@ import { RequireAuth, RequireFreshPassword } from "./routes/ProtectedRoute";
 import { AdminDosenPage } from "./pages/AdminDosenPage";
 import { AttendancePage } from "./pages/AttendancePage";
 import { AuthPage } from "./pages/AuthPage";
+import { CalendarPage } from "./pages/CalendarPage";
 import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 import { ClientsPage } from "./pages/ClientsPage";
 import { DashboardPage } from "./pages/DashboardPage";
@@ -45,6 +46,7 @@ export default function App() {
         >
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/tax" element={<TaxPage />} />
           <Route path="/clients" element={<ClientsPage />} />
           <Route path="/staff" element={<StaffPage />} />

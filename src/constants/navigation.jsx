@@ -2,6 +2,7 @@ import {
   BarChart3,
   BriefcaseBusiness,
   CalendarCheck,
+  CalendarDays,
   ClipboardList,
   FileSpreadsheet,
   LayoutDashboard,
@@ -15,6 +16,7 @@ import {
 
 export const navigation = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Kalender Kegiatan", href: "/calendar", icon: CalendarDays },
   { label: "Kategori & Layanan", href: "/tax", icon: ShieldCheck },
   { label: "Client", href: "/clients", icon: BriefcaseBusiness },
   { label: "Staff", href: "/staff", icon: Users },

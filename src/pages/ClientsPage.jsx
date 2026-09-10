@@ -118,7 +118,7 @@ export function ClientsPage() {
 
     const catObj = categories.find((c) => c.category === delegateForm.category);
     const srvObj = catObj?.services.find((i) => i.name === delegateForm.service);
-    const points = srvObj ? srvObj.basePoints : 0;
+    const points = srvObj ? Number(srvObj.basePoints ?? 0.25) : 0.25;
 
     try {
       await createTask({

@@ -2,79 +2,79 @@ export const taxServiceDefinitions = [
   {
     category: "Coretax",
     services: [
-      { name: "Aktivasi Coretax", basePoints: 40 },
-      { name: "PKP", basePoints: 35 },
-      { name: "Non PKP", basePoints: 30 },
-      { name: "NE (Non Efektif)", basePoints: 25 },
-      { name: "Pembuatan NPWP", basePoints: 40 },
-      { name: "Pengurangan Sanksi", basePoints: 25 },
-      { name: "Restitusi Pajak", basePoints: 35 },
-      { name: "Administrasi Lainnya", basePoints: 20 },
+      { name: "Aktivasi Coretax", basePoints: 0.25 },
+      { name: "PKP", basePoints: 0.25 },
+      { name: "Non PKP", basePoints: 0.25 },
+      { name: "NE (Non Efektif)", basePoints: 0.25 },
+      { name: "Pembuatan NPWP", basePoints: 0.25 },
+      { name: "Pengurangan Sanksi", basePoints: 0.25 },
+      { name: "Restitusi Pajak", basePoints: 0.25 },
+      { name: "Administrasi Lainnya", basePoints: 0.25 },
     ],
   },
   {
     category: "SPT Tahunan",
     services: [
-      { name: "SPT Orang Pribadi", basePoints: 90 },
-      { name: "SPT Badan", basePoints: 93 },
-      { name: "SPT Orang Pribadi Pembetulan", basePoints: 96 },
-      { name: "SPT Badan Pembetulan", basePoints: 100 },
+      { name: "SPT Orang Pribadi", basePoints: 0.25 },
+      { name: "SPT Badan", basePoints: 0.25 },
+      { name: "SPT Orang Pribadi Pembetulan", basePoints: 0.25 },
+      { name: "SPT Badan Pembetulan", basePoints: 0.25 },
     ],
   },
   {
     category: "SPT Masa",
     services: [
-      { name: "PPN", basePoints: 82 },
-      { name: "PPh 21/26", basePoints: 79 },
-      { name: "PPh 22/23", basePoints: 76 },
-      { name: "PPh Unifikasi", basePoints: 73 },
-      { name: "PPh Final", basePoints: 70 },
-      { name: "PPh 25", basePoints: 67 },
+      { name: "PPN", basePoints: 0.25 },
+      { name: "PPh 21/26", basePoints: 0.25 },
+      { name: "PPh 22/23", basePoints: 0.25 },
+      { name: "PPh Unifikasi", basePoints: 0.25 },
+      { name: "PPh Final", basePoints: 0.25 },
+      { name: "PPh 25", basePoints: 0.25 },
     ],
   },
   {
     category: "Akuntansi",
     services: [
-      { name: "Akuntan Internal", basePoints: 61 },
-      { name: "Akuntan Eksternal", basePoints: 64 },
+      { name: "Akuntan Internal", basePoints: 0.25 },
+      { name: "Akuntan Eksternal", basePoints: 0.25 },
     ],
   },
   {
     category: "Perizinan",
     services: [
-      { name: "Akta Pendirian", basePoints: 58 },
-      { name: "NIB", basePoints: 55 },
-      { name: "PBG", basePoints: 52 },
-      { name: "SLF", basePoints: 49 },
-      { name: "Perizinan Lainnya", basePoints: 46 },
+      { name: "Akta Pendirian", basePoints: 0.25 },
+      { name: "NIB", basePoints: 0.25 },
+      { name: "PBG", basePoints: 0.25 },
+      { name: "SLF", basePoints: 0.25 },
+      { name: "Perizinan Lainnya", basePoints: 0.25 },
     ],
   },
   {
     category: "Media",
     services: [
-      { name: "Website", basePoints: 45 },
-      { name: "Instagram", basePoints: 44 },
-      { name: "TikTok", basePoints: 43 },
-      { name: "YouTube", basePoints: 42 },
-      { name: "Facebook", basePoints: 5 },
-      { name: "WhatsApp", basePoints: 5 },
+      { name: "Website", basePoints: 0.25 },
+      { name: "Instagram", basePoints: 0.25 },
+      { name: "TikTok", basePoints: 0.25 },
+      { name: "YouTube", basePoints: 0.25 },
+      { name: "Facebook", basePoints: 0.25 },
+      { name: "WhatsApp", basePoints: 0.25 },
     ],
   },
   {
     category: "Administrasi Pajak",
     services: [
-      { name: "Surat Kuasa", basePoints: 25 },
-      { name: "Surat Kontrak", basePoints: 25 },
-      { name: "Penawaran", basePoints: 30 },
+      { name: "Surat Kuasa", basePoints: 0.25 },
+      { name: "Surat Kontrak", basePoints: 0.25 },
+      { name: "Penawaran", basePoints: 0.25 },
     ],
   },
   {
     category: "Masenger",
     services: [
-      { name: "Pengiriman Dokumen", basePoints: 20 },
-      { name: "Tanda Tangan Dokumen", basePoints: 20 },
-      { name: "Lainnya", basePoints: 20 },
-      { name: "KBM", basePoints: 79 },
+      { name: "Pengiriman Dokumen", basePoints: 0.25 },
+      { name: "Tanda Tangan Dokumen", basePoints: 0.25 },
+      { name: "Lainnya", basePoints: 0.25 },
+      { name: "KBM", basePoints: 0.25 },
     ],
   },
 ];
@@ -91,6 +91,6 @@ export function getTaxServicePoint(category, serviceName) {
     taxServices.find(
       (service) =>
         service.category === category && service.name === serviceName,
-    )?.basePoints ?? 0
+    )?.basePoints ?? 0.25
   );
 }

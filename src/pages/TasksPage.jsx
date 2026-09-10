@@ -25,12 +25,6 @@ const columns = [
     dot: "bg-blue-500",
   },
   {
-    key: "review",
-    label: "Review",
-    color: "bg-amber-50 dark:bg-amber-500/5",
-    dot: "bg-amber-500",
-  },
-  {
     key: "done",
     label: "Done",
     color: "bg-emerald-50 dark:bg-emerald-500/5",
@@ -44,7 +38,7 @@ const emptyTask = {
   pic: "",
   deadline: "",
   status: "todo",
-  points: 10,
+  points: 0.25,
   notes: "",
 };
 
@@ -59,7 +53,7 @@ const badgeToneMap = {
 };
 
 export function TasksPage() {
-  const { data, isLoading, error } = useAppData();
+  const { data } = useAppData();
   const { user } = useAuth();
   const isAdmin = ["owner", "developer", "manager", "admin"].includes(
     user?.role,
@@ -140,7 +134,7 @@ export function TasksPage() {
             Task Board
           </h1>
           <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-            Kanban — point otomatis diberikan saat task selesai.
+            Alur pengerjaan tugas — bonus +0.25 poin diberikan otomatis jika selesai tepat waktu.
           </p>
         </div>
         <div className="flex gap-2">
@@ -148,7 +142,10 @@ export function TasksPage() {
             <History className="h-4 w-4" />
             Riwayat
           </Button>
-
+          <Button onClick={() => { setEditing(null); setForm(emptyTask); setShowForm(true); }}>
+            <Plus className="h-4 w-4" />
+            Tambah Task
+          </Button>
         </div>
       </div>
 
@@ -207,30 +204,30 @@ export function TasksPage() {
         </div>
       )}
 
-      {/* Form */}
+      {/* Form modal/card */}
       {showForm && (
-        <Card className="p-5">
-          <div className="mb-4 flex items-center justify-between">
+        <Card className="p-4 border-indigo-200 dark:border-indigo-500/20">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/8">
             <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               {editing ? "Edit Task" : "Tambah Task Baru"}
             </h2>
             <button
               onClick={closeForm}
-              className="rounded-md p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/8"
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
           <form
-            className="grid gap-3 sm:grid-cols-2"
-            onSubmit={(e) => void submit(e)}
+            className="mt-4 grid gap-4 sm:grid-cols-2"
+            onSubmit={submit}
           >
             <div className="space-y-1 sm:col-span-2">
               <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                Judul Task *
+                Judul Task
               </label>
               <Input
-                placeholder="Deskripsi singkat task"
+                placeholder="Contoh: Rekonsiliasi Faktur Pajak PT ABC"
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
               />
@@ -247,7 +244,7 @@ export function TasksPage() {
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                Layanan (Otomatis Menentukan Point)
+                Layanan & Bonus Poin Ketepatan Waktu
               </label>
               <select
                 className={selectClass}
@@ -256,12 +253,12 @@ export function TasksPage() {
                   setForm({ ...form, points: Number(e.target.value) })
                 }
               >
-                <option value={10} disabled>-- Pilih Layanan --</option>
+                <option value={0.25}>Standar Bonus (+0.25 pts)</option>
                 {categories.map((cat) => (
                   <optgroup key={cat.category} label={cat.category}>
                     {cat.services.map((svc) => (
                       <option key={svc.name} value={svc.basePoints}>
-                        {svc.name} ({svc.basePoints} pts)
+                        {svc.name} (+{svc.basePoints} pts)
                       </option>
                     ))}
                   </optgroup>
@@ -362,9 +359,11 @@ export function TasksPage() {
       )}
 
       {/* Kanban columns */}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3">
         {columns.map((col) => {
-          const colTasks = tasks.filter((t) => t.status === col.key);
+          const colTasks = tasks.filter(
+            (t) => t.status === col.key || (col.key === "progress" && t.status === "review")
+          );
           return (
             <div
               key={col.key}
@@ -409,15 +408,15 @@ export function TasksPage() {
                     )}
                     <div className="mt-3 flex items-center justify-between">
                       {task.pic && (
-                        <span className="truncate text-xs text-slate-500 dark:text-slate-400 max-w-[100px]">
+                        <span className="truncate text-xs text-slate-500 dark:text-slate-400 max-w-[120px]">
                           {task.pic}
                         </span>
                       )}
                       <Badge
                         tone={col.key === "done" ? "green" : "slate"}
-                        className="ml-auto shrink-0"
+                        className="ml-auto shrink-0 text-xs"
                       >
-                        {task.points} pts
+                        +{task.points ?? 0.25} pts bonus
                       </Badge>
                     </div>
                     <div className="mt-3 flex flex-wrap gap-1.5 border-t border-slate-100 pt-2.5 dark:border-white/8">
@@ -428,18 +427,43 @@ export function TasksPage() {
                       >
                         Edit
                       </Button>
+                      {col.key === "todo" && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-400"
+                          onClick={() =>
+                            void updateTask(
+                              task.id,
+                              { ...task, status: "progress" },
+                              task.status,
+                            ).then(() =>
+                              refresh("Task dipindahkan ke In Progress"),
+                            )
+                          }
+                        >
+                          Kerjakan
+                        </Button>
+                      )}
                       {col.key !== "done" && (
                         <Button
                           size="sm"
-                          onClick={() =>
+                          onClick={() => {
+                            const todayStr = new Date().toISOString().split("T")[0];
+                            const isOverdue = task.deadline && task.deadline < todayStr;
+                            const bonusPts = task.points !== undefined && task.points !== null ? task.points : 0.25;
+                            const msg = isOverdue
+                              ? "Task diselesaikan (Terlambat - 0 poin bonus)"
+                              : `Task selesai tepat waktu! (+${bonusPts} poin bonus)`;
+
                             void updateTask(
                               task.id,
                               { ...task, status: "done" },
                               task.status,
                             ).then(() =>
-                              refresh("Task selesai, point ditambahkan"),
-                            )
-                          }
+                              refresh(msg),
+                            );
+                          }}
                         >
                           Selesai
                         </Button>

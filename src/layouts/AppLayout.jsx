@@ -38,6 +38,7 @@ export function AppLayout() {
     if (user?.role === "magang" || user?.role === "staff_magang") {
       return [
         "Dashboard",
+        "Kalender Kegiatan",
         "Kategori & Layanan",
         "Task",
         "Tugas Magang",
@@ -49,6 +50,7 @@ export function AppLayout() {
     if (user?.role === "staff") {
       return [
         "Dashboard",
+        "Kalender Kegiatan",
         "Kategori & Layanan",
         "Client",
         "Staff",
@@ -61,6 +63,7 @@ export function AppLayout() {
     if (user?.role === "owner") {
       return [
         "Dashboard",
+        "Kalender Kegiatan",
         "Kategori & Layanan",
         "Client",
         "Staff",

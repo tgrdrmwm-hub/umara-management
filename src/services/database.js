@@ -11,6 +11,7 @@ export const emptyAppData = {
   users: [],
   activityLogs: [],
   taxServices: [],
+  calendarEvents: [],
 };
 
 export async function fetchAppData() {
@@ -26,6 +27,7 @@ export async function fetchAppData() {
       attendance: [],
       analytics: [],
       taxServices: [],
+      calendarEvents: [],
     };
   }
 
@@ -38,6 +40,7 @@ export async function fetchAppData() {
     internTasksResult,
     activityResult,
     taxServicesResult,
+    calendarResult,
   ] = await Promise.all([
     supabase
       .from("users")
@@ -64,34 +67,21 @@ export async function fetchAppData() {
       .select("*")
       .order("category", { ascending: true })
       .order("service_name", { ascending: true }),
+    supabase
+      .from("calendar_events")
+      .select("*")
+      .order("event_date", { ascending: true }),
   ]);
 
-  const firstError = [
-    usersResult,
-    clientsResult,
-    tasksResult,
-    attendanceResult,
-    taxResult,
-    internTasksResult,
-    taxServicesResult,
-  ].find((result) => result.error)?.error;
-
-  // If error or all data is empty, return empty arrays (fallback to dummy in useAppData)
-  if (firstError) {
-    console.error("Supabase error:", firstError);
-    return {
-      ...emptyAppData,
-      users: [],
-      clients: [],
-      tasks: [],
-      internTasks: [],
-      taxWorks: [],
-      attendance: [],
-      analytics: [],
-      activityLogs: [],
-      taxServices: [],
-    };
-  }
+  if (usersResult.error) console.error("Supabase users error:", usersResult.error);
+  if (clientsResult.error) console.error("Supabase clients error:", clientsResult.error);
+  if (tasksResult.error) console.error("Supabase tasks error:", tasksResult.error);
+  if (attendanceResult.error) console.error("Supabase attendance error:", attendanceResult.error);
+  if (taxResult.error) console.error("Supabase tax error:", taxResult.error);
+  if (internTasksResult.error) console.error("Supabase intern_tasks error:", internTasksResult.error);
+  if (activityResult.error) console.error("Supabase activity error:", activityResult.error);
+  if (taxServicesResult.error) console.warn("Supabase tax_services notice:", taxServicesResult.error?.message);
+  if (calendarResult.error) console.warn("Supabase calendar_events notice:", calendarResult.error?.message);
 
   const users = (usersResult.data ?? []).map(toUser);
   const tasks = (tasksResult.data ?? []).map(toTask);
@@ -101,6 +91,7 @@ export async function fetchAppData() {
   const attendance = (attendanceResult.data ?? []).map(toAttendance);
   const activityLogs = activityResult.data ?? [];
   const taxServices = (taxServicesResult.data ?? []).map(toTaxService);
+  const calendarEvents = (calendarResult.data ?? []).map(toCalendarEvent);
 
   return {
     analytics: buildAnalytics(
@@ -119,6 +110,7 @@ export async function fetchAppData() {
     users,
     activityLogs,
     taxServices,
+    calendarEvents,
   };
 }
 
@@ -260,6 +252,14 @@ export async function logActivity(action, details) {
   ]);
 }
 
+function getLocalDateString() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 // ==========================================
 // Tasks
 // ==========================================
@@ -277,11 +277,23 @@ export async function updateTask(id, updates, oldStatus) {
   if (error) throw error;
 
   if (oldStatus !== "done" && updates.status === "done") {
-    await awardPointsToPic(updates.pic, updates.points);
-    await logActivity(
-      "Menyelesaikan Task",
-      `Task: ${updates.title} (+${updates.points} pts)`,
-    );
+    const todayStr = getLocalDateString();
+    const isOverdue = updates.deadline && updates.deadline < todayStr;
+    const taskBonus = Number(updates.points !== undefined && updates.points !== null ? updates.points : 0.25);
+    const earnedPoints = isOverdue ? 0 : taskBonus;
+
+    if (earnedPoints > 0) {
+      await awardPointsToPic(updates.pic, earnedPoints);
+      await logActivity(
+        "Menyelesaikan Task",
+        `Task: ${updates.title} (+${earnedPoints} pts - Tepat Waktu)`,
+      );
+    } else {
+      await logActivity(
+        "Menyelesaikan Task",
+        `Task: ${updates.title} (${isOverdue ? "Terlambat - 0 pts" : "0 pts"})`,
+      );
+    }
   } else if (oldStatus !== updates.status) {
     await logActivity(
       "Mengubah Status Task",
@@ -324,16 +336,21 @@ export async function deleteInternTask(id) {
   if (error) throw error;
 }
 
-export async function createTaxWork(values, points = 0) {
+export async function createTaxWork(values, points = 0.25) {
   if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
   const { error } = await supabase.from("tax").insert(toTaxRow(values));
   if (error) throw error;
   if (values.status === "Selesai") {
-    await awardPointsToPic(values.pic, points);
+    const todayStr = getLocalDateString();
+    const isOverdue = values.deadline && values.deadline < todayStr;
+    const earned = isOverdue ? 0 : Number(points || 0.25);
+    if (earned > 0) {
+      await awardPointsToPic(values.pic, earned);
+    }
   }
 }
 
-export async function updateTaxWork(id, values, previousStatus, points = 0) {
+export async function updateTaxWork(id, values, previousStatus, points = 0.25) {
   if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
   const { error } = await supabase
     .from("tax")
@@ -341,7 +358,12 @@ export async function updateTaxWork(id, values, previousStatus, points = 0) {
     .eq("id", id);
   if (error) throw error;
   if (previousStatus !== "Selesai" && values.status === "Selesai") {
-    await awardPointsToPic(values.pic, points);
+    const todayStr = getLocalDateString();
+    const isOverdue = values.deadline && values.deadline < todayStr;
+    const earned = isOverdue ? 0 : Number(points || 0.25);
+    if (earned > 0) {
+      await awardPointsToPic(values.pic, earned);
+    }
   }
 }
 
@@ -359,7 +381,7 @@ export async function createAttendance(values) {
   if (error) throw error;
 
   if (values.status === "Hadir" || values.status === "Terlambat") {
-    await awardPointsToPic(values.staff, 1);
+    await awardPointsToPic(values.staff, 0.25);
   }
 }
 
@@ -379,7 +401,7 @@ export async function updateAttendance(id, values, previousStatus) {
   const isPresent = values.status === "Hadir" || values.status === "Terlambat";
 
   if (!wasPresent && isPresent) {
-    await awardPointsToPic(values.staff, 1);
+    await awardPointsToPic(values.staff, 0.25);
   }
 }
 
@@ -394,7 +416,7 @@ export async function createTaxService(values) {
   const { error } = await supabase.from("tax_services_catalog").insert({
     category: values.category,
     service_name: values.service_name,
-    base_points: values.base_points,
+    base_points: Number(values.base_points ?? 0.25),
   });
   if (error) throw error;
   await logActivity("Menambah Layanan", `Layanan: ${values.service_name}`);
@@ -407,7 +429,7 @@ export async function updateTaxService(id, values) {
     .update({
       category: values.category,
       service_name: values.service_name,
-      base_points: values.base_points,
+      base_points: Number(values.base_points ?? 0.25),
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);
@@ -422,11 +444,59 @@ export async function deleteTaxService(id, serviceName) {
   await logActivity("Menghapus Layanan", `Layanan: ${serviceName}`);
 }
 
-export async function updateUserPoints(id, points) {
+// ==========================================
+// Calendar Events
+// ==========================================
+export async function createCalendarEvent(values) {
+  if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
+  const { error } = await supabase.from("calendar_events").insert({
+    title: values.title,
+    event_date: values.eventDate,
+    start_time: values.startTime || null,
+    end_time: values.endTime || null,
+    is_all_day: Boolean(values.isAllDay),
+    location: values.location || null,
+    pic: values.pic || null,
+    notes: values.notes || null,
+    created_by: values.createdBy || null,
+  });
+  if (error) throw error;
+  await logActivity("Menambah Agenda", `Agenda: ${values.title} (${values.eventDate})`);
+}
+
+export async function updateCalendarEvent(id, values) {
   if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
   const { error } = await supabase
+    .from("calendar_events")
+    .update({
+      title: values.title,
+      event_date: values.eventDate,
+      start_time: values.startTime || null,
+      end_time: values.endTime || null,
+      is_all_day: Boolean(values.isAllDay),
+      location: values.location || null,
+      pic: values.pic || null,
+      notes: values.notes || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (error) throw error;
+  await logActivity("Mengubah Agenda", `Agenda: ${values.title}`);
+}
+
+export async function deleteCalendarEvent(id, title = "Agenda") {
+  if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
+  const { error } = await supabase.from("calendar_events").delete().eq("id", id);
+  if (error) throw error;
+  await logActivity("Menghapus Agenda", `Agenda: ${title}`);
+}
+
+export async function updateUserPoints(id, points) {
+  if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
+  const numericPoints = Math.round(Number(points || 0) * 100) / 100;
+  const { error } = await supabase
     .from("users")
-    .update({ points, updated_at: new Date().toISOString() })
+    .update({ points: numericPoints, updated_at: new Date().toISOString() })
     .eq("id", id);
   if (error) throw error;
 }
@@ -452,10 +522,12 @@ async function awardPointsToPic(pic, points) {
 
   // Berikan poin ke setiap PIC yang cocok
   for (const user of data) {
+    const currentPts = Number(user.points ?? 0);
+    const newPts = Math.round((currentPts + points) * 100) / 100;
     const { error: updateError } = await supabase
       .from("users")
       .update({
-        points: Number(user.points ?? 0) + points,
+        points: newPts,
         updated_at: new Date().toISOString(),
       })
       .eq("id", user.id);
@@ -621,6 +693,22 @@ function toTaxService(row) {
     category: String(row.category ?? ""),
     name: String(row.service_name ?? ""),
     basePoints: Number(row.base_points ?? 0),
+  };
+}
+
+function toCalendarEvent(row) {
+  return {
+    id: String(row.id),
+    title: String(row.title ?? ""),
+    eventDate: String(row.event_date ?? ""),
+    startTime: String(row.start_time ?? ""),
+    endTime: String(row.end_time ?? ""),
+    isAllDay: Boolean(row.is_all_day),
+    location: String(row.location ?? ""),
+    pic: String(row.pic ?? ""),
+    notes: String(row.notes ?? ""),
+    createdBy: String(row.created_by ?? ""),
+    createdAt: String(row.created_at ?? ""),
   };
 }
 
