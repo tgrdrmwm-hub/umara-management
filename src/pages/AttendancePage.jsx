@@ -1,4 +1,4 @@
-import { CalendarDays, Clock, Plus, X } from "lucide-react";
+import { CalendarDays, Clock, Plus, X, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -255,18 +255,21 @@ export function AttendancePage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => void quickAttendance("in")}>
-            <Clock className="h-3.5 w-3.5" />
-            Check In
+          <Button onClick={() => void quickAttendance("in")} className="px-3 md:px-4">
+            <Clock className="h-4 w-4 md:mr-1" />
+            <span className="hidden md:inline">Check In</span>
           </Button>
           <Button
             variant="secondary"
+            className="px-3 md:px-4"
             onClick={() => void quickAttendance("out")}
           >
-            Check Out
+            <Clock className="h-4 w-4 md:mr-1" />
+            <span className="hidden md:inline">Check Out</span>
           </Button>
           <Button
             variant="secondary"
+            className="px-3 md:px-4"
             onClick={() => {
               if (showForm && !editing) {
                 closeForm();
@@ -277,8 +280,8 @@ export function AttendancePage() {
               }
             }}
           >
-            <Plus className="h-3.5 w-3.5" />
-            Manual
+            <Plus className="h-4 w-4 md:mr-1" />
+            <span className="hidden md:inline">Tambah</span>
           </Button>
         </div>
       </div>
@@ -623,7 +626,7 @@ export function AttendancePage() {
                   Status
                 </th>
                 {isAdmin && (
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 sticky right-0 bg-slate-50 dark:bg-slate-800/80 backdrop-blur-sm z-20 border-l border-slate-200 dark:border-white/10 shadow-[-4px_0_6px_-1px_rgba(0,0,0,0.05)]">
                     Aksi
                   </th>
                 )}
@@ -671,26 +674,29 @@ export function AttendancePage() {
                       </Badge>
                     </td>
                     {isAdmin && (
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 whitespace-nowrap sticky right-0 bg-white group-hover:bg-slate-50 dark:bg-slate-900 dark:group-hover:bg-slate-800/50 z-10 border-l border-slate-100 dark:border-white/10 shadow-[-4px_0_6px_-1px_rgba(0,0,0,0.05)]">
                         <div className="flex gap-1.5">
                           <Button
                             size="sm"
                             variant="secondary"
+                            className="px-2 md:px-3"
                             onClick={() => startEdit(row)}
                           >
-                            Edit
+                            <Pencil className="h-4 w-4 md:mr-1" />
+                            <span className="hidden md:inline">Edit</span>
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10"
+                            className="px-2 md:px-3 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10"
                             onClick={() =>
                               void deleteAttendance(row.id).then(() =>
                                 refresh("Absensi dihapus"),
                               )
                             }
                           >
-                            Hapus
+                            <Trash2 className="h-4 w-4 md:mr-1" />
+                            <span className="hidden md:inline">Hapus</span>
                           </Button>
                         </div>
                       </td>

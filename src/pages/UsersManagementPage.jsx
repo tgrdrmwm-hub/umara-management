@@ -141,9 +141,9 @@ export function UsersManagementPage() {
             Kelola akses dan akun pengguna sistem.
           </p>
         </div>
-        <Button onClick={() => setShowModal(true)}>
-          <Plus className="h-4 w-4" />
-          Tambah User
+        <Button onClick={() => setShowModal(true)} className="px-3 md:px-4">
+          <Plus className="h-4 w-4 md:mr-1" />
+          <span className="hidden md:inline">Tambah User</span>
         </Button>
       </div>
 
@@ -193,20 +193,21 @@ export function UsersManagementPage() {
                           variant="secondary"
                           onClick={() => toggleUserStatus(u.id, u.status)}
                           className={
-                            u.status === "active"
+                            "px-2 md:px-3 " +
+                            (u.status === "active"
                               ? "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
-                              : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
+                              : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10")
                           }
                         >
                           {u.status === "active" ? (
                             <>
-                              <UserX className="h-3.5 w-3.5" />
-                              Nonaktifkan
+                              <UserX className="h-4 w-4 md:mr-1" />
+                              <span className="hidden md:inline">Nonaktifkan</span>
                             </>
                           ) : (
                             <>
-                              <UserCheck className="h-3.5 w-3.5" />
-                              Aktifkan
+                              <UserCheck className="h-4 w-4 md:mr-1" />
+                              <span className="hidden md:inline">Aktifkan</span>
                             </>
                           )}
                         </Button>
@@ -214,10 +215,10 @@ export function UsersManagementPage() {
                           size="sm"
                           variant="secondary"
                           onClick={() => confirmDelete(u.id)}
-                          className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
+                          className="px-2 md:px-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          Hapus
+                          <Trash2 className="h-4 w-4 md:mr-1" />
+                          <span className="hidden md:inline">Hapus</span>
                         </Button>
                       </div>
                     )}

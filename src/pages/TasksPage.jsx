@@ -8,7 +8,7 @@ import { taxServiceDefinitions } from "../constants/taxServices";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { useAppData } from "../hooks/useAppData";
-import { createTask, deleteTask, updateTask } from "../services/database";
+import { createTask, deleteTask, updateTask, uploadInvoice } from "../services/database";
 import { useAuth } from "../hooks/useAuth";
 
 const columns = [
@@ -63,6 +63,9 @@ export function TasksPage() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyTask);
   const [showHistory, setShowHistory] = useState(false);
+  const [completingTask, setCompletingTask] = useState(null);
+  const [invoiceFile, setInvoiceFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const tasks = data?.tasks ?? [];
   const activityLogs = data?.activityLogs ?? [];
@@ -123,6 +126,40 @@ export function TasksPage() {
     setShowForm(false);
     setEditing(null);
     setForm(emptyTask);
+  }
+
+  async function confirmCompleteTask(e) {
+    e.preventDefault();
+    if (!invoiceFile) {
+      return toast.error("File invoice bukti pekerjaan wajib diunggah.");
+    }
+    
+    setIsUploading(true);
+    try {
+      const invoiceUrl = await uploadInvoice(invoiceFile, completingTask.id);
+      
+      const todayStr = new Date().toISOString().split("T")[0];
+      const isOverdue = completingTask.deadline && completingTask.deadline < todayStr;
+      const bonusPts = completingTask.points !== undefined && completingTask.points !== null ? completingTask.points : 0.25;
+      const msg = isOverdue
+        ? "Task diselesaikan (Terlambat - 0 poin bonus)"
+        : `Task selesai tepat waktu! (+${bonusPts} poin bonus)`;
+
+      await updateTask(
+        completingTask.id,
+        { ...completingTask, status: "done", invoice_url: invoiceUrl },
+        completingTask.status,
+      );
+      
+      await refresh(msg);
+      setCompletingTask(null);
+      setInvoiceFile(null);
+    } catch (err) {
+      console.error(err);
+      toast.error("Gagal mengunggah invoice atau menyelesaikan task.");
+    } finally {
+      setIsUploading(false);
+    }
   }
 
   return (
@@ -358,6 +395,60 @@ export function TasksPage() {
         </Card>
       )}
 
+      {/* Modal Upload Invoice Selesai Task */}
+      {completingTask && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <Card className="w-full max-w-sm p-0 overflow-hidden shadow-xl border-slate-200 dark:border-white/10">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-white/8 bg-slate-50/50 dark:bg-slate-800/50">
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                Penyelesaian Task
+              </h2>
+              <button
+                onClick={() => { setCompletingTask(null); setInvoiceFile(null); }}
+                className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <form onSubmit={confirmCompleteTask} className="p-5 space-y-4">
+              <div className="space-y-1">
+                <p className="text-xs text-slate-500 mb-3">
+                  Upload file bukti invoice / dokumen final untuk menyelesaikan task <strong>&quot;{completingTask.title}&quot;</strong>.
+                </p>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  File Bukti (Wajib)
+                </label>
+                <input
+                  type="file"
+                  required
+                  accept=".pdf,image/*"
+                  onChange={(e) => setInvoiceFile(e.target.files[0])}
+                  className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-500/20 dark:file:text-indigo-300 dark:hover:file:bg-indigo-500/30"
+                />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button 
+                  type="button" 
+                  variant="secondary" 
+                  onClick={() => { setCompletingTask(null); setInvoiceFile(null); }}
+                  className="flex-1"
+                  disabled={isUploading}
+                >
+                  Batal
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="flex-1"
+                  disabled={isUploading || !invoiceFile}
+                >
+                  {isUploading ? "Mengunggah..." : "Selesai"}
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+
       {/* Kanban columns */}
       <div className="grid gap-4 md:grid-cols-3">
         {columns.map((col) => {
@@ -419,6 +510,18 @@ export function TasksPage() {
                         +{task.points ?? 0.25} pts bonus
                       </Badge>
                     </div>
+                    {task.invoice_url && (
+                      <div className="mt-2 text-xs">
+                        <a 
+                          href={task.invoice_url} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="text-indigo-600 hover:underline flex items-center gap-1 dark:text-indigo-400 font-medium"
+                        >
+                          Lihat Invoice
+                        </a>
+                      </div>
+                    )}
                     <div className="mt-3 flex flex-wrap gap-1.5 border-t border-slate-100 pt-2.5 dark:border-white/8">
                       <Button
                         size="sm"
@@ -448,22 +551,7 @@ export function TasksPage() {
                       {col.key !== "done" && (
                         <Button
                           size="sm"
-                          onClick={() => {
-                            const todayStr = new Date().toISOString().split("T")[0];
-                            const isOverdue = task.deadline && task.deadline < todayStr;
-                            const bonusPts = task.points !== undefined && task.points !== null ? task.points : 0.25;
-                            const msg = isOverdue
-                              ? "Task diselesaikan (Terlambat - 0 poin bonus)"
-                              : `Task selesai tepat waktu! (+${bonusPts} poin bonus)`;
-
-                            void updateTask(
-                              task.id,
-                              { ...task, status: "done" },
-                              task.status,
-                            ).then(() =>
-                              refresh(msg),
-                            );
-                          }}
+                          onClick={() => setCompletingTask(task)}
                         >
                           Selesai
                         </Button>

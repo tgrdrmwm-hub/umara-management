@@ -201,14 +201,15 @@ export function ReportsPage() {
                 <Button
                   size="sm"
                   variant="secondary"
+                  className="px-3 md:px-4"
                   onClick={() => exportPdf(type)}
                 >
-                  <Printer className="h-3.5 w-3.5" />
-                  PDF
+                  <Printer className="h-4 w-4 md:mr-1" />
+                  <span className="md:inline">PDF</span>
                 </Button>
-                <Button size="sm" onClick={() => exportCsv(type)}>
-                  <Download className="h-3.5 w-3.5" />
-                  CSV
+                <Button size="sm" className="px-3 md:px-4" onClick={() => exportCsv(type)}>
+                  <Download className="h-4 w-4 md:mr-1" />
+                  <span className="md:inline">CSV</span>
                 </Button>
               </div>
             </Card>

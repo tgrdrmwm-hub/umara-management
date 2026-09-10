@@ -302,6 +302,24 @@ export async function updateTask(id, updates, oldStatus) {
   }
 }
 
+export async function uploadInvoice(file, taskId) {
+  if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
+  if (!file) return null;
+
+  const fileExt = file.name.split(".").pop();
+  const fileName = `${taskId}_${Date.now()}.${fileExt}`;
+  const filePath = `tasks/${fileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("invoices")
+    .upload(filePath, file);
+
+  if (uploadError) throw uploadError;
+
+  const { data } = supabase.storage.from("invoices").getPublicUrl(filePath);
+  return data.publicUrl;
+}
+
 export async function deleteTask(id, taskTitle = "Task") {
   if (!supabase) return;
   const { error } = await supabase.from("tasks").delete().eq("id", id);
@@ -545,6 +563,7 @@ function toTaskRow(values) {
     status: values.status,
     points: values.points,
     notes: values.notes,
+    invoice_url: values.invoice_url,
   };
 }
 
@@ -647,6 +666,7 @@ function toTask(row) {
     status: String(row.status ?? "todo"),
     points: Number(row.points ?? 0),
     notes: String(row.notes ?? ""),
+    invoice_url: row.invoice_url ? String(row.invoice_url) : null,
   };
 }
 

@@ -1,4 +1,4 @@
-import { Download, FileDown, FileUp, Plus, Search, X } from "lucide-react";
+import { Download, FileDown, FileUp, Plus, Search, X, Pencil, Trash2, Send } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -134,7 +134,8 @@ export function ClientsPage() {
       setDelegating(null);
       setDelegateForm({ category: "", service: "", pic: "", deadline: "" });
     } catch (err) {
-      toast.error("Gagal mendelegasikan pekerjaan");
+      console.error(err);
+      toast.error("Gagal mendelegasikan pekerjaan: " + (err?.message || "Unknown error"));
     }
   }
 
@@ -295,6 +296,7 @@ export function ClientsPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button
+            className="px-3 md:px-4"
             onClick={() => {
               if (showForm && !editing) {
                 closeForm();
@@ -305,23 +307,23 @@ export function ClientsPage() {
               }
             }}
           >
-            <Plus className="h-4 w-4" />
-            Tambah Client
+            <Plus className="h-4 w-4 md:mr-1" />
+            <span className="hidden md:inline">Tambah Client</span>
           </Button>
           
-          <label className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300 bg-slate-100 text-slate-900 hover:bg-slate-100/80 dark:bg-slate-800 dark:text-slate-50 dark:hover:bg-slate-800/80 h-9 px-4 py-2 cursor-pointer">
-            <FileUp className="h-3.5 w-3.5" />
-            Import
+          <label className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300 bg-slate-100 text-slate-900 hover:bg-slate-100/80 dark:bg-slate-800 dark:text-slate-50 dark:hover:bg-slate-800/80 h-9 px-3 md:px-4 py-2 cursor-pointer">
+            <FileUp className="h-4 w-4" />
+            <span className="hidden md:inline">Import</span>
             <input type="file" accept=".csv" className="hidden" onChange={importCsv} />
           </label>
 
-          <Button variant="secondary" onClick={exportCsv}>
-            <Download className="h-3.5 w-3.5" />
-            Export
+          <Button variant="secondary" onClick={exportCsv} className="px-3 md:px-4">
+            <Download className="h-4 w-4 md:mr-1" />
+            <span className="hidden md:inline">Export</span>
           </Button>
-          <Button variant="secondary" onClick={() => window.print()}>
-            <FileDown className="h-3.5 w-3.5" />
-            PDF
+          <Button variant="secondary" onClick={() => window.print()} className="px-3 md:px-4">
+            <FileDown className="h-4 w-4 md:mr-1" />
+            <span className="hidden md:inline">PDF</span>
           </Button>
         </div>
       </div>
@@ -509,9 +511,20 @@ export function ClientsPage() {
                     <td className="px-4 py-3 text-slate-600 dark:text-slate-400 whitespace-nowrap">{client.spt_tahunan_2024 || "-"}</td>
                     <td className="px-4 py-3 whitespace-nowrap sticky right-0 bg-white group-hover:bg-slate-50 dark:bg-slate-900 dark:group-hover:bg-slate-800/50 z-10 border-l border-slate-100 dark:border-white/10 shadow-[-4px_0_6px_-1px_rgba(0,0,0,0.05)]">
                       <div className="flex gap-1.5">
-                        <Button size="sm" variant="secondary" className="bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20" onClick={() => { setDelegating(client); setDelegateForm({ category: "", service: "", pic: "", deadline: "" }); }}>Tugaskan</Button>
-                        <Button size="sm" variant="secondary" onClick={() => startEdit(client)}>Edit</Button>
-                        {isAdmin && (<Button size="sm" variant="ghost" className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10" onClick={() => void deleteClient(client.id).then(() => refresh("Client dihapus"))}>Hapus</Button>)}
+                        <Button size="sm" variant="secondary" className="px-2 md:px-3 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20" onClick={() => { setDelegating(client); setDelegateForm({ category: "", service: "", pic: "", deadline: "" }); }}>
+                          <Send className="h-4 w-4 md:mr-1" />
+                          <span className="hidden md:inline">Tugaskan</span>
+                        </Button>
+                        <Button size="sm" variant="secondary" className="px-2 md:px-3" onClick={() => startEdit(client)}>
+                          <Pencil className="h-4 w-4 md:mr-1" />
+                          <span className="hidden md:inline">Edit</span>
+                        </Button>
+                        {isAdmin && (
+                          <Button size="sm" variant="ghost" className="px-2 md:px-3 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10" onClick={() => void deleteClient(client.id).then(() => refresh("Client dihapus"))}>
+                            <Trash2 className="h-4 w-4 md:mr-1" />
+                            <span className="hidden md:inline">Hapus</span>
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>

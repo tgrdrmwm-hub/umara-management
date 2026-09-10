@@ -8,6 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { Save } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -297,9 +298,11 @@ export function PointsPage() {
                           <Button
                             size="sm"
                             variant="secondary"
+                            className="px-2 md:px-3"
                             onClick={() => void savePoints(user)}
                           >
-                            Simpan
+                            <Save className="h-4 w-4 md:mr-1" />
+                            <span className="hidden md:inline">Simpan</span>
                           </Button>
                         </td>
                       )}
