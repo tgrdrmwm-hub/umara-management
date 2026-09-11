@@ -227,21 +227,24 @@ export async function deleteClient(id) {
   if (error) throw error;
 }
 
-export async function logActivity(action, details) {
+export async function logActivity(action, details, overrideUserName = null) {
   if (!supabase) return;
 
-  // Ambil user yang sedang login
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return;
+  let userName = overrideUserName;
 
-  const { data: userData } = await supabase
-    .from("users")
-    .select("name")
-    .eq("id", user.id)
-    .single();
-  const userName = userData?.name || user.email;
+  if (!userName) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: userData } = await supabase
+      .from("users")
+      .select("name")
+      .eq("id", user.id)
+      .single();
+    userName = userData?.name || user.email;
+  }
 
   await supabase.from("activity_logs").insert([
     {
@@ -250,6 +253,45 @@ export async function logActivity(action, details) {
       details,
     },
   ]);
+}
+
+async function checkAndAwardDailyBonus(picName) {
+  if (!supabase || !picName) return;
+  
+  const now = new Date();
+  if (now.getHours() >= 16) return; // Hanya sebelum jam 16:00
+  
+  const todayStr = getLocalDateString();
+  
+  // Cek apakah sudah dapat bonus hari ini
+  const { data: logs } = await supabase
+    .from("activity_logs")
+    .select("id")
+    .eq("user_name", picName)
+    .eq("action", "Bonus Tepat Waktu")
+    .like("created_at", `${todayStr}%`);
+    
+  if (logs && logs.length > 0) return; // Sudah dapat bonus hari ini
+
+  // Cek apakah masih ada task yang belum selesai
+  const { data: tasks } = await supabase
+    .from("tasks")
+    .select("id")
+    .ilike("pic", `%${picName}%`)
+    .neq("status", "done");
+    
+  // Cek apakah masih ada pekerjaan pajak yang belum selesai
+  const { data: taxWorks } = await supabase
+    .from("tax")
+    .select("id")
+    .ilike("pic", `%${picName}%`)
+    .neq("status", "Selesai");
+    
+  // Jika keduanya kosong, berarti semua sudah selesai
+  if ((!tasks || tasks.length === 0) && (!taxWorks || taxWorks.length === 0)) {
+    await awardPointsToPic(picName, 1); // +1 point bonus harian
+    await logActivity("Bonus Tepat Waktu", `Menyelesaikan semua tugas sebelum 16:00 (+1 pt)`, picName);
+  }
 }
 
 function getLocalDateString() {
@@ -277,21 +319,23 @@ export async function updateTask(id, updates, oldStatus) {
   if (error) throw error;
 
   if (oldStatus !== "done" && updates.status === "done") {
-    const todayStr = getLocalDateString();
-    const isOverdue = updates.deadline && updates.deadline < todayStr;
-    const taskBonus = Number(updates.points !== undefined && updates.points !== null ? updates.points : 0.25);
-    const earnedPoints = isOverdue ? 0 : taskBonus;
+    const now = new Date();
+    const hours = now.getHours();
 
-    if (earnedPoints > 0) {
-      await awardPointsToPic(updates.pic, earnedPoints);
+    if (hours < 16) {
+      // Coba berikan bonus ke semua PIC
+      const pics = updates.pic ? updates.pic.split(/,|\bdan\b/i).map((p) => p.trim()).filter(Boolean) : [];
+      for (const p of pics) {
+        await checkAndAwardDailyBonus(p);
+      }
       await logActivity(
         "Menyelesaikan Task",
-        `Task: ${updates.title} (+${earnedPoints} pts - Tepat Waktu)`,
+        `Task: ${updates.title} (Selesai sebelum 16:00)`,
       );
     } else {
       await logActivity(
         "Menyelesaikan Task",
-        `Task: ${updates.title} (${isOverdue ? "Terlambat - 0 pts" : "0 pts"})`,
+        `Task: ${updates.title} (Selesai lewat jam 16:00)`,
       );
     }
   } else if (oldStatus !== updates.status) {
@@ -359,11 +403,12 @@ export async function createTaxWork(values, points = 0.25) {
   const { error } = await supabase.from("tax").insert(toTaxRow(values));
   if (error) throw error;
   if (values.status === "Selesai") {
-    const todayStr = getLocalDateString();
-    const isOverdue = values.deadline && values.deadline < todayStr;
-    const earned = isOverdue ? 0 : Number(points || 0.25);
-    if (earned > 0) {
-      await awardPointsToPic(values.pic, earned);
+    const now = new Date();
+    if (now.getHours() < 16) {
+      const pics = values.pic ? values.pic.split(/,|\bdan\b/i).map((p) => p.trim()).filter(Boolean) : [];
+      for (const p of pics) {
+        await checkAndAwardDailyBonus(p);
+      }
     }
   }
 }
@@ -376,11 +421,12 @@ export async function updateTaxWork(id, values, previousStatus, points = 0.25) {
     .eq("id", id);
   if (error) throw error;
   if (previousStatus !== "Selesai" && values.status === "Selesai") {
-    const todayStr = getLocalDateString();
-    const isOverdue = values.deadline && values.deadline < todayStr;
-    const earned = isOverdue ? 0 : Number(points || 0.25);
-    if (earned > 0) {
-      await awardPointsToPic(values.pic, earned);
+    const now = new Date();
+    if (now.getHours() < 16) {
+      const pics = values.pic ? values.pic.split(/,|\bdan\b/i).map((p) => p.trim()).filter(Boolean) : [];
+      for (const p of pics) {
+        await checkAndAwardDailyBonus(p);
+      }
     }
   }
 }

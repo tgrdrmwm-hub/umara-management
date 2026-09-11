@@ -140,10 +140,9 @@ export function TasksPage() {
       
       const todayStr = new Date().toISOString().split("T")[0];
       const isOverdue = completingTask.deadline && completingTask.deadline < todayStr;
-      const bonusPts = completingTask.points !== undefined && completingTask.points !== null ? completingTask.points : 0.25;
       const msg = isOverdue
-        ? "Task diselesaikan (Terlambat - 0 poin bonus)"
-        : `Task selesai tepat waktu! (+${bonusPts} poin bonus)`;
+        ? "Task diselesaikan lewat deadline."
+        : "Task diselesaikan tepat waktu.";
 
       await updateTask(
         completingTask.id,
@@ -171,7 +170,7 @@ export function TasksPage() {
             Task Board
           </h1>
           <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-            Alur pengerjaan tugas — bonus +0.25 poin diberikan otomatis jika selesai tepat waktu.
+            Alur pengerjaan tugas — Selesaikan semua tugas sebelum 16:00 untuk mendapat bonus point harian!
           </p>
         </div>
         <div className="flex gap-2">
@@ -507,7 +506,7 @@ export function TasksPage() {
                         tone={col.key === "done" ? "green" : "slate"}
                         className="ml-auto shrink-0 text-xs"
                       >
-                        +{task.points ?? 0.25} pts bonus
+                        {col.key === "done" ? "Selesai" : col.key === "progress" ? "In Progress" : "To Do"}
                       </Badge>
                     </div>
                     {task.invoice_url && (
