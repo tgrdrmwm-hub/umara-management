@@ -114,7 +114,7 @@ async function cleanAndImport() {
     const pphFinal = String(row['PPH FINAL'] || '').trim().toUpperCase() === 'TRUE';
     const ppn = String(row['PPN'] || '').trim().toUpperCase() === 'TRUE';
     const pph21 = String(row['PPH 21'] || '').trim().toUpperCase() === 'TRUE';
-    const pic = (row['PIC'] || '').trim();
+    const pic = (row['PIC'] || '').replace(/\s+/g, ' ').trim();
 
     const keteranganJson = JSON.stringify({
       pph_25: pph25,
