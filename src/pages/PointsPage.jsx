@@ -8,7 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Save } from "lucide-react";
+import { Save, Award, Moon, AlertTriangle, Briefcase } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -88,9 +88,52 @@ export function PointsPage() {
           Point & Leaderboard
         </h1>
         <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-          Bonus poin dari ketepatan waktu pengerjaan tugas dan kehadiran staf.
+          Sistem insentif & poin reward staf untuk penyelesaian tugas lembur/ekstra tepat waktu.
         </p>
       </motion.div>
+
+      {/* Kebijakan Poin & Gaji Bulanan Card */}
+      <Card className="p-4 border-indigo-100 bg-gradient-to-r from-indigo-50/50 via-white to-amber-50/40 dark:border-indigo-500/20 dark:from-indigo-950/20 dark:via-slate-900 dark:to-amber-950/20">
+        <div className="flex flex-col sm:flex-row items-start gap-3">
+          <div className="rounded-xl p-2 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shrink-0">
+            <Award className="h-5 w-5" />
+          </div>
+          <div className="space-y-2 flex-1">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              Ketentuan Gaji Pokok & Reward Poin Tambahan
+            </h2>
+            <div className="grid gap-2 sm:grid-cols-3 text-xs">
+              <div className="rounded-lg bg-white/80 dark:bg-slate-800/80 p-2.5 border border-slate-200/60 dark:border-white/5">
+                <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 mb-1">
+                  <Briefcase className="h-3.5 w-3.5 text-blue-500" />
+                  Gaji Pokok Bulanan
+                </div>
+                <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Pekerjaan standar bulanan diselesaikan pada jam kantor reguler (08:00–17:00). Tidak menghasilkan poin tambahan.
+                </p>
+              </div>
+              <div className="rounded-lg bg-white/80 dark:bg-slate-800/80 p-2.5 border border-slate-200/60 dark:border-white/5">
+                <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 mb-1">
+                  <Moon className="h-3.5 w-3.5 text-amber-500" />
+                  Tepat Waktu & Lembur
+                </div>
+                <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Poin reward tambahan <strong>(+1 pt atau sesuai bobot)</strong> diberikan jika tugas diselesaikan tepat waktu dan dikerjakan saat lembur/ekstra.
+                </p>
+              </div>
+              <div className="rounded-lg bg-white/80 dark:bg-slate-800/80 p-2.5 border border-slate-200/60 dark:border-white/5">
+                <div className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 mb-1">
+                  <AlertTriangle className="h-3.5 w-3.5 text-rose-500" />
+                  Pekerjaan Terlambat
+                </div>
+                <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Pekerjaan yang melewati batas deadline <strong>tidak mendapatkan poin (0 pt)</strong> meskipun dikerjakan pada saat lembur.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
 
       {/* Stats */}
       <div className="grid gap-3 sm:grid-cols-3">

@@ -1,0 +1,1010 @@
+     ,NAMA WAJIB PAJAK,KONTRAK,PPH 25,PPH FINAL,PPN,PPH 21,PIC
+1,CV ABADI JAYA SEJAHTERA,Bulanan,TRUE,FALSE,FALSE,TRUE,Anggun - Intan
+2,CV KEEMASAN ABADI ,Bulanan,TRUE,FALSE,TRUE,TRUE,Azizah  - Septi
+3,PT JELAJAH WISATA THOYIBAH,Bulanan,TRUE,FALSE,FALSE,TRUE,Azizah  - Septi
+4,PT DUNIA USAHA MAPAN SEJAHTERA,Bulanan,TRUE,FALSE,TRUE,TRUE,Anggun - Intan
+5,CV DUNIA USAHA MAPAN SEJAHTERA,Bulanan,TRUE,FALSE,FALSE,TRUE,Anggun - Intan
+6,CV MITRA SEJATI LAMPU,Bulanan,TRUE,FALSE,TRUE,TRUE,Azizah  - Septi
+7,PT KHARISMA KARTIKA ABADI,Bulanan,TRUE,FALSE,TRUE,TRUE,Anggun - Intan
+8,PT SADAR JAYA TRANSINDO,Bulanan,TRUE,FALSE,FALSE,TRUE,Aulia - Nita
+9,PT NUSA MENTARI INDONESIA,Bulanan,FALSE,FALSE,TRUE,TRUE,Aulia - Nita
+10,CV SANTRI,Bulanan,TRUE,FALSE,FALSE,TRUE,Anggun - Intan
+11,PT KING MAKMUR SEJAHTERA,Bulanan,TRUE,FALSE,FALSE,TRUE,Aulia - Nita
+12,CV CAHAYA ABADI GUNA,Bulanan,TRUE,FALSE,FALSE,TRUE,Azizah  - Septi
+13,CV CAHAYA BUANA CEMERLANG,Bulanan,TRUE,FALSE,TRUE,TRUE,Anggun - Intan
+14,PT GRAHA AGUNG SEMESTA,Bulanan,TRUE,FALSE,TRUE,TRUE,Anggun - Intan
+15,PT SOLO ABADI INDONESIA,Bulanan,TRUE,FALSE,FALSE,FALSE,Azizah  - Septi
+16,CV KREASI MUDA INDONESIA,Bulanan,TRUE,FALSE,FALSE,FALSE,Azizah  - Septi
+17,PT TRIJAYA PLASTIK UTAMA,Bulanan,TRUE,FALSE,TRUE,TRUE,Aulia - Nita
+18,CV PILAR MAS UNIVERSAL,Bulanan,TRUE,FALSE,FALSE,FALSE,Anggun - Intan
+19,CV GERBANG BERKAT INDONESIA,Bulanan,TRUE,FALSE,FALSE,FALSE,Anggun - Intan
+20,CV PLATINUM INDONESIA,Bulanan,TRUE,FALSE,FALSE,FALSE,Aulia - Nita
+21,CV SENTOSA JAYA,Bulanan,TRUE,FALSE,FALSE,TRUE,Aulia - Nita
+22,CV BINTANG PROMOSINDO,Bulanan,TRUE,FALSE,TRUE,TRUE,Aulia - Nita
+23,CV AL ADI JAYA,Bulanan,TRUE,FALSE,TRUE,TRUE,Anggun - Intan
+24,CV PRODETIL ENGINEERING,Bulanan,TRUE,FALSE,TRUE,TRUE,Anggun - Intan
+25,CV SATYA PERDANA,Bulanan,TRUE,FALSE,TRUE,TRUE,Aulia - Nita
+26,CV KIARA CARE INDONESIA,Bulanan,TRUE,FALSE,TRUE,TRUE,Azizah  - Septi
+27,CV GEMA NUSA,Bulanan,TRUE,FALSE,TRUE,TRUE,Anggun - Intan
+28,CV AMMURA SANDANG NUSANTARA,Bulanan,TRUE,FALSE,FALSE,TRUE,Aulia - Nita
+29,CV BERKAT PACKAGING,Bulanan,TRUE,FALSE,FALSE,TRUE,Azizah  - Septi
+30,HENDI,Bulanan,FALSE,TRUE,FALSE,TRUE,Anggun - Intan
+31,FRAYANGRISTA DEVI SITA,Bulanan,FALSE,TRUE,FALSE,TRUE,Azizah  - Septi
+32,CV SAMBUNGMACAN,Bulanan,TRUE,FALSE,TRUE,TRUE,Aulia - Nita
+33,CV HAPKIE BERKAT JAYA,Bulanan,TRUE,FALSE,TRUE,TRUE,Azizah  - Septi
+34,PT BECOM,Bulanan,TRUE,FALSE,TRUE,TRUE,Azizah  - Septi
+35,PT FARHANA BERKAH AKBAR,Bulanan,TRUE,FALSE,FALSE,TRUE,Aulia - Nita
+36,CV FARHANEKA BERKAH REZEKI,Bulanan,TRUE,FALSE,TRUE,TRUE,Anggun - Intan
+37,FADRY AKBAR,Bulanan,TRUE,FALSE,TRUE,TRUE,Azizah  - Septi
+38,PT MITRA SANTRI SOLO,Bulanan,TRUE,FALSE,FALSE,TRUE,Aulia - Nita
+39,CV MEGABIT RIZKI ABADI,Bulanan,FALSE,TRUE,TRUE,TRUE,Azizah  - Septi
+40,PT KALIAN LOGISTIK NUSANTARA,Bulanan,TRUE,FALSE,FALSE,TRUE,Aulia - Nita
+41,PT AL AZHAR WISATA SUCI,Bulanan,TRUE,FALSE,FALSE,TRUE,Anggun - Intan
+42,CV NGUDI REJEKI,Bulanan,TRUE,FALSE,TRUE,TRUE,Aulia - Nita
+43,YUDIYANTO,Bulanan,FALSE,TRUE,FALSE,TRUE,Azizah  - Septi
+44,SARMIN PRAPTO RAHARJO,Bulanan,FALSE,TRUE,FALSE,TRUE,Azizah  - Septi
+45,CV SUMBER URIP,Bulanan,FALSE,TRUE,TRUE,FALSE,Azizah  - Septi
+46,CV SOBAT ANGLER SEJATI,Bulanan,FALSE,TRUE,TRUE,TRUE,Aulia - Nita
+47,DONI HASTADI,Bulanan,FALSE,TRUE,FALSE,FALSE,Anggun - Intan
+48,PT RHEIN MAHAKARYA INDONESIA,Bulanan,TRUE,FALSE,FALSE,TRUE,Aulia - Nita
+49,CV SOLO INDONESIA JAYA,Bulanan,FALSE,TRUE,FALSE,TRUE,Anggun - Intan
+50,PT SHAPTA BHUWANA CAKARA,Bulanan,TRUE,FALSE,FALSE,TRUE,Azizah  - Septi
+51,CV GLOBAL EDUTAMA NUSANTARA,Bulanan,FALSE,TRUE,FALSE,TRUE,Anggun - Intan
+52,CV BIMBEL KEDINASAN INDONESIA,Bulanan,FALSE,TRUE,FALSE,TRUE,Anggun - Intan
+53,CV TRIYAGAN JAYA ABADI,Bulanan,FALSE,TRUE,FALSE,TRUE,Azizah  - Septi
+54,CV BIMO NUSA JAYA,Bulanan,FALSE,TRUE,FALSE,TRUE,Azizah  - Septi
+55,CV WILMART INDO JAYA,Bulanan,FALSE,TRUE,FALSE,TRUE,Anggun - Intan
+56,CV SANTOSA ABADI JAYA,Bulanan,FALSE,TRUE,FALSE,TRUE,Aulia - Nita
+57,CV BHUWANA CARAKA INDONESIA,Bulanan,FALSE,TRUE,FALSE,TRUE,Azizah  - Septi
+58,CV SOLO MAHAKARYA INDONESIA,Bulanan,FALSE,TRUE,FALSE,TRUE,Aulia - Nita
+59,CV MULTI CIPTA INVESTAMA,Bulanan,FALSE,TRUE,FALSE,TRUE,Aulia - Nita
+60,CV KUNCI SUKSES BERSAMA,Bulanan,FALSE,TRUE,FALSE,TRUE,Azizah  - Septi
+61,PT ELENOIR SKIN,Bulanan,TRUE,FALSE,FALSE,TRUE,Anggun - Intan
+62,PT BINA MUSLIM CENDIKIA,Bulanan,TRUE,FALSE,FALSE,TRUE,Aulia - Nita
+63,ZINDI WILLY,Bulanan,TRUE,FALSE,FALSE,TRUE,Aulia - Nita
+64,CV DAMANSARA,Bulanan,TRUE,FALSE,TRUE,TRUE,Azizah  - Septi
+65,CV GLOBAL JAYA SENTOSA,Bulanan,FALSE,TRUE,FALSE,TRUE,Aulia - Nita
+66,CV FOCUS GLOBAL JAYA,Bulanan,FALSE,TRUE,FALSE,TRUE,Azizah  - Septi
+67,EPRILLIA,Bulanan,FALSE,TRUE,FALSE,TRUE,Anggun - Intan
+68,BAHAGIA BERKAT MELIMPAH,Bulanan,FALSE,TRUE,FALSE,TRUE,Anggun - Intan
+69,CV SINAR ARTHA SEJAHTERA,Bulanan,TRUE,FALSE,TRUE,TRUE,Aulia - Nita
+70,CV CAHAYA SENTRA MANDIRI,Bulanan,TRUE,FALSE,TRUE,TRUE,Aulia - Nita
+71,CV. SINAR CIPTA SEJAHTERA,Bulanan,TRUE,FALSE,TRUE,TRUE,Anggun - Intan
+72,CV FORTUNA AIKO,Bulanan,TRUE,FALSE,TRUE,TRUE,Anggun - Intan
+73,PT PAJANG KUSUMA BARON,Bulanan,TRUE,FALSE,FALSE,TRUE,Azizah  - Septi
+74,PT PAJANG FARMA MEDIKA,Bulanan,TRUE,FALSE,FALSE,TRUE,Azizah  - Septi
+75,PT PAJANG KUSUMA MEDIKA,Bulanan,TRUE,FALSE,TRUE,TRUE,Aulia - Nita
+76,EVAN CHANDRA KUMARA,Bulanan,FALSE,FALSE,TRUE,FALSE,Aulia - Nita
+77,PANCA SUSILO,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+78,ARIZAL FIRMANSYAH ,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+79,DEWI NUGRAHENI,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+80,YAYASAN BINA INSANI THOYIBAH,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+81,AKMALUDIN AKBAR,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+82,MUHAMMAD ZAIN,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+83,TIONG ENG,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+84,TAN GIOK BIE,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+85,NOVIANA DWI ANGGRAINI,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+86,Y.B. AGUS DWIYONO,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+87,KHARISMA PETRA,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+88,RIO SULISTIYANTO,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+89,GOENAWAN,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+90,AGUNG KURNIAWAN,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+91,MUZAZIN,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+92,NURDIN URBAYANI,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+93,BENEDICTUS BUDIANTO PONO,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+94,CHANDRA SOEDIBYO,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+95,ERICK SETIAWAN KOSASIH,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+96,HENDRO KOSASIH,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+97,CV TIGA DELAPAN MAKMUR,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+98,DIAN UNTORO,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+100,MUHAMMAD TAUFAN,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+101,ABDUL GHAFAR ISMAIL,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+102,CV SEMBILAN JAYA MAKMUR,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+103,MAULANA MUJAHID,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+104,ROFI SULTHON,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+105,HANDOYO LOANO,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+106,IRVAN DIKA,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+107,DIAZ ARJUN,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+108,JOKO HARJONO,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+109,ANDIK SULISTYAWAN,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+110,FARADHIAN ANDRI YOGA PURNAMA,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+111,CIPUT RADRIYANTO,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+112,PERWITA HAPSARI,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+113,HUMAIROH AL HAKIM AR,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+114,NADIA AMALIA HUSNA,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+115,AHMAD HIZBUL SAUQI,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+116,KUKUH WASKITO,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+117,CV BENKA MULTIUSAHA,Bulanan,TRUE,FALSE,FALSE,FALSE,Aulia - Nita
+118,YB DICKY BABYWEARIT ,Bulanan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+119,CV BERKARYA BERSAMA WARNA,Bulanan,FALSE,TRUE,FALSE,FALSE,Azizah  - Septi
+120,CV BERKAT BUSANA BALITA,Bulanan,FALSE,TRUE,FALSE,FALSE,Aulia - Nita
+121,CV KIDSMATE OUTLET INDONESIA,Bulanan,FALSE,TRUE,FALSE,FALSE,Azizah  - Septi
+122,CV GERAI BUSANA BALITA,Bulanan,FALSE,TRUE,FALSE,FALSE,Azizah  - Septi
+123,CLARA ADIKA KARTIKA SARI,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+124,CV FAJAR BUANA JAYA,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+125,ALFIAH SALAMUN,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+126,AKMALUDDIN WICAKSONO,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+127,FUAD ERY PRIBADI,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+128,ENRI PARWIYANTI,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+129,AMIN TRI WIDYO,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+130,ANDHY HARTANTO SOEJONO,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+131,CHANDRA SOEJONO,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+132,PT MEKAR LIMA PUTRA,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+133,DENY SETIO BUDE,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+134,CV ANUGERAH JAYA ABADI,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+135,LILIS BUDI ASTUTI,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+136,NAUVAL,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+137,NANANG MUJAHIDIN,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+138,CV WJSPORT INDUSTRI,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+139,WIJIYANTO,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+140,CV JSEVEN APPAREL INDONESIA,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+141,UTAMI SUKMAWATI,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+142,CV SLAM FURNITURE,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+143,SLAMET,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+144,MUSTOFA,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+145,GOENAWAN STEFANUS SANTOSO,Tahunan,FALSE,FALSE,FALSE,FALSE,
+146,SYAHRUL AFRIZAL SITORUS,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+147,YULIANTO WIBOWO,Tahunan,FALSE,FALSE,FALSE,FALSE,
+148,DR METANA,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+149,PRESTIGE DIAGNOSTIKA INDONESIA,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+150,DEWI SARAH,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+151,RIZKI OKTAGUSANI,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+152,DR. SUNARTO,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+153,CV BERSAMA TIGA SARANA,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+154,FRANSISKUS TOTO HARSONO,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+155,CV CITRA HAPSARI,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+156,FEBRI HARYU APSARI,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+157,MUHAMMAD AMIR ABDAT,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+158,IWAN HANOTO,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+159,CV BLEGEDU KETJHEH ARTA,Bulanan,FALSE,TRUE,FALSE,FALSE,Anggun - Intan
+160,AHMAD SYAIFULLAH,Bulanan,FALSE,TRUE,FALSE,FALSE,Anggun - Intan
+161,DODIK ARDY BAKHTIAR,Bulanan,FALSE,TRUE,FALSE,FALSE,Aulia - Nita
+162,DR FERRY WIJANARKO,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+163,DR GEIZAR ARSIKA,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+164,DR HANIS SETYONO,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+165,DR GALIH,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+166,DR ERIANA,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+167,DR. NIKEN,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+168,"dr. MUHAMMAD FAUZAN JAUHARI, SpBS",Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+169,ARIS SUPRIYADI,Bulanan,FALSE,TRUE,FALSE,FALSE,Aulia - Nita
+170,MARZUKI,Bulanan,FALSE,TRUE,FALSE,FALSE,Anggun - Intan
+171,EKO FITRIANTO,Bulanan,FALSE,TRUE,FALSE,FALSE,Aulia - Nita
+172,SUSENO DARMOYO,Bulanan,FALSE,TRUE,FALSE,FALSE,Anggun - Intan
+173,LUTFI AGUS PRAYUDI,Bulanan,FALSE,TRUE,FALSE,FALSE,Anggun - Intan
+174,SUGENG BUDIYONO,Bulanan,FALSE,TRUE,FALSE,FALSE,Aulia - Nita
+175,PAK FIRDAUS,Bulanan,FALSE,TRUE,FALSE,FALSE,Aulia - Nita
+176,BILLY SANDRIANTO,Bulanan,FALSE,TRUE,FALSE,FALSE,Azizah  - Septi
+177,IWAN WIDODO BUDI LAKSONO,Bulanan,FALSE,TRUE,FALSE,FALSE,Azizah  - Septi
+178,BALQIS,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+179,JOKO SANTOSO,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+180,YOHANES ARDIAN,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+181,MEKAR RACHMAWATI,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+182,AIKON RIFKI,Bulanan,FALSE,TRUE,FALSE,FALSE,Aulia - Nita
+183,PT AJIYA ZUHDI UTAMA,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+184,NADIF FADLAN MUSAFA,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+185,AMIR BASTARI,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+186,CV RIO SEJAHTERA ABADI,Bulanan,FALSE,TRUE,FALSE,FALSE,Azizah  - Septi
+187,MICGA PRIYO PRATITIS,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+188,PT MULTI PROTEKSI MANAJEMEN,Bulanan,TRUE,FALSE,FALSE,FALSE,Azizah  - Septi
+189,LUKAS WIRANTO,Bulanan,TRUE,FALSE,FALSE,FALSE,Anggun - Intan
+190,MARGARET IMELDA LUKMINTO,Bulanan,TRUE,FALSE,FALSE,FALSE,Aulia - Nita
+191,AKHMAD IKHWAN SETIAWAN,Bulanan,FALSE,TRUE,FALSE,FALSE,Anggun - Intan
+192,UTAMI PUJI RAHAYU,Bulanan,FALSE,TRUE,FALSE,FALSE,Aulia - Nita
+193,MUHAMMAD ALI AL KATIRI,Bulanan,FALSE,TRUE,FALSE,FALSE,Anggun - Intan
+194,AHMAD RIZAL,Bulanan,FALSE,TRUE,FALSE,FALSE,Aulia - Nita
+195,ANGELINA GRACIA,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+196,CV WIDO SYUKUR MANDIRI,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+197,JOKO WIDODO,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+198,UMMU KALSUM,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+199,HENDRI TEGUH,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+200,PT WISMA SRIKANDI,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+201,DODIE WIBOWO,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+202,MARCELLINO RADIKTYA,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+203,PT GREENFARM ENERGI INDONESIA,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+204,TANADIK HARISON ,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+205,MAHAKARYA KAJIAN,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+206,RITA VITRIYANA,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+207,CV CAYA ABADI GEMILANG,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+208,ENDRIK ARIYANTO,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+209,GRACEILA,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+210,SUSANA JUANTORO,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+211,YAYASAN DARUL QURAN,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+212,SUGIYANTI SUBALIO,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+213,RAFI TAUFIQUL,Tahunan,FALSE,FALSE,FALSE,FALSE,
+214,YAYASAN WULAN ALI,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+215,YAYASAN MADRASAH HADIST,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+216,YUDI ISMANTO,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+217,ERRIKA RATNA ALIFIA,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+218,SRI ENDAH WAHYUNINGSIH,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+219,WIJIYANTO,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+220,ROBERT EDDY SUSILO,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+221,AGUS SUPRIYANTO,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+222,SURATI,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+223,BANDI,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+224,CV MUTIARA JAYA TRANS,Tahunan,FALSE,FALSE,FALSE,FALSE,
+225,BENITA ARIANI,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+226,HERMANTO ADI KUNCORO,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+227,ROOSIANI PRASETIOWATI,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+228,CV. RELASI JAYA,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+229,YUSUF ANAFI,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+230,YOHANES ONNY EKO KRISTYANTO,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+231,TRI WIJANARTO,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+232,dr. BRIGITTE RINA ANINDA,Bulanan,TRUE,FALSE,FALSE,FALSE,Anggun - Intan
+233,SANTOSO BUDIHARDJO,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+234,INDRA GAUTAMA,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+235,CV RUKUN TEGAR SANTOSO,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+236,CV KUMARA MANDIRI JAYA,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+237,NUR SAMHUDI DRS,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+238,Dr. YUDISTIRA,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+239,CV PHOENIK,Bulanan,TRUE,FALSE,FALSE,TRUE,Azizah  - Septi
+240,LAMBANG SURAWAN,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+241,TRI BANGUN SUDARWATI,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+242,DATIEN ARISKA UTAMI,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+243,ANNAS,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+244,PT BERLIAN MULTI PERSADA,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+245,KOPERASI PEMASARAN LANCAR MAKMUR CERIA,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+246,MUHAMMAD TAUFAN,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+247,YUNIN PRAMESTI,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+248,TUTUP DARSONO,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+249,SLAMET RAHMANTO,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+250,RIZAL ZEIN ZULKARNAEN,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+251,PUJI ASTUTI,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+252,PAK GITANI,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+253,CV ABYAKTA,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+254,SUDIRMAN,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+255,HARTONO SOETANTYO,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+256,CV ISTIQOMAH FURNITURE,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+257,SRIYONO,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+258,NANDA FENTA,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+259,PT ARJUNA PRABU DEWANATA,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+260,TEFI FEBRU KUSTANTO,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+261,PT RAJA BERKAH BUANA,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+262,OKI ALFIANSYAH,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+263,FANNY AMALIA RAHMAN,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+264,MUHAMMAD ZUN NASHITH,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+265,NOVIANTI RAGIL SETYONINGRUM,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+266,PT YONG XING INDONESIA,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+267,CV NUSANTARA JAYA BERSAMA,Bulanan,FALSE,TRUE,FALSE,FALSE,Anggun - Intan
+268,ALDI,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+269,PAMUJI,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+270,WANDHA ILHAM RAMADHAN ,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+271,HERMAWATI IKA SELFIANA,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+272,IVANDU MANGGAR RISNANTO,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+273,SRI SULASTRI,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+274,WAHYUDI,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+275,WAHYU WINDARI,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+276,NITA APRIYANA,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+277,SANDI YUWONO,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+278,DAVID SRIANTO,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+279,ali satria,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+280,LUTFI HIDAYAT ,Bulanan,FALSE,TRUE,FALSE,FALSE,Aulia - Nita
+281,PT SORA ,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+282,YENNY WULANDARI ,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+283,TEFI FEBRU KUSTANTO,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+284,CV SALSA SUBUR,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+285,raden roro ,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+286,SISWADJI,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+287,HENDY TIA/CHAN KIM SOE,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+288,CV BATIK JAYA LESTARI,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+289,ONGKI PRADANA,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+290,CV CAMELIA GRUB INDONESIA,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+291,CV HANDAYANI,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+292,REYNALDO ANDREW GUNAWAN,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+293,STEFANUS AUDRY GUNAWAN SIE,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+294,PT PERKASA AGRO SEJAHTERA,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+295,HARIS NURHADI,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+296,PT SATRIA CAKRA,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+297,RULLI HERDIANTO,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+298,ARIS MARGONO,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+299,SRI RAHAYU,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+300,AGUS DWIANTO,Tahunan,FALSE,FALSE,FALSE,FALSE,Azizah  - Septi
+301,SUGIMAN,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+302,STIE SURAKARTA,Tahunan,FALSE,FALSE,FALSE,FALSE,Anggun - Intan
+303,CV JAYANTARA CIPTA MANDIRI,Tahunan,FALSE,FALSE,FALSE,FALSE,Aulia - Nita
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+,,,,,,,
+308,,,,,,,

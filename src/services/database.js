@@ -151,6 +151,23 @@ export async function updateUserFirstLogin(id) {
 
 export async function createClient(values) {
   if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
+
+  let metaKeterangan = values.keterangan || "";
+  if (
+    values.pph_25 !== undefined ||
+    values.pph_final !== undefined ||
+    values.ppn !== undefined ||
+    values.pph_21 !== undefined
+  ) {
+    metaKeterangan = JSON.stringify({
+      pph_25: Boolean(values.pph_25),
+      pph_final: Boolean(values.pph_final),
+      ppn: Boolean(values.ppn),
+      pph_21: Boolean(values.pph_21),
+      notes: typeof values.keterangan === "string" && !values.keterangan.startsWith("{") ? values.keterangan : "",
+    });
+  }
+
   const { error } = await supabase.from("clients").insert({
     name: values.name,
     npwp: values.npwp,
@@ -177,7 +194,7 @@ export async function createClient(values) {
     tanggal_mulai_kontrak: values.tanggal_mulai_kontrak,
     tanggal_akhir_kontrak: values.tanggal_akhir_kontrak,
     kontrak: values.kontrak,
-    keterangan: values.keterangan,
+    keterangan: metaKeterangan,
     spt_tahunan_2024: values.spt_tahunan_2024,
   });
   if (error) throw error;
@@ -185,6 +202,33 @@ export async function createClient(values) {
 
 export async function updateClient(id, values) {
   if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
+
+  let metaKeterangan = values.keterangan || "";
+  if (
+    values.pph_25 !== undefined ||
+    values.pph_final !== undefined ||
+    values.ppn !== undefined ||
+    values.pph_21 !== undefined
+  ) {
+    let existingNotes = "";
+    if (typeof values.keterangan === "string" && values.keterangan.startsWith("{")) {
+      try {
+        const parsed = JSON.parse(values.keterangan);
+        existingNotes = parsed.notes || "";
+      } catch {}
+    } else {
+      existingNotes = values.keterangan || "";
+    }
+
+    metaKeterangan = JSON.stringify({
+      pph_25: Boolean(values.pph_25),
+      pph_final: Boolean(values.pph_final),
+      ppn: Boolean(values.ppn),
+      pph_21: Boolean(values.pph_21),
+      notes: existingNotes,
+    });
+  }
+
   const { error } = await supabase
     .from("clients")
     .update({
@@ -213,7 +257,7 @@ export async function updateClient(id, values) {
       tanggal_mulai_kontrak: values.tanggal_mulai_kontrak,
       tanggal_akhir_kontrak: values.tanggal_akhir_kontrak,
       kontrak: values.kontrak,
-      keterangan: values.keterangan,
+      keterangan: metaKeterangan,
       spt_tahunan_2024: values.spt_tahunan_2024,
       updated_at: new Date().toISOString(),
     })
@@ -255,45 +299,6 @@ export async function logActivity(action, details, overrideUserName = null) {
   ]);
 }
 
-async function checkAndAwardDailyBonus(picName) {
-  if (!supabase || !picName) return;
-  
-  const now = new Date();
-  if (now.getHours() >= 16) return; // Hanya sebelum jam 16:00
-  
-  const todayStr = getLocalDateString();
-  
-  // Cek apakah sudah dapat bonus hari ini
-  const { data: logs } = await supabase
-    .from("activity_logs")
-    .select("id")
-    .eq("user_name", picName)
-    .eq("action", "Bonus Tepat Waktu")
-    .like("created_at", `${todayStr}%`);
-    
-  if (logs && logs.length > 0) return; // Sudah dapat bonus hari ini
-
-  // Cek apakah masih ada task yang belum selesai
-  const { data: tasks } = await supabase
-    .from("tasks")
-    .select("id")
-    .ilike("pic", `%${picName}%`)
-    .neq("status", "done");
-    
-  // Cek apakah masih ada pekerjaan pajak yang belum selesai
-  const { data: taxWorks } = await supabase
-    .from("tax")
-    .select("id")
-    .ilike("pic", `%${picName}%`)
-    .neq("status", "Selesai");
-    
-  // Jika keduanya kosong, berarti semua sudah selesai
-  if ((!tasks || tasks.length === 0) && (!taxWorks || taxWorks.length === 0)) {
-    await awardPointsToPic(picName, 1); // +1 point bonus harian
-    await logActivity("Bonus Tepat Waktu", `Menyelesaikan semua tugas sebelum 16:00 (+1 pt)`, picName);
-  }
-}
-
 function getLocalDateString() {
   const d = new Date();
   const year = d.getFullYear();
@@ -307,43 +312,79 @@ function getLocalDateString() {
 // ==========================================
 export async function createTask(task) {
   if (!supabase) return;
-  const { error } = await supabase.from("tasks").insert([task]);
+  const taskRow = toTaskRow(task);
+  const { error } = await supabase.from("tasks").insert([taskRow]);
   if (error) throw error;
 
-  await logActivity("Menambah Task", `Task: ${task.title}`);
+  await logActivity("Menambah Task", `Task: ${taskRow.title}`);
 }
 
-export async function updateTask(id, updates, oldStatus) {
-  if (!supabase) return;
-  const { error } = await supabase.from("tasks").update(updates).eq("id", id);
+export async function updateTask(id, updates, oldStatus, completionMeta = {}) {
+  if (!supabase) return { earnedPoints: 0, isOverdue: false, isOvertime: false };
+  const taskRow = toTaskRow(updates);
+  const { error } = await supabase.from("tasks").update(taskRow).eq("id", id);
   if (error) throw error;
+
+  let earnedPoints = 0;
+  let isOverdue = false;
+  let isOvertime = false;
 
   if (oldStatus !== "done" && updates.status === "done") {
     const now = new Date();
-    const hours = now.getHours();
+    const todayStr = getLocalDateString();
+    
+    // 1. Cek tepat waktu vs terlambat
+    isOverdue = Boolean(updates.deadline && updates.deadline < todayStr);
 
-    if (hours < 16) {
-      // Coba berikan bonus ke semua PIC
-      const pics = updates.pic ? updates.pic.split(/,|\bdan\b/i).map((p) => p.trim()).filter(Boolean) : [];
-      for (const p of pics) {
-        await checkAndAwardDailyBonus(p);
+    // 2. Cek apakah lembur / tugas ekstra:
+    // - Selesai di luar jam kantor normal (< 08:00 atau >= 17:00)
+    // - Selesai pada akhir pekan (Sabtu / Minggu)
+    // - Ditandai lembur pada completionMeta.isOvertime atau updates.is_overtime atau tag [Lembur]
+    const isOvertimeHours = now.getHours() >= 17 || now.getHours() < 8 || now.getDay() === 0 || now.getDay() === 6;
+    const isMarkedOvertime =
+      Boolean(completionMeta.isOvertime) ||
+      Boolean(updates.is_overtime) ||
+      (updates.title && updates.title.toLowerCase().includes("[lembur]")) ||
+      (updates.notes && updates.notes.toLowerCase().includes("[lembur]"));
+
+    isOvertime = isOvertimeHours || isMarkedOvertime;
+
+    if (isOverdue) {
+      // Selesai terlambat: TIDAK DAPAT POIN
+      earnedPoints = 0;
+      await logActivity(
+        "Menyelesaikan Task",
+        `Task: ${taskRow.title} (Selesai TERLAMBAT - Lewat deadline ${updates.deadline} • 0 pt)`,
+        updates.pic
+      );
+    } else if (isOvertime) {
+      // Selesai tepat waktu & Lembur: DAPAT POIN
+      earnedPoints = Number(updates.points > 0 ? updates.points : 1);
+      if (updates.pic) {
+        await awardPointsToPic(updates.pic, earnedPoints);
       }
       await logActivity(
-        "Menyelesaikan Task",
-        `Task: ${updates.title} (Selesai sebelum 16:00)`,
+        "Poin Lembur Tepat Waktu",
+        `Task: ${taskRow.title} (Selesai TEPAT WAKTU saat Lembur • Diberikan +${earnedPoints} pt)`,
+        updates.pic
       );
     } else {
+      // Selesai tepat waktu tapi jam kerja biasa (tugas reguler gaji bulanan): 0 pt
+      earnedPoints = 0;
       await logActivity(
         "Menyelesaikan Task",
-        `Task: ${updates.title} (Selesai lewat jam 16:00)`,
+        `Task: ${taskRow.title} (Selesai tepat waktu • Tugas reguler bulanan)`,
+        updates.pic
       );
     }
   } else if (oldStatus !== updates.status) {
     await logActivity(
       "Mengubah Status Task",
-      `Task: ${updates.title} menjadi ${updates.status}`,
+      `Task: ${taskRow.title} menjadi ${updates.status}`,
     );
   }
+
+  return { earnedPoints, isOverdue, isOvertime };
 }
 
 export async function uploadInvoice(file, taskId) {
@@ -398,36 +439,26 @@ export async function deleteInternTask(id) {
   if (error) throw error;
 }
 
-export async function createTaxWork(values, points = 0.25) {
+export async function createTaxWork(values) {
   if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
   const { error } = await supabase.from("tax").insert(toTaxRow(values));
   if (error) throw error;
-  if (values.status === "Selesai") {
-    const now = new Date();
-    if (now.getHours() < 16) {
-      const pics = values.pic ? values.pic.split(/,|\bdan\b/i).map((p) => p.trim()).filter(Boolean) : [];
-      for (const p of pics) {
-        await checkAndAwardDailyBonus(p);
-      }
-    }
-  }
+  await logActivity("Membuat Pekerjaan Pajak", `Layanan: ${values.service || values.category} - Klien: ${values.client}`);
 }
 
-export async function updateTaxWork(id, values, previousStatus, points = 0.25) {
+export async function updateTaxWork(id, values, previousStatus) {
   if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
   const { error } = await supabase
     .from("tax")
     .update({ ...toTaxRow(values), updated_at: new Date().toISOString() })
     .eq("id", id);
   if (error) throw error;
-  if (previousStatus !== "Selesai" && values.status === "Selesai") {
-    const now = new Date();
-    if (now.getHours() < 16) {
-      const pics = values.pic ? values.pic.split(/,|\bdan\b/i).map((p) => p.trim()).filter(Boolean) : [];
-      for (const p of pics) {
-        await checkAndAwardDailyBonus(p);
-      }
-    }
+  if (previousStatus !== values.status) {
+    await logActivity(
+      "Update Status Pajak",
+      `${values.service || values.category} (${values.client}) -> ${values.status}`,
+      values.pic
+    );
   }
 }
 
@@ -443,10 +474,6 @@ export async function createAttendance(values) {
     .from("attendance")
     .insert(toAttendanceRow(values));
   if (error) throw error;
-
-  if (values.status === "Hadir" || values.status === "Terlambat") {
-    await awardPointsToPic(values.staff, 0.25);
-  }
 }
 
 export async function updateAttendance(id, values, previousStatus) {
@@ -459,14 +486,6 @@ export async function updateAttendance(id, values, previousStatus) {
     })
     .eq("id", id);
   if (error) throw error;
-
-  const wasPresent =
-    previousStatus === "Hadir" || previousStatus === "Terlambat";
-  const isPresent = values.status === "Hadir" || values.status === "Terlambat";
-
-  if (!wasPresent && isPresent) {
-    await awardPointsToPic(values.staff, 0.25);
-  }
 }
 
 export async function deleteAttendance(id) {
@@ -568,24 +587,29 @@ export async function updateUserPoints(id, points) {
 async function awardPointsToPic(pic, points) {
   if (!supabase || !pic || points <= 0) return;
 
-  // Pisahkan nama PIC menggunakan koma atau "dan" untuk mendukung banyak staf sekaligus
   const picNames = pic
-    .split(/,|\bdan\b/i)
-    .map((name) => name.trim())
+    .split(/[,/&\-–—]|\bdan\b/i)
+    .map((name) => name.trim().toLowerCase())
     .filter(Boolean);
 
   if (picNames.length === 0) return;
 
   const { data, error } = await supabase
     .from("users")
-    .select("id,name,points")
-    .in("name", picNames);
+    .select("id,name,points");
 
   if (error) throw error;
   if (!data || data.length === 0) return;
 
-  // Berikan poin ke setiap PIC yang cocok
-  for (const user of data) {
+  // Cocokkan secara case-insensitive
+  const matchedUsers = data.filter((u) => {
+    const uName = (u.name || "").toLowerCase().trim();
+    return picNames.some(
+      (name) => name === uName || name.includes(uName) || uName.includes(name)
+    );
+  });
+
+  for (const user of matchedUsers) {
     const currentPts = Number(user.points ?? 0);
     const newPts = Math.round((currentPts + points) * 100) / 100;
     const { error: updateError } = await supabase
@@ -601,13 +625,20 @@ async function awardPointsToPic(pic, points) {
 }
 
 function toTaskRow(values) {
+  let title = values.title || "";
+  if (values.is_overtime && !title.toLowerCase().includes("[lembur]")) {
+    title = `[Lembur] ${title}`;
+  } else if (values.is_overtime === false && title.toLowerCase().startsWith("[lembur] ")) {
+    title = title.replace(/^\[lembur\]\s*/i, "");
+  }
+
   return {
-    title: values.title,
+    title: title.trim(),
     client: values.client,
     pic: values.pic,
-    deadline: values.deadline,
+    deadline: values.deadline || null,
     status: values.status,
-    points: values.points,
+    points: values.points !== undefined ? Number(values.points) : 1,
     notes: values.notes,
     invoice_url: values.invoice_url,
   };
@@ -617,7 +648,7 @@ function toInternTaskRow(values) {
   return {
     assigner: values.assigner,
     intern: values.intern,
-    date: values.date,
+    date: values.date || null,
     title: values.title,
     attachment: values.attachment,
     status: values.status,
@@ -630,7 +661,7 @@ function toTaxRow(values) {
     service: values.service,
     client: values.client,
     pic: values.pic,
-    deadline: values.deadline,
+    deadline: values.deadline || null,
     status: values.status,
     attachment: values.attachment,
     notes: values.notes,
@@ -640,7 +671,7 @@ function toTaxRow(values) {
 function toAttendanceRow(values) {
   return {
     staff: values.staff,
-    date: values.date,
+    date: values.date || null,
     check_in: values.checkIn || null,
     check_out: values.checkOut || null,
     status: values.status,
@@ -670,6 +701,13 @@ function toUser(row) {
 }
 
 function toClient(row) {
+  let meta = {};
+  if (row.keterangan && typeof row.keterangan === "string" && row.keterangan.trim().startsWith("{")) {
+    try {
+      meta = JSON.parse(row.keterangan);
+    } catch {}
+  }
+
   return {
     id: String(row.id),
     name: String(row.name ?? ""),
@@ -697,12 +735,21 @@ function toClient(row) {
     tanggal_mulai_kontrak: String(row.tanggal_mulai_kontrak ?? ""),
     tanggal_akhir_kontrak: String(row.tanggal_akhir_kontrak ?? ""),
     kontrak: String(row.kontrak ?? ""),
-    keterangan: String(row.keterangan ?? ""),
+    keterangan: meta.notes !== undefined ? String(meta.notes) : String(row.keterangan ?? ""),
     spt_tahunan_2024: String(row.spt_tahunan_2024 ?? ""),
+    pph_25: Boolean(row.pph_25 ?? meta.pph_25 ?? false),
+    pph_final: Boolean(row.pph_final ?? meta.pph_final ?? false),
+    ppn: Boolean(row.ppn ?? meta.ppn ?? false),
+    pph_21: Boolean(row.pph_21 ?? meta.pph_21 ?? false),
   };
 }
 
 function toTask(row) {
+  const isOvertime = Boolean(
+    (row.title && row.title.toLowerCase().includes("[lembur]")) ||
+    (row.notes && row.notes.toLowerCase().includes("[lembur]"))
+  );
+
   return {
     id: String(row.id),
     title: String(row.title ?? ""),
@@ -710,9 +757,10 @@ function toTask(row) {
     pic: String(row.pic ?? ""),
     deadline: String(row.deadline ?? ""),
     status: String(row.status ?? "todo"),
-    points: Number(row.points ?? 0),
+    points: Number(row.points ?? 1),
     notes: String(row.notes ?? ""),
     invoice_url: row.invoice_url ? String(row.invoice_url) : null,
+    is_overtime: isOvertime,
   };
 }
 
