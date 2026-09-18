@@ -1044,13 +1044,13 @@ export function ClientsPage() {
       {/* Tabel Klien (Disesuaikan Persis Kolom CSV + Drag to Scroll seperti HP) */}
       <Card className="overflow-hidden flex flex-col border border-slate-200 dark:border-white/10 shadow-sm relative">
         {/* Bar Navigasi Swipe / Drag */}
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-slate-50/90 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-white/10 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-slate-50/90 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-white/10 text-xs">
           <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 shrink-0">
               <MoveHorizontal className="h-3 w-3 animate-pulse" />
             </span>
-            <span className="font-medium">
-              Tabel dapat digeser langsung dengan mouse atau layar sentuh (seperti swipe di HP)
+            <span className="font-medium text-[11px] sm:text-xs">
+              Geser tabel ke kiri / kanan untuk melihat kolom lengkap
             </span>
           </div>
 
@@ -1060,20 +1060,20 @@ export function ClientsPage() {
               onClick={() => scrollTable("left")}
               disabled={!canScrollLeft}
               title="Geser ke kiri"
-              className="inline-flex items-center justify-center h-7 px-2.5 gap-1 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed dark:border-white/10 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition text-[11px] font-medium shadow-2xs"
+              className="inline-flex items-center justify-center h-6 sm:h-7 px-2 sm:px-2.5 gap-1 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed dark:border-white/10 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition text-[11px] font-medium shadow-2xs"
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
-              <span>Geser Kiri</span>
+              <ChevronLeft className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+              <span>Kiri</span>
             </button>
             <button
               type="button"
               onClick={() => scrollTable("right")}
               disabled={!canScrollRight}
               title="Geser ke kanan"
-              className="inline-flex items-center justify-center h-7 px-2.5 gap-1 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed dark:border-white/10 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition text-[11px] font-medium shadow-2xs"
+              className="inline-flex items-center justify-center h-6 sm:h-7 px-2 sm:px-2.5 gap-1 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed dark:border-white/10 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition text-[11px] font-medium shadow-2xs"
             >
-              <span>Geser Kanan</span>
-              <ChevronRight className="h-3.5 w-3.5" />
+              <span>Kanan</span>
+              <ChevronRight className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             </button>
           </div>
         </div>
@@ -1098,7 +1098,7 @@ export function ClientsPage() {
                 <th className="px-3.5 py-3 font-semibold text-slate-700 dark:text-slate-300 w-12 text-center">
                   No
                 </th>
-                <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300 min-w-[240px]">
+                <th className="px-3.5 py-3 font-semibold text-slate-700 dark:text-slate-300 min-w-[170px] sm:min-w-[240px]">
                   NAMA WAJIB PAJAK
                 </th>
                 <th className="px-3.5 py-3 font-semibold text-slate-700 dark:text-slate-300 text-center w-28">
@@ -1119,7 +1119,7 @@ export function ClientsPage() {
                 <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300 min-w-[170px]">
                   PIC
                 </th>
-                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100 text-right sticky right-0 bg-slate-50 dark:bg-slate-800 z-10 border-l border-slate-200 dark:border-white/10 no-drag shadow-[-6px_0_12px_-4px_rgba(0,0,0,0.08)]">
+                <th className="px-3.5 py-3 font-semibold text-slate-900 dark:text-slate-100 text-right lg:sticky lg:right-0 bg-slate-50 dark:bg-slate-800 z-10 lg:border-l border-slate-200 dark:border-white/10 no-drag lg:shadow-[-6px_0_12px_-4px_rgba(0,0,0,0.08)]">
                   Aksi
                 </th>
               </tr>
@@ -1257,13 +1257,13 @@ export function ClientsPage() {
                       </td>
 
                       {/* Aksi */}
-                      <td className="px-4 py-3 whitespace-nowrap text-right sticky right-0 bg-white group-hover:bg-slate-50 dark:bg-slate-900 dark:group-hover:bg-slate-800/80 z-10 border-l border-slate-100 dark:border-white/10 no-drag shadow-[-6px_0_12px_-4px_rgba(0,0,0,0.08)]">
+                      <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-right lg:sticky lg:right-0 bg-white group-hover:bg-slate-50 dark:bg-slate-900 dark:group-hover:bg-slate-800/80 z-10 lg:border-l border-slate-100 dark:border-white/10 no-drag lg:shadow-[-6px_0_12px_-4px_rgba(0,0,0,0.08)]">
                         <div className="flex items-center justify-end gap-1">
                           <button
                             type="button"
                             title="Tugaskan ke Task Board"
                             onClick={() => openDelegateModal(client)}
-                            className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 transition"
+                            className="inline-flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 rounded-lg text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 transition"
                           >
                             <Send className="h-3.5 w-3.5" />
                           </button>
@@ -1272,16 +1272,16 @@ export function ClientsPage() {
                             type="button"
                             title="Lihat Detail Lengkap"
                             onClick={() => setViewingDetail(client)}
-                            className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+                            className="inline-flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
                           >
-                            <Eye className="h-4 w-4" />
+                            <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           </button>
 
                           <button
                             type="button"
                             title="Edit Klien"
                             onClick={() => startEdit(client)}
-                            className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+                            className="inline-flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
@@ -1301,7 +1301,7 @@ export function ClientsPage() {
                                   );
                                 }
                               }}
-                              className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
+                              className="inline-flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
