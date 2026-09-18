@@ -198,9 +198,9 @@ export function getClientActiveServices(client) {
 
 export function ClientsPage() {
   const { data } = useAppData();
-  const { user } = useAuth();
+  const { user: currentUser } = useAuth();
   const isAdmin = ["owner", "developer", "manager", "admin"].includes(
-    user?.role,
+    currentUser?.role,
   );
   const queryClient = useQueryClient();
 
@@ -237,7 +237,7 @@ export function ClientsPage() {
     setDelegateForm({
       category: "SPT Masa",
       services: initialServices.length > 0 ? initialServices : ["PPN"],
-      pic: autoPic,
+      pic: autoPic || (currentUser?.name && !isAdmin ? currentUser.name : ""),
       deadline: "",
     });
   }
@@ -1880,11 +1880,27 @@ export function ClientsPage() {
                   <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
                     Tugaskan Kepada (PIC) *
                   </label>
-                  {delegateForm.pic && (
-                    <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">
-                      Terpilih: {delegateForm.pic}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {currentUser?.name && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDelegateForm((prev) => ({
+                            ...prev,
+                            pic: currentUser.name,
+                          }));
+                        }}
+                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 hover:underline"
+                      >
+                        Tugaskan ke Saya ({currentUser.name})
+                      </button>
+                    )}
+                    {delegateForm.pic && (
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                        Terpilih: {delegateForm.pic}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-2 pt-1">
                   {data?.users
