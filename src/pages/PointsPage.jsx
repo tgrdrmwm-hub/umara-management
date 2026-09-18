@@ -250,31 +250,31 @@ export function PointsPage() {
       >
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[520px] text-xs sm:min-w-[560px] sm:text-sm">
+            <table className="w-full min-w-[480px] text-xs sm:min-w-[560px] sm:text-sm">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-white/8">
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
+                  <th className="px-3 py-2.5 sm:px-4 sm:py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
                     Rank
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
+                  <th className="px-3 py-2.5 sm:px-4 sm:py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
                     Nama
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
+                  <th className="px-3 py-2.5 sm:px-4 sm:py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
                     Role
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
+                  <th className="px-3 py-2.5 sm:px-4 sm:py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
                     Badge
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
+                  <th className="px-3 py-2.5 sm:px-4 sm:py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
                     Point
                   </th>
                   {isAdmin && (
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
+                    <th className="px-3 py-2.5 sm:px-4 sm:py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
                       Edit
                     </th>
                   )}
                   {isAdmin && (
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
+                    <th className="px-3 py-2.5 sm:px-4 sm:py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
                       Aksi
                     </th>
                   )}
@@ -290,7 +290,7 @@ export function PointsPage() {
                         i === 0 ? "bg-amber-50/60 dark:bg-amber-500/5" : ""
                       }
                     >
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2.5 sm:px-4 sm:py-3">
                         {i === 0 ? (
                           <span className="text-lg">🥇</span>
                         ) : i === 1 ? (
@@ -303,16 +303,16 @@ export function PointsPage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
+                      <td className="px-3 py-2.5 sm:px-4 sm:py-3 font-medium text-slate-900 dark:text-slate-100">
                         {user.name}
                       </td>
-                      <td className="px-4 py-3 capitalize text-slate-600 dark:text-slate-400">
+                      <td className="px-3 py-2.5 sm:px-4 sm:py-3 capitalize text-slate-600 dark:text-slate-400">
                         {user.role.replace("_", " ")}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2.5 sm:px-4 sm:py-3">
                         <Badge tone={badgeConfig[badge].tone}>{badge}</Badge>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2.5 sm:px-4 sm:py-3">
                         <span
                           className="text-base font-semibold"
                           style={{ color: i < 3 ? podiumColors[i] : undefined }}
@@ -321,11 +321,11 @@ export function PointsPage() {
                         </span>
                       </td>
                       {isAdmin && (
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-2.5 sm:px-4 sm:py-3">
                           <Input
                             type="number"
                             step="0.25"
-                            className="w-24 h-8 text-xs"
+                            className="w-16 sm:w-24 h-8 text-xs"
                             value={draftPoints[user.id] ?? user.points}
                             onChange={(e) =>
                               setDraftPoints({
@@ -337,15 +337,15 @@ export function PointsPage() {
                         </td>
                       )}
                       {isAdmin && (
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-2.5 sm:px-4 sm:py-3">
                           <Button
                             size="sm"
                             variant="secondary"
-                            className="px-2 md:px-3"
+                            className="px-2 sm:px-3 text-xs"
                             onClick={() => void savePoints(user)}
                           >
-                            <Save className="h-4 w-4 md:mr-1" />
-                            <span className="hidden md:inline">Simpan</span>
+                            <Save className="h-3.5 w-3.5 sm:mr-1" />
+                            <span className="hidden sm:inline">Simpan</span>
                           </Button>
                         </td>
                       )}

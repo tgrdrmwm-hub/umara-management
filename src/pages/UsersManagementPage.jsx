@@ -314,16 +314,17 @@ export function UsersManagementPage() {
                 )}
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
                 <Button
                   type="button"
                   variant="secondary"
+                  className="w-full sm:w-auto"
                   onClick={() => setShowModal(false)}
                   disabled={isSubmitting}
                 >
                   Batal
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting}>
                   {isSubmitting ? "Menyimpan..." : "Simpan User"}
                 </Button>
               </div>
@@ -339,8 +340,8 @@ export function UsersManagementPage() {
             className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm"
             onClick={() => !isDeleting && setUserToDelete(null)}
           />
-          <Card className="relative w-full max-w-sm p-6">
-            <div className="mb-6 flex items-center gap-3">
+          <Card className="relative w-full max-w-sm p-5 sm:p-6">
+            <div className="mb-5 sm:mb-6 flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400">
                 <Trash2 className="h-5 w-5" />
               </div>
@@ -358,10 +359,11 @@ export function UsersManagementPage() {
               Apakah Anda yakin ingin menghapus user ini secara permanen? Semua data yang terkait dengan user ini juga mungkin akan terhapus.
             </p>
 
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
               <Button
                 type="button"
                 variant="secondary"
+                className="w-full sm:w-auto"
                 onClick={() => setUserToDelete(null)}
                 disabled={isDeleting}
               >
@@ -370,7 +372,7 @@ export function UsersManagementPage() {
               <Button 
                 onClick={executeDelete} 
                 disabled={isDeleting}
-                className="bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 border-transparent"
+                className="w-full sm:w-auto bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 border-transparent"
               >
                 {isDeleting ? "Menghapus..." : "Ya, Hapus"}
               </Button>

@@ -150,7 +150,7 @@ export function DashboardPage() {
       </motion.div>
 
       {/* Stat cards */}
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-2.5 sm:gap-3 grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, i) => (
           <motion.div
             key={stat.label}
@@ -158,20 +158,20 @@ export function DashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.06, duration: 0.4, ease: "easeOut" }}
           >
-            <Card className="p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+            <Card className="p-3 sm:p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                <p className="text-[11px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 truncate max-w-[90px] sm:max-w-none">
                   {stat.label}
                 </p>
                 <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-lg ${statConfig[i % statConfig.length].bg}`}
+                  className={`flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg shrink-0 ${statConfig[i % statConfig.length].bg}`}
                 >
                   <stat.icon
-                    className={`h-4 w-4 ${statConfig[i % statConfig.length].color}`}
+                    className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${statConfig[i % statConfig.length].color}`}
                   />
                 </div>
               </div>
-              <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              <p className="mt-2 sm:mt-3 text-lg sm:text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                 {stat.value}
               </p>
             </Card>

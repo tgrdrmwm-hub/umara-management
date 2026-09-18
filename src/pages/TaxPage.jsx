@@ -98,28 +98,28 @@ export function TaxPage() {
           </p>
         </div>
         {isAdmin && (
-          <Button onClick={startAdd}>
+          <Button onClick={startAdd} className="w-full sm:w-auto">
             <Plus className="h-4 w-4" />
-            Tambah Layanan
+            <span>Tambah Layanan</span>
           </Button>
         )}
       </div>
 
       {/* Form */}
       {isAdmin && showForm && (
-        <Card className="p-5">
+        <Card className="p-4 sm:p-5">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-semibold text-slate-900 dark:text-slate-100">
+            <h2 className="font-semibold text-slate-900 dark:text-slate-100 text-sm sm:text-base">
               {editing ? "Edit Layanan" : "Tambah Layanan Baru"}
             </h2>
             <button
               onClick={() => setShowForm(false)}
-              className="rounded-md p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/8"
+              className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/8"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
-          <form className="grid gap-4 sm:grid-cols-3" onSubmit={submit}>
+          <form className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3" onSubmit={submit}>
             <div className="space-y-1">
               <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
                 Kategori
@@ -161,11 +161,11 @@ export function TaxPage() {
                 onChange={(e) => setForm({ ...form, base_points: parseFloat(e.target.value) || 0 })}
               />
             </div>
-            <div className="sm:col-span-3 flex gap-2">
-              <Button type="submit">
+            <div className="sm:col-span-3 flex flex-wrap gap-2 pt-1">
+              <Button type="submit" className="flex-1 sm:flex-initial">
                 {editing ? "Simpan Perubahan" : "Tambah"}
               </Button>
-              <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>
+              <Button type="button" variant="secondary" onClick={() => setShowForm(false)} className="flex-1 sm:flex-initial">
                 Batal
               </Button>
             </div>
@@ -174,7 +174,7 @@ export function TaxPage() {
       )}
 
       {/* Grid of Categories */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
         {categories.map((categoryObj, index) => {
           const { category, services } = categoryObj;
           const totalPoints = services.reduce((total, service) => total + service.basePoints, 0);
@@ -182,17 +182,17 @@ export function TaxPage() {
           return (
             <Card key={index} className="flex flex-col p-0 overflow-hidden border-slate-200 dark:border-white/10 hover:border-indigo-500/50 dark:hover:border-indigo-400/50 transition-colors">
               {/* Category Header */}
-              <div className="bg-slate-50 dark:bg-slate-800/50 px-5 py-4 border-b border-slate-200 dark:border-white/10 flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+              <div className="bg-slate-50 dark:bg-slate-800/50 px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-200 dark:border-white/10 flex justify-between items-center">
+                <h2 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
                   {category}
                 </h2>
-                <Badge tone="blue" className="px-2 py-0.5 rounded-full">
+                <Badge tone="blue" className="px-2 py-0.5 rounded-full text-xs">
                   {services.length} Layanan
                 </Badge>
               </div>
 
               {/* Services List */}
-              <div className="p-5 flex-1 flex flex-col gap-2">
+              <div className="p-4 sm:p-5 flex-1 flex flex-col gap-2">
                 {services.map((service) => (
                   <div
                     key={service.id}

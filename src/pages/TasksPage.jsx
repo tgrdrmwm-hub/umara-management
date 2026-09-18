@@ -158,6 +158,7 @@ export function TasksPage() {
   const [startingTask, setStartingTask] = useState(null);
   const [approvedStartPics, setApprovedStartPics] = useState([]);
   const [approvedCompletePics, setApprovedCompletePics] = useState([]);
+  const [mobileActiveCol, setMobileActiveCol] = useState("all");
 
   const tasks = data?.tasks ?? [];
   const activityLogs = data?.activityLogs ?? [];
@@ -441,23 +442,23 @@ export function TasksPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
             Task Board
           </h1>
-          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             Pekerjaan bulanan reguler terhitung dalam gaji pokok. Tambahan poin reward diperoleh apabila tugas diselesaikan tepat waktu dan dikerjakan secara lembur/ekstra.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => setShowHistory(true)}>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button variant="secondary" onClick={() => setShowHistory(true)} className="flex-1 sm:flex-initial text-xs sm:text-sm">
             <History className="h-4 w-4" />
-            Riwayat
+            <span>Riwayat</span>
           </Button>
-          <Button onClick={() => { setEditing(null); setForm(emptyTask); setShowForm(true); }}>
+          <Button onClick={() => { setEditing(null); setForm(emptyTask); setShowForm(true); }} className="flex-1 sm:flex-initial text-xs sm:text-sm">
             <Plus className="h-4 w-4" />
-            Tambah Task
+            <span>Tambah Task</span>
           </Button>
         </div>
       </div>
@@ -531,10 +532,7 @@ export function TasksPage() {
               <X className="h-4 w-4" />
             </button>
           </div>
-          <form
-            className="mt-4 grid gap-4 sm:grid-cols-2"
-            onSubmit={submit}
-          >
+          <form onSubmit={handleSubmit} className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
             <div className="space-y-1 sm:col-span-2">
               <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
                 Judul Task
@@ -768,9 +766,9 @@ export function TasksPage() {
         const isAllApproved = pics.length < 2 || pics.every((p) => approvedStartPics.includes(p.toLowerCase()));
 
         return (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-            <Card className="w-full max-w-md p-0 overflow-hidden shadow-xl border-slate-200 dark:border-white/10 rounded-2xl">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-white/8 bg-slate-50/50 dark:bg-slate-800/50">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-sm">
+            <Card className="w-full max-w-md max-h-[90vh] flex flex-col p-0 overflow-hidden shadow-xl border-slate-200 dark:border-white/10 rounded-2xl">
+              <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 dark:border-white/8 bg-slate-50/50 dark:bg-slate-800/50 shrink-0">
                 <div>
                   <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                     Mulai Pengerjaan Tugas (On Process)
@@ -781,13 +779,13 @@ export function TasksPage() {
                 </div>
                 <button
                   onClick={() => { setStartingTask(null); setApprovedStartPics([]); }}
-                  className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
-              <form onSubmit={confirmStartTask} className="p-5 space-y-4">
+              <form onSubmit={confirmStartTask} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
                 <div className="rounded-xl border border-blue-200 bg-blue-50/80 p-3.5 text-xs text-blue-900 dark:border-blue-500/20 dark:bg-blue-950/30 dark:text-blue-200">
                   <div className="font-semibold flex items-center gap-1.5">
                     <Users className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
@@ -895,12 +893,12 @@ export function TasksPage() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-white/10">
+                <div className="flex flex-col-reverse sm:flex-row gap-2 pt-2 border-t border-slate-100 dark:border-white/10">
                   <Button 
                     type="button" 
                     variant="secondary" 
                     onClick={() => { setStartingTask(null); setApprovedStartPics([]); }}
-                    className="flex-1"
+                    className="w-full sm:flex-1 text-xs sm:text-sm"
                   >
                     Batal
                   </Button>
@@ -908,14 +906,14 @@ export function TasksPage() {
                     <Button 
                       type="button" 
                       onClick={saveStartApprovals}
-                      className="flex-1 font-semibold"
+                      className="w-full sm:flex-1 font-semibold text-xs sm:text-sm"
                     >
                       Simpan Konfirmasi ({approvedStartPics.length}/{pics.length} PIC)
                     </Button>
                   ) : (
                     <Button 
                       type="submit" 
-                      className="flex-1 font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+                      className="w-full sm:flex-1 font-semibold bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm"
                     >
                       Mulai Kerjakan ({pics.length}/{pics.length} PIC Siap)
                     </Button>
@@ -934,9 +932,9 @@ export function TasksPage() {
         const isAllApproved = pics.length < 2 || pics.every((p) => approvedCompletePics.includes(p.toLowerCase()));
 
         return (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-            <Card className="w-full max-w-md p-0 overflow-hidden shadow-xl border-slate-200 dark:border-white/10 rounded-2xl">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-white/8 bg-slate-50/50 dark:bg-slate-800/50">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-sm">
+            <Card className="w-full max-w-md max-h-[90vh] flex flex-col p-0 overflow-hidden shadow-xl border-slate-200 dark:border-white/10 rounded-2xl">
+              <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 dark:border-white/8 bg-slate-50/50 dark:bg-slate-800/50 shrink-0">
                 <div>
                   <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                     Konfirmasi Penyelesaian Task
@@ -947,13 +945,13 @@ export function TasksPage() {
                 </div>
                 <button
                   onClick={() => { setCompletingTask(null); setInvoiceFile(null); setApprovedCompletePics([]); }}
-                  className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
-              <form onSubmit={confirmCompleteTask} className="p-5 space-y-4 max-h-[85vh] overflow-y-auto">
+              <form onSubmit={confirmCompleteTask} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
                 {/* Status Evaluation Card */}
                 {isOverdue ? (
                   <div className="rounded-xl border border-rose-200 bg-rose-50/80 p-3.5 text-xs text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300 flex items-start gap-2.5">
@@ -1135,12 +1133,12 @@ export function TasksPage() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-white/10">
+                <div className="flex flex-col-reverse sm:flex-row gap-2 pt-2 border-t border-slate-100 dark:border-white/10">
                   <Button 
                     type="button" 
                     variant="secondary" 
                     onClick={() => { setCompletingTask(null); setInvoiceFile(null); setApprovedCompletePics([]); }}
-                    className="flex-1"
+                    className="w-full sm:flex-1 text-xs sm:text-sm"
                     disabled={isUploading}
                   >
                     Batal
@@ -1149,7 +1147,7 @@ export function TasksPage() {
                     <Button 
                       type="button" 
                       onClick={saveCompleteApprovals}
-                      className="flex-1 font-semibold"
+                      className="w-full sm:flex-1 font-semibold text-xs sm:text-sm"
                       disabled={isUploading}
                     >
                       {isUploading
@@ -1159,7 +1157,7 @@ export function TasksPage() {
                   ) : (
                     <Button 
                       type="submit" 
-                      className="flex-1 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white"
+                      className="w-full sm:flex-1 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm"
                       disabled={isUploading || (!invoiceFile && !completingTask.invoice_url) || !isAllApproved}
                     >
                       {isUploading
@@ -1178,6 +1176,42 @@ export function TasksPage() {
         );
       })()}
 
+      {/* Mobile Kanban Tab Selector */}
+      <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/5 md:hidden overflow-x-auto no-scrollbar border border-slate-200/60 dark:border-white/5">
+        <button
+          type="button"
+          onClick={() => setMobileActiveCol("all")}
+          className={`flex-1 py-1.5 px-2.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all text-center ${
+            mobileActiveCol === "all"
+              ? "bg-white text-slate-900 shadow-xs dark:bg-slate-800 dark:text-white"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+          }`}
+        >
+          Semua ({tasks.length})
+        </button>
+        {columns.map((col) => {
+          const count = tasks.filter(
+            (t) => t.status === col.key || (col.key === "progress" && t.status === "review")
+          ).length;
+          return (
+            <button
+              key={col.key}
+              type="button"
+              onClick={() => setMobileActiveCol(col.key)}
+              className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all text-center flex items-center justify-center gap-1 ${
+                mobileActiveCol === col.key
+                  ? "bg-white text-slate-900 shadow-xs dark:bg-slate-800 dark:text-white"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              }`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${col.dot}`} />
+              <span>{col.label}</span>
+              <span className="text-[10px] opacity-75 font-mono">({count})</span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Kanban columns */}
       <div className="grid gap-4 md:grid-cols-3">
         {columns.map((col) => {
@@ -1187,7 +1221,9 @@ export function TasksPage() {
           return (
             <div
               key={col.key}
-              className={`rounded-xl border border-slate-200/80 dark:border-white/8 ${col.color} p-3`}
+              className={`rounded-xl border border-slate-200/80 dark:border-white/8 ${col.color} p-3 ${
+                mobileActiveCol !== "all" && mobileActiveCol !== col.key ? "hidden md:block" : "block"
+              }`}
             >
               {/* Column header */}
               <div className="mb-3 flex items-center justify-between px-1">

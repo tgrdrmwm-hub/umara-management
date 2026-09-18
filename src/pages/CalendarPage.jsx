@@ -382,22 +382,23 @@ export function CalendarPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
-            <CalendarDays className="h-6 w-6 text-indigo-500" />
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
+            <CalendarDays className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-500 shrink-0" />
             Kalender Kegiatan
           </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             Jadwal kegiatan Bu Uma & agenda operasional kantor UmaraTax.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={goToToday}>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button variant="secondary" onClick={goToToday} className="flex-1 sm:flex-initial text-xs sm:text-sm">
             Hari Ini
           </Button>
-          <Button onClick={() => openAddModal()}>
-            <Plus className="h-4 w-4" />
+          <Button onClick={() => openAddModal()} className="flex-1 sm:flex-initial text-xs sm:text-sm">
+            <Plus className="h-4 w-4 mr-1 shrink-0" />
             Tambah Agenda
           </Button>
         </div>
@@ -407,10 +408,10 @@ export function CalendarPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column (Month Calendar Grid) */}
         <div className="lg:col-span-2 space-y-4">
-          <Card className="p-5">
+          <Card className="p-3 sm:p-5">
             {/* Month Navigation */}
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+            <div className="flex items-center justify-between mb-4 sm:mb-5">
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                 {MONTH_NAMES[currentMonthDate.getMonth()]}{" "}
                 {currentMonthDate.getFullYear()}
               </h2>
@@ -437,11 +438,11 @@ export function CalendarPage() {
             </div>
 
             {/* Day Headers */}
-            <div className="grid grid-cols-7 gap-1.5 text-center mb-2">
+            <div className="grid grid-cols-7 gap-1 sm:gap-1.5 text-center mb-2">
               {DAY_NAMES.map((day, idx) => (
                 <div
                   key={day}
-                  className={`text-xs font-semibold py-1.5 ${
+                  className={`text-[10px] sm:text-xs font-semibold py-1 sm:py-1.5 ${
                     idx === 0 || idx === 6
                       ? "text-rose-500 dark:text-rose-400"
                       : "text-slate-500 dark:text-slate-400"
@@ -453,7 +454,7 @@ export function CalendarPage() {
             </div>
 
             {/* Calendar Cells */}
-            <div className="grid grid-cols-7 gap-1.5">
+            <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
               {calendarGrid.map((cell) => {
                 const dayEvents = eventsByDate[cell.dateStr] || [];
                 const isSelected = selectedDate === cell.dateStr;
@@ -463,7 +464,7 @@ export function CalendarPage() {
                   <div
                     key={cell.dateStr}
                     onClick={() => setSelectedDate(cell.dateStr)}
-                    className={`min-h-[85px] sm:min-h-[95px] p-1.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+                    className={`min-h-[50px] sm:min-h-[95px] p-1 sm:p-1.5 rounded-lg sm:rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
                       isSelected
                         ? "border-indigo-500 bg-indigo-50/40 dark:bg-indigo-500/10 ring-2 ring-indigo-500/30"
                         : cell.isCurrentMonth
@@ -474,7 +475,7 @@ export function CalendarPage() {
                     {/* Day Number */}
                     <div className="flex items-center justify-between">
                       <span
-                        className={`text-xs font-semibold rounded-full h-6 w-6 flex items-center justify-center ${
+                        className={`text-[11px] sm:text-xs font-semibold rounded-full h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center ${
                           isToday
                             ? "bg-indigo-600 text-white font-bold"
                             : isSelected
@@ -485,14 +486,27 @@ export function CalendarPage() {
                         {cell.dayNumber}
                       </span>
                       {dayEvents.length > 0 && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300">
+                        <span className="text-[9px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300">
                           {dayEvents.length}
                         </span>
                       )}
                     </div>
 
-                    {/* Mini event list in cell */}
-                    <div className="space-y-1 mt-1 overflow-hidden">
+                    {/* Mobile dots indicator (hidden on tablet/desktop) */}
+                    <div className="sm:hidden flex items-center justify-center gap-0.5 mt-1">
+                      {dayEvents.slice(0, 3).map((_, i) => (
+                        <span
+                          key={i}
+                          className="h-1.5 w-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400"
+                        />
+                      ))}
+                      {dayEvents.length > 3 && (
+                        <span className="h-1 w-1 rounded-full bg-slate-400" />
+                      )}
+                    </div>
+
+                    {/* Desktop & Tablet event title badges */}
+                    <div className="hidden sm:block space-y-1 mt-1 overflow-hidden">
                       {dayEvents.slice(0, 2).map((evt) => (
                         <div
                           key={evt.id}
@@ -959,15 +973,16 @@ export function CalendarPage() {
                   </div>
 
                   {/* Submit buttons */}
-                  <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-white/8">
+                  <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-3 border-t border-slate-100 dark:border-white/8">
                     <Button
                       type="button"
                       variant="secondary"
+                      className="w-full sm:w-auto"
                       onClick={() => setShowModal(false)}
                     >
                       Batal
                     </Button>
-                    <Button type="submit">
+                    <Button type="submit" className="w-full sm:w-auto">
                       {editingEvent ? "Simpan Perubahan" : "Tambah Agenda"}
                     </Button>
                   </div>

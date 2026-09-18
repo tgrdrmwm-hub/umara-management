@@ -628,9 +628,9 @@ export function ClientsPage() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <Button
-            className="shadow-sm"
+            className="shadow-sm flex-1 sm:flex-initial text-xs sm:text-sm"
             onClick={() => {
               if (showForm && !editing) {
                 closeForm();
@@ -645,7 +645,7 @@ export function ClientsPage() {
             <span>Tambah Klien</span>
           </Button>
 
-          <label className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg text-sm font-medium transition-colors bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700 h-9 px-3.5 py-2 cursor-pointer shadow-sm">
+          <label className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg text-xs sm:text-sm font-medium transition-colors bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700 h-9 px-2.5 sm:px-3.5 py-2 cursor-pointer shadow-sm flex-1 sm:flex-initial">
             <FileUp className="h-4 w-4" />
             <span>Import CSV</span>
             <input
@@ -659,7 +659,7 @@ export function ClientsPage() {
           <Button
             variant="secondary"
             onClick={exportCsv}
-            className="px-3.5 shadow-sm"
+            className="px-2.5 sm:px-3.5 shadow-sm text-xs sm:text-sm flex-1 sm:flex-initial"
           >
             <Download className="h-4 w-4 mr-1.5" />
             <span>Export CSV</span>
@@ -668,7 +668,7 @@ export function ClientsPage() {
           <Button
             variant="secondary"
             onClick={() => window.print()}
-            className="px-3 shadow-sm"
+            className="px-2.5 sm:px-3 shadow-sm h-9 w-9 shrink-0"
             title="Cetak atau simpan PDF"
           >
             <FileDown className="h-4 w-4" />
@@ -1979,19 +1979,19 @@ export function ClientsPage() {
               </div>
 
               {/* Submit / Action Buttons */}
-              <div className="flex items-center gap-2 pt-3 border-t border-slate-100 dark:border-white/10">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2 pt-3 border-t border-slate-100 dark:border-white/10">
                 <Button
                   type="button"
                   variant="secondary"
                   onClick={() => setDelegating(null)}
-                  className="h-10 px-4 text-xs sm:text-sm font-medium shrink-0"
+                  className="h-10 px-4 text-xs sm:text-sm font-medium w-full sm:w-auto"
                 >
                   Batal
                 </Button>
                 <Button
                   type="submit"
                   disabled={delegateForm.services.length === 0}
-                  className="flex-1 h-10 px-3 text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 whitespace-nowrap"
+                  className="w-full sm:flex-1 h-10 px-3 text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 whitespace-nowrap"
                 >
                   <Send className="h-3.5 w-3.5 shrink-0" />
                   <span>

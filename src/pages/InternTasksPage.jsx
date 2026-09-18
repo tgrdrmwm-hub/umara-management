@@ -68,6 +68,7 @@ export function InternTasksPage() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyTask);
+  const [mobileActiveCol, setMobileActiveCol] = useState("all");
 
   const tasks = data?.internTasks ?? [];
 
@@ -123,12 +124,12 @@ export function InternTasksPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
             Tugas Magang
           </h1>
-          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             Kelola tugas yang diberikan oleh staff kepada anak magang.
           </p>
         </div>
@@ -143,57 +144,58 @@ export function InternTasksPage() {
                 setShowForm(true);
               }
             }}
+            className="w-full sm:w-auto"
           >
             <Plus className="h-4 w-4" />
-            Tambah Tugas
+            <span>Tambah Tugas</span>
           </Button>
         )}
       </div>
 
       {/* Form */}
       {showForm && (
-        <Card className="p-5">
+        <Card className="p-4 sm:p-5">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            <h2 className="font-semibold text-slate-900 dark:text-slate-100 text-sm sm:text-base">
               {editing ? "Edit Tugas Magang" : "Tambah Tugas Magang"}
             </h2>
             <button
               onClick={closeForm}
-              className="rounded-md p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/8"
+              className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/8"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
           <form
-            className="grid gap-3 sm:grid-cols-2"
-            onSubmit={(e) => void submit(e)}
+            className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2"
+            onSubmit={submit}
           >
             <div className="space-y-1 sm:col-span-2">
               <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                Pekerjaan / Judul Tugas *
+                Judul Tugas
               </label>
               <Input
-                placeholder="Deskripsi pekerjaan"
+                placeholder="Nama / deskripsi tugas..."
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
               />
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                Pemberi Tugas (Staff) *
+                Pemberi Tugas (Staff / Dosen)
               </label>
               <Input
-                placeholder="Nama Staff"
+                placeholder="Nama Anda..."
                 value={form.assigner}
                 onChange={(e) => setForm({ ...form, assigner: e.target.value })}
               />
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                Diberikan Kepada (Anak Magang)
+                Ditugaskan Kepada (Magang)
               </label>
               <Input
-                placeholder="Nama Anak Magang"
+                placeholder="Nama anak magang..."
                 value={form.intern}
                 onChange={(e) => setForm({ ...form, intern: e.target.value })}
               />
@@ -236,17 +238,51 @@ export function InternTasksPage() {
                 }
               />
             </div>
-            <div className="flex gap-2 sm:col-span-2">
-              <Button type="submit">
+            <div className="flex flex-wrap gap-2 sm:col-span-2 pt-1">
+              <Button type="submit" className="flex-1 sm:flex-initial">
                 {editing ? "Simpan Perubahan" : "Tambah Tugas"}
               </Button>
-              <Button type="button" variant="secondary" onClick={closeForm}>
+              <Button type="button" variant="secondary" onClick={closeForm} className="flex-1 sm:flex-initial">
                 Batal
               </Button>
             </div>
           </form>
         </Card>
       )}
+
+      {/* Mobile Kanban Tab Selector */}
+      <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/5 md:hidden overflow-x-auto no-scrollbar border border-slate-200/60 dark:border-white/5">
+        <button
+          type="button"
+          onClick={() => setMobileActiveCol("all")}
+          className={`flex-1 py-1.5 px-2.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all text-center ${
+            mobileActiveCol === "all"
+              ? "bg-white text-slate-900 shadow-xs dark:bg-slate-800 dark:text-white"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+          }`}
+        >
+          Semua ({tasks.length})
+        </button>
+        {columns.map((col) => {
+          const count = tasks.filter((t) => t.status === col.key).length;
+          return (
+            <button
+              key={col.key}
+              type="button"
+              onClick={() => setMobileActiveCol(col.key)}
+              className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all text-center flex items-center justify-center gap-1 ${
+                mobileActiveCol === col.key
+                  ? "bg-white text-slate-900 shadow-xs dark:bg-slate-800 dark:text-white"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              }`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${col.dot}`} />
+              <span>{col.label}</span>
+              <span className="text-[10px] opacity-75 font-mono">({count})</span>
+            </button>
+          );
+        })}
+      </div>
 
       {/* Kanban columns */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -255,7 +291,9 @@ export function InternTasksPage() {
           return (
             <div
               key={col.key}
-              className={`rounded-xl border border-slate-200/80 dark:border-white/8 ${col.color} p-3`}
+              className={`rounded-xl border border-slate-200/80 dark:border-white/8 ${col.color} p-3 ${
+                mobileActiveCol !== "all" && mobileActiveCol !== col.key ? "hidden md:block" : "block"
+              }`}
             >
               <div className="mb-3 flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">

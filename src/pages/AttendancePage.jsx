@@ -254,22 +254,25 @@ export function AttendancePage() {
             Jam masuk, pulang, durasi kerja, dan status kehadiran staff.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={() => void quickAttendance("in")} className="px-3 md:px-4">
-            <Clock className="h-4 w-4 md:mr-1" />
-            <span className="hidden md:inline">Check In</span>
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <Button
+            onClick={() => void quickAttendance("in")}
+            className="flex-1 sm:flex-initial px-3 sm:px-4 text-xs sm:text-sm"
+          >
+            <Clock className="h-4 w-4 mr-1.5 shrink-0" />
+            <span>Check In</span>
           </Button>
           <Button
             variant="secondary"
-            className="px-3 md:px-4"
+            className="flex-1 sm:flex-initial px-3 sm:px-4 text-xs sm:text-sm"
             onClick={() => void quickAttendance("out")}
           >
-            <Clock className="h-4 w-4 md:mr-1" />
-            <span className="hidden md:inline">Check Out</span>
+            <Clock className="h-4 w-4 mr-1.5 shrink-0" />
+            <span>Check Out</span>
           </Button>
           <Button
             variant="secondary"
-            className="px-3 md:px-4"
+            className="w-full sm:w-auto px-3 sm:px-4 text-xs sm:text-sm"
             onClick={() => {
               if (showForm && !editing) {
                 closeForm();
@@ -280,8 +283,8 @@ export function AttendancePage() {
               }
             }}
           >
-            <Plus className="h-4 w-4 md:mr-1" />
-            <span className="hidden md:inline">Tambah</span>
+            <Plus className="h-4 w-4 mr-1.5 shrink-0" />
+            <span>Tambah</span>
           </Button>
         </div>
       </div>
@@ -431,42 +434,42 @@ export function AttendancePage() {
       </div>
 
       {/* Calendar */}
-      <Card className="p-6 relative overflow-hidden bg-gradient-to-b from-white to-slate-50/50 dark:from-slate-900 dark:to-slate-900/50">
+      <Card className="p-3 sm:p-6 relative overflow-hidden bg-gradient-to-b from-white to-slate-50/50 dark:from-slate-900 dark:to-slate-900/50">
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
         
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner dark:bg-indigo-500/10 dark:text-indigo-400">
+            <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-inner dark:bg-indigo-500/10 dark:text-indigo-400">
               <CalendarDays className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
                 {monthName} {now.getFullYear()}
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Log absensi bulan ini</p>
+              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Log absensi bulan ini</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-4 text-xs font-medium text-slate-600 dark:text-slate-400">
-            <span className="flex items-center gap-2 px-2 py-1 rounded-md bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-white/5">
-              <span className="relative flex h-2.5 w-2.5">
+          <div className="flex items-center gap-2 sm:gap-4 text-[11px] sm:text-xs font-medium text-slate-600 dark:text-slate-400">
+            <span className="flex items-center gap-1.5 sm:gap-2 px-2 py-1 rounded-md bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-white/5">
+              <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-indigo-500"></span>
               </span>
               Hari ini
             </span>
-            <span className="flex items-center gap-2 px-2 py-1 rounded-md bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-white/5">
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+            <span className="flex items-center gap-1.5 sm:gap-2 px-2 py-1 rounded-md bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-white/5">
+              <span className="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
               Ada absensi
             </span>
           </div>
         </div>
         
-        <div className="grid grid-cols-7 gap-y-4 gap-x-2 relative z-10">
+        <div className="grid grid-cols-7 gap-y-2 sm:gap-y-4 gap-x-1 sm:gap-x-2 relative z-10">
           {["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"].map((d) => (
             <div
               key={d}
-              className="pb-2 text-center text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500"
+              className="pb-1 text-center text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500"
             >
               {d}
             </div>
@@ -499,11 +502,11 @@ export function AttendancePage() {
               return (
                 <div key={idx} className="flex justify-center">
                   <div
-                    className={`relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl text-sm font-semibold transition-all duration-300 ${
+                    className={`relative flex h-8 w-8 sm:h-11 sm:w-11 items-center justify-center rounded-xl sm:rounded-2xl text-xs sm:text-sm font-semibold transition-all duration-300 ${
                       day.type !== 'current'
                         ? 'text-slate-300 dark:text-slate-700'
                         : isToday
-                          ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 scale-110 z-10'
+                          ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 scale-105 sm:scale-110 z-10'
                           : hasAttendance
                             ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 hover:bg-emerald-100 hover:scale-105 ring-1 ring-inset ring-emerald-200 dark:ring-emerald-500/30'
                             : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105'
@@ -511,7 +514,7 @@ export function AttendancePage() {
                   >
                     {day.date}
                     {hasAttendance && !isToday && (
-                      <span className="absolute bottom-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500 transition-transform group-hover:scale-150"></span>
+                      <span className="absolute bottom-1 h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-emerald-500 transition-transform group-hover:scale-150"></span>
                     )}
                   </div>
                 </div>
@@ -733,14 +736,15 @@ export function AttendancePage() {
                 }}
                 autoFocus
               />
-              <div className="mt-6 flex justify-end gap-3">
+              <div className="mt-6 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
                 <Button
                   variant="outline"
+                  className="w-full sm:w-auto"
                   onClick={() => setInternPrompt({ show: false, type: null, name: "" })}
                 >
                   Batal
                 </Button>
-                <Button onClick={submitInternAttendance}>
+                <Button className="w-full sm:w-auto" onClick={submitInternAttendance}>
                   {internPrompt.type === "in" ? "Check In" : "Check Out"}
                 </Button>
               </div>
