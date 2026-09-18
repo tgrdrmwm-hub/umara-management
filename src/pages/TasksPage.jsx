@@ -82,7 +82,9 @@ export function resolveClientPics(clientPic, users = []) {
     (u) =>
       u.role !== "owner" &&
       u.name.toLowerCase() !== "tegar" &&
-      u.name.toLowerCase() !== "owner"
+      u.name.toLowerCase() !== "owner" &&
+      u.name.toLowerCase() !== "magang" &&
+      u.role !== "magang"
   );
 
   const matched = staffUsers.filter((u) => isPicSelected(clientPic, u.name));
@@ -500,8 +502,8 @@ export function TasksPage() {
                   </span>
                 )}
               </div>
-              <div className="flex flex-wrap gap-2 pt-1">
-                {data?.users?.filter(u => u.role !== 'owner' && u.name.toLowerCase() !== 'tegar' && u.name.toLowerCase() !== 'owner').map((user) => {
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {data?.users?.filter(u => u.role !== 'owner' && u.name.toLowerCase() !== 'tegar' && u.name.toLowerCase() !== 'owner' && u.name.toLowerCase() !== 'magang' && u.role !== 'magang').map((user) => {
                   const isSelected = isPicSelected(form.pic, user.name);
                   return (
                     <label

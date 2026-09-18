@@ -91,7 +91,9 @@ export function resolveClientPics(clientPic, users = []) {
     (u) =>
       u.role !== "owner" &&
       u.name.toLowerCase() !== "tegar" &&
-      u.name.toLowerCase() !== "owner"
+      u.name.toLowerCase() !== "owner" &&
+      u.name.toLowerCase() !== "magang" &&
+      u.role !== "magang"
   );
 
   const matched = staffUsers.filter((u) => isPicSelected(clientPic, u.name));
@@ -1561,15 +1563,15 @@ export function ClientsPage() {
 
       {/* Delegate Modal (Multi-Layanan Sekaligus) */}
       {delegating && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <Card className="w-full max-w-lg p-5 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="mb-4 flex items-center justify-between border-b pb-3 border-slate-100 dark:border-white/10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-3 sm:p-4 backdrop-blur-sm">
+          <Card className="w-full max-w-lg p-4 sm:p-5 shadow-2xl max-h-[92vh] overflow-y-auto rounded-2xl">
+            <div className="mb-3.5 flex items-center justify-between border-b pb-3 border-slate-100 dark:border-white/10">
               <div>
                 <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
                   Delegasikan Tugas Klien
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Pilih satu atau beberapa layanan sekaligus untuk dibuatkan task ke Board
+                  Pilih satu atau beberapa layanan untuk dibuatkan tugas ke Board
                 </p>
               </div>
               <button
@@ -1581,17 +1583,17 @@ export function ClientsPage() {
             </div>
 
             {/* Info Klien */}
-            <div className="mb-4 rounded-xl border border-slate-200/80 bg-slate-50/80 dark:border-white/10 dark:bg-slate-800/60 p-3 text-xs space-y-1.5">
+            <div className="mb-3.5 rounded-xl border border-slate-200/80 bg-slate-50/80 dark:border-white/10 dark:bg-slate-800/60 p-3 text-xs space-y-1.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
+                <div className="min-w-0">
                   <span className="text-slate-400 dark:text-slate-500 block text-[10px]">
                     Nama Klien:
                   </span>
-                  <span className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                  <span className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate block">
                     {delegating.name}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300">
                     {delegating.kontrak || "Bulanan"}
                   </span>
@@ -1601,7 +1603,7 @@ export function ClientsPage() {
                 </div>
               </div>
               {delegating.pic && (
-                <div className="text-[11px] text-slate-600 dark:text-slate-300 pt-1 border-t border-slate-200/60 dark:border-white/5">
+                <div className="text-[11px] text-slate-600 dark:text-slate-300 pt-1 border-t border-slate-200/60 dark:border-white/5 truncate">
                   PIC Default Terdaftar:{" "}
                   <span className="font-semibold text-blue-600 dark:text-blue-400">
                     {delegating.pic}
@@ -1613,10 +1615,10 @@ export function ClientsPage() {
             <form className="space-y-4" onSubmit={submitDelegate}>
               {/* 4 Layanan Utama Klien (PPH 25, PPH FINAL, PPN, PPH 21) */}
               <div className="space-y-2">
-                <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-1.5">
                     <label className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                      Pilihan Layanan Pajak (Bisa Pilih Banyak) *
+                      Pilihan Layanan Pajak *
                     </label>
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300">
                       {delegateForm.services.length} dipilih
@@ -1624,7 +1626,7 @@ export function ClientsPage() {
                   </div>
 
                   {/* Tombol Aksi Cepat */}
-                  <div className="flex items-center gap-1.5 text-[11px]">
+                  <div className="flex items-center gap-1 text-[11px] overflow-x-auto pb-0.5">
                     <button
                       type="button"
                       onClick={() => {
@@ -1648,11 +1650,10 @@ export function ClientsPage() {
                           services: Array.from(new Set(activeList)),
                         }));
                       }}
-                      className="font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 hover:underline"
+                      className="px-2 py-1 rounded-md font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 whitespace-nowrap active:scale-95 transition-transform"
                     >
                       Pilih Yang Aktif
                     </button>
-                    <span className="text-slate-300 dark:text-slate-600">|</span>
                     <button
                       type="button"
                       onClick={() => {
@@ -1664,19 +1665,18 @@ export function ClientsPage() {
                           services: allFour,
                         }));
                       }}
-                      className="font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+                      className="px-2 py-1 rounded-md font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 whitespace-nowrap active:scale-95 transition-transform"
                     >
-                      Pilih 4 Layanan
+                      Semua (4)
                     </button>
-                    <span className="text-slate-300 dark:text-slate-600">|</span>
                     <button
                       type="button"
                       onClick={() =>
                         setDelegateForm((prev) => ({ ...prev, services: [] }))
                       }
-                      className="font-medium text-rose-500 hover:text-rose-700"
+                      className="px-2 py-1 rounded-md font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-200 dark:border-rose-900 whitespace-nowrap active:scale-95 transition-transform"
                     >
-                      Batal
+                      Reset
                     </button>
                   </div>
                 </div>
@@ -1692,9 +1692,9 @@ export function ClientsPage() {
                     return (
                       <label
                         key={item.service}
-                        className={`relative flex items-start gap-2.5 p-3 rounded-xl border transition cursor-pointer select-none ${
+                        className={`relative flex items-start gap-2 p-2.5 rounded-xl border transition cursor-pointer select-none ${
                           isSelected
-                            ? "border-blue-600 bg-blue-50/70 dark:border-blue-500 dark:bg-blue-950/40 shadow-xs"
+                            ? "border-blue-600 bg-blue-50/80 dark:border-blue-500 dark:bg-blue-950/50 shadow-xs"
                             : "border-slate-200 bg-white hover:border-slate-300 dark:border-white/10 dark:bg-slate-800/60 dark:hover:border-white/20"
                         }`}
                       >
@@ -1711,25 +1711,25 @@ export function ClientsPage() {
                               return { ...prev, services: updated };
                             });
                           }}
-                          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700"
+                          className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700"
                         />
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1">
-                            <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                          <div className="flex items-start justify-between gap-1">
+                            <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
                               {item.label}
                             </span>
-                            <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                            <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 shrink-0 whitespace-nowrap bg-slate-100 dark:bg-slate-700/60 px-1 py-0.2 rounded">
                               0.25 pt
                             </span>
                           </div>
-                          <div className="mt-1">
+                          <div className="mt-1.5 flex items-center">
                             {isClientActive ? (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
-                                <Check className="h-3 w-3 mr-0.5" /> TRUE (Aktif)
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 whitespace-nowrap">
+                                <Check className="h-2.5 w-2.5 mr-0.5 shrink-0" /> Aktif
                               </span>
                             ) : (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800">
-                                FALSE
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 whitespace-nowrap">
+                                Non-Aktif
                               </span>
                             )}
                           </div>
@@ -1752,9 +1752,9 @@ export function ClientsPage() {
                       delegateForm.services.includes(tahunanSrv);
                     return (
                       <label
-                        className={`flex items-start gap-2.5 p-3 rounded-xl border transition cursor-pointer select-none mt-2 ${
+                        className={`flex items-start gap-2 p-2.5 rounded-xl border transition cursor-pointer select-none mt-2 ${
                           isSelected
-                            ? "border-indigo-600 bg-indigo-50/70 dark:border-indigo-500 dark:bg-indigo-950/40 shadow-xs"
+                            ? "border-indigo-600 bg-indigo-50/80 dark:border-indigo-500 dark:bg-indigo-950/50 shadow-xs"
                             : "border-slate-200 bg-white hover:border-slate-300 dark:border-white/10 dark:bg-slate-800/60"
                         }`}
                       >
@@ -1771,21 +1771,21 @@ export function ClientsPage() {
                               return { ...prev, services: updated };
                             });
                           }}
-                          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                          className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                         />
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1">
-                            <span className="text-xs font-bold text-indigo-950 dark:text-indigo-200">
+                          <div className="flex items-start justify-between gap-1">
+                            <span className="text-xs font-bold text-indigo-950 dark:text-indigo-200 truncate">
                               {isBadan
                                 ? "SPT Tahunan Badan"
                                 : "SPT Tahunan Orang Pribadi"}
                             </span>
-                            <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                            <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 shrink-0 whitespace-nowrap bg-slate-100 dark:bg-slate-700/60 px-1 py-0.2 rounded">
                               0.25 pt
                             </span>
                           </div>
-                          <div className="mt-1">
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-100 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300">
+                          <div className="mt-1.5 flex items-center">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-100 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 whitespace-nowrap">
                               ✓ Kontrak Tahunan
                             </span>
                           </div>
@@ -1799,13 +1799,14 @@ export function ClientsPage() {
                   <button
                     type="button"
                     onClick={() => setShowOtherCategories(!showOtherCategories)}
-                    className="text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 flex items-center gap-1"
+                    className="w-full py-2 px-3 rounded-xl border border-dashed border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-600 bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between text-xs font-medium text-slate-700 dark:text-slate-300 transition"
                   >
-                    <span>
-                      {showOtherCategories ? "− Tutup" : "+ Tambah"} Layanan dari Kategori Lain
+                    <span className="flex items-center gap-1.5 truncate">
+                      <span className="text-blue-600 dark:text-blue-400 font-bold">{showOtherCategories ? "−" : "+"}</span>
+                      <span className="font-semibold">{showOtherCategories ? "Tutup Layanan Lain" : "Tambah Layanan Kategori Lain"}</span>
                     </span>
-                    <span className="text-[10px] text-slate-400">
-                      (Coretax, Akuntansi, Perizinan, dll)
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 whitespace-nowrap ml-1">
+                      (Coretax, dll)
                     </span>
                   </button>
 
@@ -1875,24 +1876,26 @@ export function ClientsPage() {
               </div>
 
               {/* PIC Selector */}
-              <div className="space-y-1 pt-1 border-t border-slate-100 dark:border-white/5">
+              <div className="space-y-1.5 pt-1 border-t border-slate-100 dark:border-white/5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                     Tugaskan Kepada (PIC) *
                   </label>
                   {delegateForm.pic && (
-                    <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">
+                    <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium truncate max-w-[180px]">
                       Terpilih: {delegateForm.pic}
                     </span>
                   )}
                 </div>
-                <div className="flex flex-wrap gap-2 pt-1">
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
                   {data?.users
                     ?.filter(
                       (u) =>
                         u.role !== "owner" &&
                         u.name.toLowerCase() !== "tegar" &&
-                        u.name.toLowerCase() !== "owner",
+                        u.name.toLowerCase() !== "owner" &&
+                        u.name.toLowerCase() !== "magang" &&
+                        u.role !== "magang",
                     )
                     .map((user) => {
                       const isSelected = isPicSelected(
@@ -1902,9 +1905,9 @@ export function ClientsPage() {
                       return (
                         <label
                           key={user.id}
-                          className={`cursor-pointer select-none rounded-full px-3 py-1.5 text-xs font-medium transition-colors border ${
+                          className={`cursor-pointer select-none rounded-full px-3 py-1 text-xs font-medium transition-colors border ${
                             isSelected
-                              ? "bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white shadow-sm"
+                              ? "bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white shadow-xs"
                               : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700 dark:hover:bg-slate-800"
                           }`}
                         >
@@ -1962,27 +1965,30 @@ export function ClientsPage() {
               </div>
 
               {/* Submit / Action Buttons */}
-              <div className="flex gap-2 pt-2 border-t border-slate-100 dark:border-white/10">
+              <div className="flex items-center gap-2 pt-3 border-t border-slate-100 dark:border-white/10">
                 <Button
                   type="button"
                   variant="secondary"
                   onClick={() => setDelegating(null)}
-                  className="w-1/3"
+                  className="h-10 px-4 text-xs sm:text-sm font-medium shrink-0"
                 >
                   Batal
                 </Button>
                 <Button
                   type="submit"
                   disabled={delegateForm.services.length === 0}
-                  className="w-2/3 flex items-center justify-center gap-1.5"
+                  className="flex-1 h-10 px-3 text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 whitespace-nowrap"
                 >
-                  <Send className="h-3.5 w-3.5" />
+                  <Send className="h-3.5 w-3.5 shrink-0" />
                   <span>
-                    {delegateForm.services.length === 0
-                      ? "Pilih Minimal 1 Layanan"
-                      : delegateForm.services.length === 1
-                      ? `Buat 1 Task`
-                      : `Buat ${delegateForm.services.length} Task Sekaligus`}
+                    {delegateForm.services.length === 0 ? (
+                      "Pilih Layanan"
+                    ) : (
+                      <>
+                        Buat {delegateForm.services.length} Task
+                        <span className="hidden sm:inline"> Sekaligus</span>
+                      </>
+                    )}
                   </span>
                 </Button>
               </div>
