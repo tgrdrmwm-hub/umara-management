@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   Award,
   CheckCircle2,
+  Users,
 } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -59,6 +60,14 @@ function getTodayDateString() {
   const month = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+export function getTaskPics(picString) {
+  if (!picString) return [];
+  return picString
+    .split(/[,/&\-–—]|\bdan\b/i)
+    .map((p) => p.trim())
+    .filter(Boolean);
 }
 
 export function isPicSelected(picString, userName) {
@@ -119,6 +128,9 @@ export function TasksPage() {
   const [completionOvertime, setCompletionOvertime] = useState(false);
   const [invoiceFile, setInvoiceFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [startingTask, setStartingTask] = useState(null);
+  const [approvedStartPics, setApprovedStartPics] = useState([]);
+  const [approvedCompletePics, setApprovedCompletePics] = useState([]);
 
   const tasks = data?.tasks ?? [];
   const activityLogs = data?.activityLogs ?? [];
@@ -183,6 +195,55 @@ export function TasksPage() {
     setForm(emptyTask);
   }
 
+  function handleStartTask(task) {
+    const pics = getTaskPics(task.pic);
+    if (pics.length >= 2) {
+      setStartingTask(task);
+      setApprovedStartPics([]);
+    } else {
+      void updateTask(
+        task.id,
+        { ...task, status: "progress" },
+        task.status,
+      ).then(() => refresh("Task dipindahkan ke In Progress"));
+    }
+  }
+
+  async function confirmStartTask(e) {
+    e.preventDefault();
+    if (!startingTask) return;
+    const pics = getTaskPics(startingTask.pic);
+    if (
+      pics.length >= 2 &&
+      !pics.every((p) => approvedStartPics.includes(p.toLowerCase()))
+    ) {
+      return toast.error(
+        "Kedua PIC yang bertanggung jawab wajib memberikan persetujuan.",
+      );
+    }
+
+    try {
+      await updateTask(
+        startingTask.id,
+        {
+          ...startingTask,
+          status: "progress",
+        },
+        startingTask.status,
+      );
+      await refresh(
+        pics.length >= 2
+          ? `Task resmi dimulai dengan persetujuan kedua PIC (${pics.join(", ")})!`
+          : "Task dipindahkan ke In Progress",
+      );
+      setStartingTask(null);
+      setApprovedStartPics([]);
+    } catch (err) {
+      console.error(err);
+      toast.error("Gagal memulai task: " + (err?.message || "Unknown error"));
+    }
+  }
+
   function openCompleteModal(task) {
     const now = new Date();
     const isAfterHours =
@@ -192,6 +253,7 @@ export function TasksPage() {
       now.getDay() === 6;
     setCompletingTask(task);
     setInvoiceFile(null);
+    setApprovedCompletePics([]);
     setCompletionOvertime(Boolean(task.is_overtime || isAfterHours));
   }
 
@@ -199,6 +261,15 @@ export function TasksPage() {
     e.preventDefault();
     if (!invoiceFile) {
       return toast.error("File invoice bukti pekerjaan wajib diunggah.");
+    }
+    const pics = getTaskPics(completingTask.pic);
+    if (
+      pics.length >= 2 &&
+      !pics.every((p) => approvedCompletePics.includes(p.toLowerCase()))
+    ) {
+      return toast.error(
+        "Kedua PIC yang bertanggung jawab wajib menyetujui penyelesaian tugas.",
+      );
     }
     
     setIsUploading(true);
@@ -221,11 +292,13 @@ export function TasksPage() {
 
       if (res?.isOverdue) {
         toast.warning(
-          `Task diselesaikan lewat tenggat waktu (${completingTask.deadline}). Tidak mendapat poin reward (0 pt).`
+          `Task diselesaikan lewat tenggat waktu (${completingTask.deadline}). Tidak mendapat poin reward (0 pt).`,
         );
       } else if (res?.earnedPoints > 0) {
         toast.success(
-          `Task diselesaikan tepat waktu! +${res.earnedPoints} poin berhasil diberikan ke PIC.`
+          pics.length >= 2
+            ? `Task selesai dengan persetujuan kedua PIC (${pics.join(", ")})! Poin berhasil diberikan.`
+            : `Task diselesaikan tepat waktu! +${res.earnedPoints} poin berhasil diberikan ke PIC.`,
         );
       } else {
         toast.success("Task berhasil diselesaikan.");
@@ -233,6 +306,7 @@ export function TasksPage() {
 
       setCompletingTask(null);
       setInvoiceFile(null);
+      setApprovedCompletePics([]);
     } catch (err) {
       console.error(err);
       toast.error("Gagal: " + (err?.message || "Unknown error"));
@@ -565,12 +639,141 @@ export function TasksPage() {
         </Card>
       )}
 
+      {/* Modal Mulai Kerjakan (Dual PIC Verification) */}
+      {startingTask && (() => {
+        const pics = getTaskPics(startingTask.pic);
+        const isAllApproved = pics.length < 2 || pics.every((p) => approvedStartPics.includes(p.toLowerCase()));
+
+        return (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+            <Card className="w-full max-w-md p-0 overflow-hidden shadow-xl border-slate-200 dark:border-white/10 rounded-2xl">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-white/8 bg-slate-50/50 dark:bg-slate-800/50">
+                <div>
+                  <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    Mulai Pengerjaan Tugas (On Process)
+                  </h2>
+                  <p className="text-xs text-slate-500 truncate max-w-xs mt-0.5">
+                    {startingTask.title}
+                  </p>
+                </div>
+                <button
+                  onClick={() => { setStartingTask(null); setApprovedStartPics([]); }}
+                  className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <form onSubmit={confirmStartTask} className="p-5 space-y-4">
+                <div className="rounded-xl border border-blue-200 bg-blue-50/80 p-3.5 text-xs text-blue-900 dark:border-blue-500/20 dark:bg-blue-950/30 dark:text-blue-200">
+                  <div className="font-semibold flex items-center gap-1.5">
+                    <Users className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                    Penanggung Jawab Bersama ({pics.length} PIC)
+                  </div>
+                  <p className="mt-1 text-[11px] text-blue-700 dark:text-blue-300 leading-relaxed">
+                    Tugas ini didelegasikan kepada <strong>{pics.join(" & ")}</strong>. Status tidak bisa diubah oleh 1 orang saja; diperlukan konfirmasi kesiapan dari kedua PIC untuk memulai.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      Konfirmasi Kedua PIC *
+                    </label>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                      approvedStartPics.length === pics.length
+                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                        : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
+                    }`}>
+                      {approvedStartPics.length}/{pics.length} PIC Siap
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {pics.map((picName) => {
+                      const isChecked = approvedStartPics.includes(picName.toLowerCase());
+                      return (
+                        <label
+                          key={picName}
+                          className={`flex items-start gap-3 p-3 rounded-xl border transition cursor-pointer select-none ${
+                            isChecked
+                              ? "border-blue-600 bg-blue-50/70 dark:border-blue-500 dark:bg-blue-950/40 shadow-xs"
+                              : "border-slate-200 bg-white hover:border-slate-300 dark:border-white/10 dark:bg-slate-800/60"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setApprovedStartPics([...approvedStartPics, picName.toLowerCase()]);
+                              } else {
+                                setApprovedStartPics(
+                                  approvedStartPics.filter((p) => p !== picName.toLowerCase())
+                                );
+                              }
+                            }}
+                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                                {picName}
+                              </span>
+                              {isChecked ? (
+                                <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
+                                  ✓ Siap Mengerjakan
+                                </span>
+                              ) : (
+                                <span className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded">
+                                  Wajib Dicentang
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                              Saya ({picName}) menyatakan mulai mengerjakan tugas ini.
+                            </p>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-2 border-t border-slate-100 dark:border-white/10">
+                  <Button 
+                    type="button" 
+                    variant="secondary" 
+                    onClick={() => { setStartingTask(null); setApprovedStartPics([]); }}
+                    className="flex-1"
+                  >
+                    Batal
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    className="flex-1 font-semibold"
+                    disabled={!isAllApproved}
+                  >
+                    {isAllApproved
+                      ? `Mulai Kerjakan (${pics.length}/${pics.length} PIC)`
+                      : `Butuh ${pics.length} PIC (${approvedStartPics.length}/${pics.length})`}
+                  </Button>
+                </div>
+              </form>
+            </Card>
+          </div>
+        );
+      })()}
+
       {/* Modal Upload Invoice Selesai Task */}
       {completingTask && (() => {
         const isOverdue = Boolean(completingTask.deadline && completingTask.deadline < todayStr);
+        const pics = getTaskPics(completingTask.pic);
+        const isAllApproved = pics.length < 2 || pics.every((p) => approvedCompletePics.includes(p.toLowerCase()));
+
         return (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-            <Card className="w-full max-w-md p-0 overflow-hidden shadow-xl border-slate-200 dark:border-white/10">
+            <Card className="w-full max-w-md p-0 overflow-hidden shadow-xl border-slate-200 dark:border-white/10 rounded-2xl">
               <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-white/8 bg-slate-50/50 dark:bg-slate-800/50">
                 <div>
                   <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -581,14 +784,14 @@ export function TasksPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => { setCompletingTask(null); setInvoiceFile(null); }}
+                  onClick={() => { setCompletingTask(null); setInvoiceFile(null); setApprovedCompletePics([]); }}
                   className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
-              <form onSubmit={confirmCompleteTask} className="p-5 space-y-4">
+              <form onSubmit={confirmCompleteTask} className="p-5 space-y-4 max-h-[85vh] overflow-y-auto">
                 {/* Status Evaluation Card */}
                 {isOverdue ? (
                   <div className="rounded-xl border border-rose-200 bg-rose-50/80 p-3.5 text-xs text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300 flex items-start gap-2.5">
@@ -635,6 +838,78 @@ export function TasksPage() {
                   </div>
                 </label>
 
+                {/* Persetujuan Kedua PIC (jika >= 2 PIC) */}
+                {pics.length >= 2 && (
+                  <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-white/10">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                        <Users className="h-3.5 w-3.5 text-blue-600" />
+                        Persetujuan Kedua PIC Penanggung Jawab *
+                      </label>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                        approvedCompletePics.length === pics.length
+                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                          : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
+                      }`}>
+                        {approvedCompletePics.length}/{pics.length} PIC Setuju
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Tugas ini tidak bisa diselesaikan oleh 1 orang saja. Kedua PIC wajib memverifikasi dan menyetujui hasil pekerjaan:
+                    </p>
+
+                    <div className="space-y-2">
+                      {pics.map((picName) => {
+                        const isChecked = approvedCompletePics.includes(picName.toLowerCase());
+                        return (
+                          <label
+                            key={picName}
+                            className={`flex items-start gap-2.5 p-3 rounded-xl border transition cursor-pointer select-none ${
+                              isChecked
+                                ? "border-emerald-600 bg-emerald-50/70 dark:border-emerald-500 dark:bg-emerald-950/40 shadow-xs"
+                                : "border-slate-200 bg-white hover:border-slate-300 dark:border-white/10 dark:bg-slate-800/60"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setApprovedCompletePics([...approvedCompletePics, picName.toLowerCase()]);
+                                } else {
+                                  setApprovedCompletePics(
+                                    approvedCompletePics.filter((p) => p !== picName.toLowerCase())
+                                  );
+                                }
+                              }}
+                              className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-1">
+                                <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                                  {picName}
+                                </span>
+                                {isChecked ? (
+                                  <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
+                                    ✓ Disetujui
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded">
+                                    Wajib Dicentang
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                Saya ({picName}) telah memeriksa hasil pekerjaan & menyetujui tugas ini selesai.
+                              </p>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Invoice Upload */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
@@ -652,11 +927,11 @@ export function TasksPage() {
                   </p>
                 </div>
 
-                <div className="flex gap-2 pt-2">
+                <div className="flex gap-2 pt-2 border-t border-slate-100 dark:border-white/10">
                   <Button 
                     type="button" 
                     variant="secondary" 
-                    onClick={() => { setCompletingTask(null); setInvoiceFile(null); }}
+                    onClick={() => { setCompletingTask(null); setInvoiceFile(null); setApprovedCompletePics([]); }}
                     className="flex-1"
                     disabled={isUploading}
                   >
@@ -664,10 +939,16 @@ export function TasksPage() {
                   </Button>
                   <Button 
                     type="submit" 
-                    className="flex-1"
-                    disabled={isUploading || !invoiceFile}
+                    className="flex-1 font-semibold"
+                    disabled={isUploading || !invoiceFile || !isAllApproved}
                   >
-                    {isUploading ? "Mengunggah..." : "Konfirmasi Selesai"}
+                    {isUploading
+                      ? "Mengunggah..."
+                      : !invoiceFile
+                      ? "Unggah Bukti Dahulu"
+                      : !isAllApproved
+                      ? `Butuh ${pics.length} PIC (${approvedCompletePics.length}/${pics.length})`
+                      : "Konfirmasi Selesai"}
                   </Button>
                 </div>
               </form>
@@ -750,11 +1031,21 @@ export function TasksPage() {
                       </div>
                     )}
                     <div className="mt-3 flex items-center justify-between">
-                      {task.pic && (
-                        <span className="truncate text-xs text-slate-500 dark:text-slate-400 max-w-[120px]">
-                          {task.pic}
-                        </span>
-                      )}
+                      {task.pic && (() => {
+                        const pics = getTaskPics(task.pic);
+                        return (
+                          <span className="truncate text-xs text-slate-500 dark:text-slate-400 max-w-[160px]">
+                            {pics.length >= 2 ? (
+                              <span className="inline-flex items-center gap-1 font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                                <Users className="h-3 w-3 shrink-0" />
+                                <span className="truncate">{pics.length} PIC: {pics.join(", ")}</span>
+                              </span>
+                            ) : (
+                              task.pic
+                            )}
+                          </span>
+                        );
+                      })()}
                       <Badge
                         tone={col.key === "done" ? "green" : "slate"}
                         className="ml-auto shrink-0 text-xs"
@@ -787,15 +1078,7 @@ export function TasksPage() {
                           size="sm"
                           variant="secondary"
                           className="bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-400"
-                          onClick={() =>
-                            void updateTask(
-                              task.id,
-                              { ...task, status: "progress" },
-                              task.status,
-                            ).then(() =>
-                              refresh("Task dipindahkan ke In Progress"),
-                            )
-                          }
+                          onClick={() => handleStartTask(task)}
                         >
                           Kerjakan
                         </Button>

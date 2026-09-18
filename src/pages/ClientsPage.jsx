@@ -417,28 +417,30 @@ export function ClientsPage() {
     }
 
     try {
-      const createdNames = [];
-      for (const srvName of delegateForm.services) {
+      // Hitung akumulasi poin dari semua layanan yang dipilih
+      const totalPoints = delegateForm.services.reduce((sum, srvName) => {
         const srvObj = taxServices.find((i) => i.name === srvName);
-        const points = srvObj ? Number(srvObj.basePoints ?? 0.25) : 0.25;
+        return sum + (srvObj ? Number(srvObj.basePoints ?? 0.25) : 0.25);
+      }, 0);
+      const formattedPoints = Math.round(totalPoints * 100) / 100;
 
-        await createTask({
-          title: `[${srvName}] ${delegating.name}`,
-          client: delegating.name,
-          notes: `Tugas ${srvName} untuk klien ${delegating.name}`,
-          pic: delegateForm.pic,
-          deadline: delegateForm.deadline || null,
-          status: "todo",
-          points: points,
-          is_overtime: false,
-        });
-        createdNames.push(srvName);
-      }
+      const servicesLabel = delegateForm.services.join(", ");
+      const taskTitle = `[${servicesLabel}] ${delegating.name}`;
+
+      // Buat SATU task terpadu untuk klien tersebut
+      await createTask({
+        title: taskTitle,
+        client: delegating.name,
+        notes: `Layanan: ${servicesLabel} | Klien: ${delegating.name}`,
+        pic: delegateForm.pic,
+        deadline: delegateForm.deadline || null,
+        status: "todo",
+        points: formattedPoints,
+        is_overtime: false,
+      });
 
       await refresh(
-        createdNames.length > 1
-          ? `${createdNames.length} tugas (${createdNames.join(", ")}) berhasil didelegasikan ke Task Board!`
-          : `Tugas [${createdNames[0]}] berhasil didelegasikan ke Task Board!`,
+        `Tugas klien [${delegating.name}] (${delegateForm.services.length} Layanan • ${formattedPoints} pt) berhasil didelegasikan!`,
       );
       setDelegating(null);
       setDelegateForm({
@@ -1992,10 +1994,7 @@ export function ClientsPage() {
                     {delegateForm.services.length === 0 ? (
                       "Pilih Layanan"
                     ) : (
-                      <>
-                        Buat {delegateForm.services.length} Task
-                        <span className="hidden sm:inline"> Sekaligus</span>
-                      </>
+                      `Buat Task (${delegateForm.services.length} Layanan)`
                     )}
                   </span>
                 </Button>
