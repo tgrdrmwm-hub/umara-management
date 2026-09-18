@@ -330,50 +330,32 @@ export async function updateTask(id, updates, oldStatus, completionMeta = {}) {
   let isOvertime = false;
 
   if (oldStatus !== "done" && updates.status === "done") {
-    const now = new Date();
     const todayStr = getLocalDateString();
     
-    // 1. Cek tepat waktu vs terlambat
+    // 1. Cek tepat waktu vs terlambat berdasarkan tenggat waktu (deadline)
     isOverdue = Boolean(updates.deadline && updates.deadline < todayStr);
 
-    // 2. Cek apakah lembur / tugas ekstra:
-    // - Selesai di luar jam kantor normal (< 08:00 atau >= 17:00)
-    // - Selesai pada akhir pekan (Sabtu / Minggu)
-    // - Ditandai lembur pada completionMeta.isOvertime atau updates.is_overtime atau tag [Lembur]
-    const isOvertimeHours = now.getHours() >= 17 || now.getHours() < 8 || now.getDay() === 0 || now.getDay() === 6;
-    const isMarkedOvertime =
-      Boolean(completionMeta.isOvertime) ||
-      Boolean(updates.is_overtime) ||
-      (updates.title && updates.title.toLowerCase().includes("[lembur]")) ||
-      (updates.notes && updates.notes.toLowerCase().includes("[lembur]"));
-
-    isOvertime = isOvertimeHours || isMarkedOvertime;
-
     if (isOverdue) {
-      // Selesai terlambat: TIDAK DAPAT POIN
+      // Selesai terlambat (melebihi tenggat waktu): TIDAK DAPAT POIN
       earnedPoints = 0;
       await logActivity(
         "Menyelesaikan Task",
-        `Task: ${taskRow.title} (Selesai TERLAMBAT - Lewat deadline ${updates.deadline} • 0 pt)`,
+        `Task: ${taskRow.title} (Selesai TERLAMBAT - Lewat tenggat ${updates.deadline} • 0 pt)`,
         updates.pic
       );
-    } else if (isOvertime) {
-      // Selesai tepat waktu & Lembur: DAPAT POIN
-      earnedPoints = Number(updates.points > 0 ? updates.points : 1);
+    } else {
+      // Selesai TEPAT WAKTU (sebelum atau pada tenggat waktu): DAPAT POIN PENUH!
+      earnedPoints = Number(
+        updates.points !== undefined && updates.points !== null && Number(updates.points) > 0
+          ? updates.points
+          : 0.25
+      );
       if (updates.pic) {
         await awardPointsToPic(updates.pic, earnedPoints);
       }
       await logActivity(
-        "Poin Lembur Tepat Waktu",
-        `Task: ${taskRow.title} (Selesai TEPAT WAKTU saat Lembur • Diberikan +${earnedPoints} pt)`,
-        updates.pic
-      );
-    } else {
-      // Selesai tepat waktu tapi jam kerja biasa (tugas reguler gaji bulanan): 0 pt
-      earnedPoints = 0;
-      await logActivity(
-        "Menyelesaikan Task",
-        `Task: ${taskRow.title} (Selesai tepat waktu • Tugas reguler bulanan)`,
+        "Poin Tepat Waktu",
+        `Task: ${taskRow.title} (Selesai TEPAT WAKTU • Diberikan +${earnedPoints} pt)`,
         updates.pic
       );
     }
@@ -384,7 +366,7 @@ export async function updateTask(id, updates, oldStatus, completionMeta = {}) {
     );
   }
 
-  return { earnedPoints, isOverdue, isOvertime };
+  return { earnedPoints, isOverdue, isOvertime: Boolean(updates.is_overtime) };
 }
 
 export async function uploadInvoice(file, taskId) {

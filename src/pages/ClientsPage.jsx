@@ -1948,10 +1948,15 @@ export function ClientsPage() {
               </div>
 
               {/* Deadline */}
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                  Tenggat Waktu (Opsional)
-                </label>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Tenggat Waktu (Deadline)
+                  </label>
+                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">
+                    Tepat Waktu = Dapat Poin
+                  </span>
+                </div>
                 <Input
                   type="date"
                   value={delegateForm.deadline}
@@ -1962,6 +1967,9 @@ export function ClientsPage() {
                     })
                   }
                 />
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
+                  Tugas yang diselesaikan <strong>sebelum/pada tenggat waktu</strong> akan otomatis mendapatkan poin penuh. Jika diselesaikan melebihi tenggat (terlambat), <strong>tidak mendapatkan poin (0 pt)</strong>.
+                </p>
               </div>
 
               {/* Submit / Action Buttons */}

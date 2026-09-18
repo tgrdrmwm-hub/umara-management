@@ -221,16 +221,14 @@ export function TasksPage() {
 
       if (res?.isOverdue) {
         toast.warning(
-          `Task diselesaikan lewat deadline (${completingTask.deadline}). Tidak mendapat reward poin (0 pt).`
+          `Task diselesaikan lewat tenggat waktu (${completingTask.deadline}). Tidak mendapat poin reward (0 pt).`
         );
       } else if (res?.earnedPoints > 0) {
         toast.success(
-          `Task diselesaikan tepat waktu saat lembur! +${res.earnedPoints} poin diberikan ke PIC.`
+          `Task diselesaikan tepat waktu! +${res.earnedPoints} poin berhasil diberikan ke PIC.`
         );
       } else {
-        toast.success(
-          "Task diselesaikan tepat waktu (Pekerjaan reguler tercover gaji bulanan)."
-        );
+        toast.success("Task berhasil diselesaikan.");
       }
 
       setCompletingTask(null);
@@ -593,38 +591,26 @@ export function TasksPage() {
               <form onSubmit={confirmCompleteTask} className="p-5 space-y-4">
                 {/* Status Evaluation Card */}
                 {isOverdue ? (
-                  <div className="rounded-lg border border-rose-200 bg-rose-50/80 p-3 text-xs text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300 flex items-start gap-2.5">
+                  <div className="rounded-xl border border-rose-200 bg-rose-50/80 p-3.5 text-xs text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300 flex items-start gap-2.5">
                     <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-rose-500" />
                     <div>
                       <div className="font-semibold text-rose-900 dark:text-rose-200">
-                        Lewat Batas Deadline ({completingTask.deadline})
+                        Lewat Batas Tenggat Waktu ({completingTask.deadline})
                       </div>
                       <p className="mt-0.5 text-[11px] text-rose-600 dark:text-rose-400">
-                        Sesuai kebijakan reward, tugas yang diselesaikan terlambat <strong>tidak mendapatkan reward poin (0 pt)</strong>.
-                      </p>
-                    </div>
-                  </div>
-                ) : completionOvertime ? (
-                  <div className="rounded-lg border border-emerald-200 bg-emerald-50/80 p-3 text-xs text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300 flex items-start gap-2.5">
-                    <Award className="h-4 w-4 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
-                    <div>
-                      <div className="font-semibold text-emerald-900 dark:text-emerald-200">
-                        Tepat Waktu & Lembur (+{completingTask.points || 1} Poin)
-                      </div>
-                      <p className="mt-0.5 text-[11px] text-emerald-600 dark:text-emerald-400">
-                        Memenuhi syarat bonus! PIC <strong>{completingTask.pic || "Staff"}</strong> akan menerima tambahan <strong>+{completingTask.points || 1} poin</strong>.
+                        Sesuai aturan, tugas yang diselesaikan melebihi tenggat waktu <strong>tidak mendapatkan reward poin (0 pt)</strong>.
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-3 text-xs text-slate-600 dark:border-white/10 dark:bg-slate-800/60 dark:text-slate-300 flex items-start gap-2.5">
-                    <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-slate-500" />
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 p-3.5 text-xs text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300 flex items-start gap-2.5">
+                    <Award className="h-4 w-4 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
                     <div>
-                      <div className="font-semibold text-slate-900 dark:text-slate-200">
-                        Tepat Waktu (Tugas Rutin Bulanan)
+                      <div className="font-semibold text-emerald-900 dark:text-emerald-200">
+                        Selesai Tepat Waktu (+{completingTask.points || 0.25} Poin)
                       </div>
-                      <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
-                        Pekerjaan rutin bulanan tercakup dalam gaji pokok reguler (<strong>0 poin reward tambahan</strong>).
+                      <p className="mt-0.5 text-[11px] text-emerald-600 dark:text-emerald-400">
+                        Diselesaikan sebelum/pada batas tenggat waktu! PIC <strong>{completingTask.pic || "Staff"}</strong> akan menerima tambahan <strong>+{completingTask.points || 0.25} poin</strong>.
                       </p>
                     </div>
                   </div>
@@ -728,15 +714,16 @@ export function TasksPage() {
                       <h3 className="text-sm font-medium text-slate-900 dark:text-slate-100 leading-snug">
                         {task.title}
                       </h3>
-                      {task.is_overtime ? (
-                        <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
-                          <Moon className="h-2.5 w-2.5" /> Lembur (+{task.points || 1} pt)
+                      <div className="shrink-0 flex items-center gap-1">
+                        {task.is_overtime && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
+                            <Moon className="h-2.5 w-2.5" /> Lembur
+                          </span>
+                        )}
+                        <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 border border-blue-200/80 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800">
+                          +{task.points || 0.25} pt
                         </span>
-                      ) : (
-                        <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-                          Reguler
-                        </span>
-                      )}
+                      </div>
                     </div>
                     {task.client && (
                       <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
