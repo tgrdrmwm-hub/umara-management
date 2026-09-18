@@ -9,6 +9,8 @@ import {
   Award,
   CheckCircle2,
   Users,
+  Check,
+  Lock,
 } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -80,8 +82,12 @@ export function isPicSelected(picString, userName) {
 
   return tokens.some((token) => {
     if (token === target) return true;
-    const words = token.split(/\s+/);
-    return words.includes(target);
+    const tokenWords = token.split(/\s+/);
+    if (tokenWords.includes(target)) return true;
+    const targetWords = target.split(/\s+/);
+    if (targetWords.includes(token)) return true;
+    if (tokenWords.some((tw) => targetWords.includes(tw) && tw.length > 2)) return true;
+    return false;
   });
 }
 
@@ -112,6 +118,27 @@ const badgeToneMap = {
   review: "amber",
   done: "green",
 };
+
+export function parseTaskApprovals(notes) {
+  if (!notes) return { start: [], done: [] };
+  try {
+    const match = notes.match(/<!-- APPROVALS: (.*?) -->/);
+    if (match && match[1]) {
+      const parsed = JSON.parse(match[1]);
+      return {
+        start: Array.isArray(parsed.start) ? parsed.start : [],
+        done: Array.isArray(parsed.done) ? parsed.done : [],
+      };
+    }
+  } catch {}
+  return { start: [], done: [] };
+}
+
+export function encodeTaskApprovals(notes, approvals) {
+  const cleanNotes = (notes || "").replace(/<!-- APPROVALS: .*? -->/g, "").trim();
+  const metaStr = `<!-- APPROVALS: ${JSON.stringify(approvals)} -->`;
+  return cleanNotes ? `${cleanNotes}\n${metaStr}` : metaStr;
+}
 
 export function TasksPage() {
   const { data } = useAppData();
@@ -160,7 +187,9 @@ export function TasksPage() {
     if (!form.title.trim()) return toast.error("Judul task wajib diisi");
     try {
       if (editing) {
-        await updateTask(editing.id, form, editing.status);
+        const currentApprovals = parseTaskApprovals(editing.notes);
+        const mergedNotes = encodeTaskApprovals(form.notes, currentApprovals);
+        await updateTask(editing.id, { ...form, notes: mergedNotes }, editing.status);
         setEditing(null);
         await refresh("Task diperbarui");
       } else {
@@ -183,7 +212,7 @@ export function TasksPage() {
       deadline: task.deadline,
       status: task.status,
       points: task.points || 1,
-      notes: task.notes,
+      notes: (task.notes || "").replace(/<!-- APPROVALS: .*? -->/g, "").trim(),
       is_overtime: Boolean(task.is_overtime),
     });
     setShowForm(true);
@@ -199,13 +228,46 @@ export function TasksPage() {
     const pics = getTaskPics(task.pic);
     if (pics.length >= 2) {
       setStartingTask(task);
-      setApprovedStartPics([]);
+      const existingApprovals = parseTaskApprovals(task.notes).start;
+      setApprovedStartPics(existingApprovals);
     } else {
+      const isPicMatch = !task.pic || isPicSelected(task.pic, user?.name);
+      if (!isPicMatch && !isAdmin) {
+        return toast.error(`Hanya PIC (${task.pic}) yang dapat memulai tugas ini.`);
+      }
       void updateTask(
         task.id,
         { ...task, status: "progress" },
         task.status,
       ).then(() => refresh("Task dipindahkan ke In Progress"));
+    }
+  }
+
+  async function saveStartApprovals() {
+    if (!startingTask) return;
+    try {
+      const currentApprovals = parseTaskApprovals(startingTask.notes);
+      const newNotes = encodeTaskApprovals(startingTask.notes, {
+        ...currentApprovals,
+        start: approvedStartPics,
+      });
+
+      await updateTask(
+        startingTask.id,
+        {
+          ...startingTask,
+          notes: newNotes,
+        },
+        startingTask.status,
+      );
+      await refresh(
+        `Persetujuan mulai tugas disimpan (${approvedStartPics.length}/${getTaskPics(startingTask.pic).length} PIC siap)!`,
+      );
+      setStartingTask(null);
+      setApprovedStartPics([]);
+    } catch (err) {
+      console.error(err);
+      toast.error("Gagal menyimpan persetujuan: " + (err?.message || "Unknown error"));
     }
   }
 
@@ -223,11 +285,18 @@ export function TasksPage() {
     }
 
     try {
+      const currentApprovals = parseTaskApprovals(startingTask.notes);
+      const newNotes = encodeTaskApprovals(startingTask.notes, {
+        ...currentApprovals,
+        start: approvedStartPics,
+      });
+
       await updateTask(
         startingTask.id,
         {
           ...startingTask,
           status: "progress",
+          notes: newNotes,
         },
         startingTask.status,
       );
@@ -245,6 +314,11 @@ export function TasksPage() {
   }
 
   function openCompleteModal(task) {
+    const pics = getTaskPics(task.pic);
+    const isPicMatch = pics.length === 0 || pics.some((p) => isPicSelected(p, user?.name));
+    if (!isPicMatch && !isAdmin) {
+      return toast.error(`Hanya PIC (${task.pic}) yang dapat menyelesaikan tugas ini.`);
+    }
     const now = new Date();
     const isAfterHours =
       now.getHours() >= 17 ||
@@ -253,13 +327,52 @@ export function TasksPage() {
       now.getDay() === 6;
     setCompletingTask(task);
     setInvoiceFile(null);
-    setApprovedCompletePics([]);
+    const existingDoneApprovals = parseTaskApprovals(task.notes).done;
+    setApprovedCompletePics(existingDoneApprovals);
     setCompletionOvertime(Boolean(task.is_overtime || isAfterHours));
+  }
+
+  async function saveCompleteApprovals() {
+    if (!completingTask) return;
+    try {
+      let invoiceUrl = completingTask.invoice_url;
+      if (invoiceFile) {
+        setIsUploading(true);
+        invoiceUrl = await uploadInvoice(invoiceFile, completingTask.id);
+      }
+
+      const currentApprovals = parseTaskApprovals(completingTask.notes);
+      const newNotes = encodeTaskApprovals(completingTask.notes, {
+        ...currentApprovals,
+        done: approvedCompletePics,
+      });
+
+      await updateTask(
+        completingTask.id,
+        {
+          ...completingTask,
+          invoice_url: invoiceUrl,
+          notes: newNotes,
+        },
+        completingTask.status,
+      );
+      await refresh(
+        `Persetujuan penyelesaian disimpan (${approvedCompletePics.length}/${getTaskPics(completingTask.pic).length} PIC setuju)!`,
+      );
+      setCompletingTask(null);
+      setInvoiceFile(null);
+      setApprovedCompletePics([]);
+    } catch (err) {
+      console.error(err);
+      toast.error("Gagal menyimpan persetujuan: " + (err?.message || "Unknown error"));
+    } finally {
+      setIsUploading(false);
+    }
   }
 
   async function confirmCompleteTask(e) {
     e.preventDefault();
-    if (!invoiceFile) {
+    if (!invoiceFile && !completingTask.invoice_url) {
       return toast.error("File invoice bukti pekerjaan wajib diunggah.");
     }
     const pics = getTaskPics(completingTask.pic);
@@ -274,7 +387,16 @@ export function TasksPage() {
     
     setIsUploading(true);
     try {
-      const invoiceUrl = await uploadInvoice(invoiceFile, completingTask.id);
+      let invoiceUrl = completingTask.invoice_url;
+      if (invoiceFile) {
+        invoiceUrl = await uploadInvoice(invoiceFile, completingTask.id);
+      }
+
+      const currentApprovals = parseTaskApprovals(completingTask.notes);
+      const newNotes = encodeTaskApprovals(completingTask.notes, {
+        ...currentApprovals,
+        done: approvedCompletePics,
+      });
       
       const res = await updateTask(
         completingTask.id,
@@ -282,6 +404,7 @@ export function TasksPage() {
           ...completingTask,
           status: "done",
           invoice_url: invoiceUrl,
+          notes: newNotes,
           is_overtime: completionOvertime,
         },
         completingTask.status,
@@ -691,20 +814,30 @@ export function TasksPage() {
 
                   <div className="space-y-2">
                     {pics.map((picName) => {
+                      const isPicMatch = isPicSelected(picName, user?.name);
+                      const canToggle = isPicMatch || isAdmin;
                       const isChecked = approvedStartPics.includes(picName.toLowerCase());
                       return (
                         <label
                           key={picName}
-                          className={`flex items-start gap-3 p-3 rounded-xl border transition cursor-pointer select-none ${
+                          className={`flex items-start gap-3 p-3 rounded-xl border transition select-none ${
+                            !canToggle
+                              ? "cursor-not-allowed bg-slate-50/60 border-slate-200 dark:bg-slate-900/30 dark:border-white/5 opacity-80"
+                              : "cursor-pointer"
+                          } ${
                             isChecked
                               ? "border-blue-600 bg-blue-50/70 dark:border-blue-500 dark:bg-blue-950/40 shadow-xs"
-                              : "border-slate-200 bg-white hover:border-slate-300 dark:border-white/10 dark:bg-slate-800/60"
+                              : canToggle
+                              ? "border-slate-200 bg-white hover:border-slate-300 dark:border-white/10 dark:bg-slate-800/60"
+                              : ""
                           }`}
                         >
                           <input
                             type="checkbox"
                             checked={isChecked}
+                            disabled={!canToggle}
                             onChange={(e) => {
+                              if (!canToggle) return;
                               if (e.target.checked) {
                                 setApprovedStartPics([...approvedStartPics, picName.toLowerCase()]);
                               } else {
@@ -713,25 +846,47 @@ export function TasksPage() {
                                 );
                               }
                             }}
-                            className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                            className={`mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500 ${
+                              !canToggle ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                            }`}
                           />
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-1">
-                              <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                            <div className="flex items-center justify-between gap-1 flex-wrap">
+                              <span className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                                 {picName}
+                                {isPicMatch && (
+                                  <span className="text-[10px] font-normal text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-950/80 px-1 rounded">
+                                    (Anda)
+                                  </span>
+                                )}
+                                {isAdmin && !isPicMatch && (
+                                  <span className="text-[10px] font-normal text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-950/80 px-1 rounded">
+                                    (Admin)
+                                  </span>
+                                )}
                               </span>
                               {isChecked ? (
-                                <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
-                                  ✓ Siap Mengerjakan
+                                <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded inline-flex items-center gap-1">
+                                  <Check className="h-3 w-3" />
+                                  Siap Mengerjakan
+                                </span>
+                              ) : canToggle ? (
+                                <span className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded font-medium">
+                                  Klik untuk Konfirmasi
                                 </span>
                               ) : (
-                                <span className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded">
-                                  Wajib Dicentang
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded inline-flex items-center gap-1">
+                                  <Lock className="h-2.5 w-2.5" />
+                                  Hanya PIC {picName}
                                 </span>
                               )}
                             </div>
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                              Saya ({picName}) menyatakan mulai mengerjakan tugas ini.
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                              {isChecked
+                                ? `${picName} telah menyatakan mulai mengerjakan tugas ini.`
+                                : canToggle
+                                ? `Saya (${picName}) menyatakan siap mulai mengerjakan tugas ini.`
+                                : `Menunggu ${picName} masuk dengan akunnya untuk mencentang konfirmasi kesiapan.`}
                             </p>
                           </div>
                         </label>
@@ -740,7 +895,7 @@ export function TasksPage() {
                   </div>
                 </div>
 
-                <div className="flex gap-2 pt-2 border-t border-slate-100 dark:border-white/10">
+                <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-white/10">
                   <Button 
                     type="button" 
                     variant="secondary" 
@@ -749,15 +904,22 @@ export function TasksPage() {
                   >
                     Batal
                   </Button>
-                  <Button 
-                    type="submit" 
-                    className="flex-1 font-semibold"
-                    disabled={!isAllApproved}
-                  >
-                    {isAllApproved
-                      ? `Mulai Kerjakan (${pics.length}/${pics.length} PIC)`
-                      : `Butuh ${pics.length} PIC (${approvedStartPics.length}/${pics.length})`}
-                  </Button>
+                  {!isAllApproved ? (
+                    <Button 
+                      type="button" 
+                      onClick={saveStartApprovals}
+                      className="flex-1 font-semibold"
+                    >
+                      Simpan Konfirmasi ({approvedStartPics.length}/{pics.length} PIC)
+                    </Button>
+                  ) : (
+                    <Button 
+                      type="submit" 
+                      className="flex-1 font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      Mulai Kerjakan ({pics.length}/{pics.length} PIC Siap)
+                    </Button>
+                  )}
                 </div>
               </form>
             </Card>
@@ -860,20 +1022,30 @@ export function TasksPage() {
 
                     <div className="space-y-2">
                       {pics.map((picName) => {
+                        const isPicMatch = isPicSelected(picName, user?.name);
+                        const canToggle = isPicMatch || isAdmin;
                         const isChecked = approvedCompletePics.includes(picName.toLowerCase());
                         return (
                           <label
                             key={picName}
-                            className={`flex items-start gap-2.5 p-3 rounded-xl border transition cursor-pointer select-none ${
+                            className={`flex items-start gap-2.5 p-3 rounded-xl border transition select-none ${
+                              !canToggle
+                                ? "cursor-not-allowed bg-slate-50/60 border-slate-200 dark:bg-slate-900/30 dark:border-white/5 opacity-80"
+                                : "cursor-pointer"
+                            } ${
                               isChecked
                                 ? "border-emerald-600 bg-emerald-50/70 dark:border-emerald-500 dark:bg-emerald-950/40 shadow-xs"
-                                : "border-slate-200 bg-white hover:border-slate-300 dark:border-white/10 dark:bg-slate-800/60"
+                                : canToggle
+                                ? "border-slate-200 bg-white hover:border-slate-300 dark:border-white/10 dark:bg-slate-800/60"
+                                : ""
                             }`}
                           >
                             <input
                               type="checkbox"
                               checked={isChecked}
+                              disabled={!canToggle}
                               onChange={(e) => {
+                                if (!canToggle) return;
                                 if (e.target.checked) {
                                   setApprovedCompletePics([...approvedCompletePics, picName.toLowerCase()]);
                                 } else {
@@ -882,25 +1054,47 @@ export function TasksPage() {
                                   );
                                 }
                               }}
-                              className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                              className={`mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 ${
+                                !canToggle ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                              }`}
                             />
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-1">
-                                <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                              <div className="flex items-center justify-between gap-1 flex-wrap">
+                                <span className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                                   {picName}
+                                  {isPicMatch && (
+                                    <span className="text-[10px] font-normal text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/80 px-1 rounded">
+                                      (Anda)
+                                    </span>
+                                  )}
+                                  {isAdmin && !isPicMatch && (
+                                    <span className="text-[10px] font-normal text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-950/80 px-1 rounded">
+                                      (Admin)
+                                    </span>
+                                  )}
                                 </span>
                                 {isChecked ? (
-                                  <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
-                                    ✓ Disetujui
+                                  <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded inline-flex items-center gap-1">
+                                    <Check className="h-3 w-3" />
+                                    Disetujui
+                                  </span>
+                                ) : canToggle ? (
+                                  <span className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded font-medium">
+                                    Klik untuk Menyetujui
                                   </span>
                                 ) : (
-                                  <span className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded">
-                                    Wajib Dicentang
+                                  <span className="text-[10px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded inline-flex items-center gap-1">
+                                    <Lock className="h-2.5 w-2.5" />
+                                    Hanya PIC {picName}
                                   </span>
                                 )}
                               </div>
-                              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                Saya ({picName}) telah memeriksa hasil pekerjaan & menyetujui tugas ini selesai.
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                                {isChecked
+                                  ? `${picName} telah memeriksa hasil pekerjaan & menyetujui tugas selesai.`
+                                  : canToggle
+                                  ? `Saya (${picName}) telah memeriksa hasil pekerjaan & menyetujui tugas ini selesai.`
+                                  : `Menunggu ${picName} masuk dengan akunnya untuk menyetujui hasil pekerjaan.`}
                               </p>
                             </div>
                           </label>
@@ -912,22 +1106,36 @@ export function TasksPage() {
 
                 {/* Invoice Upload */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    File Bukti Invoice / Dokumen Final (Wajib)
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      File Bukti Invoice / Dokumen Final {completingTask.invoice_url ? "(Sudah Ada)" : "(Wajib)"}
+                    </label>
+                    {completingTask.invoice_url && (
+                      <a
+                        href={completingTask.invoice_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[11px] text-indigo-600 hover:underline flex items-center gap-1 dark:text-indigo-400 font-medium"
+                      >
+                        ✓ Dokumen Tersimpan
+                      </a>
+                    )}
+                  </div>
                   <input
                     type="file"
-                    required
+                    required={!completingTask.invoice_url}
                     accept=".pdf,image/*"
                     onChange={(e) => setInvoiceFile(e.target.files[0])}
                     className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-500/20 dark:file:text-indigo-300 dark:hover:file:bg-indigo-500/30"
                   />
                   <p className="text-[11px] text-slate-400">
-                    Unggah faktur/dokumen hasil pengerjaan sebagai bukti validasi.
+                    {completingTask.invoice_url
+                      ? "File bukti sudah diunggah. Unggah file baru hanya jika ingin menggantinya."
+                      : "Unggah faktur/dokumen hasil pengerjaan sebagai bukti validasi."}
                   </p>
                 </div>
 
-                <div className="flex gap-2 pt-2 border-t border-slate-100 dark:border-white/10">
+                <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-white/10">
                   <Button 
                     type="button" 
                     variant="secondary" 
@@ -937,19 +1145,32 @@ export function TasksPage() {
                   >
                     Batal
                   </Button>
-                  <Button 
-                    type="submit" 
-                    className="flex-1 font-semibold"
-                    disabled={isUploading || !invoiceFile || !isAllApproved}
-                  >
-                    {isUploading
-                      ? "Mengunggah..."
-                      : !invoiceFile
-                      ? "Unggah Bukti Dahulu"
-                      : !isAllApproved
-                      ? `Butuh ${pics.length} PIC (${approvedCompletePics.length}/${pics.length})`
-                      : "Konfirmasi Selesai"}
-                  </Button>
+                  {pics.length >= 2 && !isAllApproved ? (
+                    <Button 
+                      type="button" 
+                      onClick={saveCompleteApprovals}
+                      className="flex-1 font-semibold"
+                      disabled={isUploading}
+                    >
+                      {isUploading
+                        ? "Menyimpan..."
+                        : `Simpan Persetujuan (${approvedCompletePics.length}/${pics.length} PIC)`}
+                    </Button>
+                  ) : (
+                    <Button 
+                      type="submit" 
+                      className="flex-1 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white"
+                      disabled={isUploading || (!invoiceFile && !completingTask.invoice_url) || !isAllApproved}
+                    >
+                      {isUploading
+                        ? "Mengunggah..."
+                        : !invoiceFile && !completingTask.invoice_url
+                        ? "Unggah Bukti Dahulu"
+                        : pics.length >= 2
+                        ? `Konfirmasi Selesai (${pics.length}/${pics.length} PIC)`
+                        : "Konfirmasi Selesai"}
+                    </Button>
+                  )}
                 </div>
               </form>
             </Card>
@@ -1033,22 +1254,39 @@ export function TasksPage() {
                     <div className="mt-3 flex items-center justify-between">
                       {task.pic && (() => {
                         const pics = getTaskPics(task.pic);
+                        const isMultiPic = pics.length >= 2;
+                        const approvals = parseTaskApprovals(task.notes);
+                        const startCount = approvals.start.length;
+                        const doneCount = approvals.done.length;
+
                         return (
-                          <span className="truncate text-xs text-slate-500 dark:text-slate-400 max-w-[160px]">
-                            {pics.length >= 2 ? (
-                              <span className="inline-flex items-center gap-1 font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-800">
-                                <Users className="h-3 w-3 shrink-0" />
-                                <span className="truncate">{pics.length} PIC: {pics.join(", ")}</span>
-                              </span>
-                            ) : (
-                              task.pic
+                          <div className="space-y-1 max-w-[200px]">
+                            <div className="truncate text-xs text-slate-500 dark:text-slate-400">
+                              {isMultiPic ? (
+                                <span className="inline-flex items-center gap-1 font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                                  <Users className="h-3 w-3 shrink-0" />
+                                  <span className="truncate">{pics.length} PIC: {pics.join(", ")}</span>
+                                </span>
+                              ) : (
+                                task.pic
+                              )}
+                            </div>
+                            {isMultiPic && col.key === "todo" && startCount > 0 && (
+                              <div className="text-[10px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900/60 font-medium">
+                                ⏳ {startCount}/{pics.length} PIC Siap ({approvals.start.join(", ")})
+                              </div>
                             )}
-                          </span>
+                            {isMultiPic && col.key === "progress" && doneCount > 0 && (
+                              <div className="text-[10px] text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-900/60 font-medium">
+                                ⏳ {doneCount}/{pics.length} PIC Setuju Selesai
+                              </div>
+                            )}
+                          </div>
                         );
                       })()}
                       <Badge
-                        tone={col.key === "done" ? "green" : "slate"}
-                        className="ml-auto shrink-0 text-xs"
+                        tone={badgeToneMap[col.key]}
+                        className="ml-auto shrink-0 text-xs self-start"
                       >
                         {col.key === "done" ? "Selesai" : col.key === "progress" ? "In Progress" : "To Do"}
                       </Badge>
@@ -1080,7 +1318,16 @@ export function TasksPage() {
                           className="bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-400"
                           onClick={() => handleStartTask(task)}
                         >
-                          Kerjakan
+                          {(() => {
+                            const pics = getTaskPics(task.pic);
+                            if (pics.length >= 2) {
+                              const approvals = parseTaskApprovals(task.notes).start;
+                              return approvals.length > 0
+                                ? `Kerjakan (${approvals.length}/${pics.length})`
+                                : `Kerjakan (${pics.length} PIC)`;
+                            }
+                            return "Kerjakan";
+                          })()}
                         </Button>
                       )}
                       {col.key !== "done" && (
@@ -1088,7 +1335,16 @@ export function TasksPage() {
                           size="sm"
                           onClick={() => openCompleteModal(task)}
                         >
-                          Selesai
+                          {(() => {
+                            const pics = getTaskPics(task.pic);
+                            if (pics.length >= 2) {
+                              const approvals = parseTaskApprovals(task.notes).done;
+                              return approvals.length > 0
+                                ? `Selesai (${approvals.length}/${pics.length})`
+                                : "Selesai";
+                            }
+                            return "Selesai";
+                          })()}
                         </Button>
                       )}
                       {isAdmin && (

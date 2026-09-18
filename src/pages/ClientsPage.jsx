@@ -80,8 +80,12 @@ export function isPicSelected(picString, userName) {
 
   return tokens.some((token) => {
     if (token === target) return true;
-    const words = token.split(/\s+/);
-    return words.includes(target);
+    const tokenWords = token.split(/\s+/);
+    if (tokenWords.includes(target)) return true;
+    const targetWords = target.split(/\s+/);
+    if (targetWords.includes(token)) return true;
+    if (tokenWords.some((tw) => targetWords.includes(tw) && tw.length > 2)) return true;
+    return false;
   });
 }
 
