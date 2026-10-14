@@ -49,4 +49,10 @@ uploads/
 !supabase/**/*.sql
 !supabase/*.sql
 .github_token
+
+# Data Klien & Laporan
+*.csv
+*.pdf
+laporan*
+Laporan*
  
