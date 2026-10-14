@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
+    "@oxlint/binding-linux-x64-gnu": "^1.88.0",
+    "@rolldown/binding-linux-x64-gnu": "^1.2.13",
     "@supabase/supabase-js": "^2.111.0",
     "@tanstack/react-query": "^5.101.3",
     "axios": "^1.18.1",

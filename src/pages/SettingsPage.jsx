@@ -19,7 +19,16 @@ export function SettingsPage() {
   const [settings, setSettings] = useState(() => ({
     company: localStorage.getItem("umara_company") ?? "UMARA TAX",
     smtp: localStorage.getItem("umara_smtp") ?? "smtp.umara.tax",
-    email: localStorage.getItem("umara_email") ?? "admin@example.com",
+    email:
+      localStorage.getItem("umara_email") ||
+      import.meta.env.VITE_MAIL_SENDER_FROM_EMAIL ||
+      "MS_noreply@test-p7kx4xw0ny7g9yjr.mlsender.net",
+    resendApiKey:
+      localStorage.getItem("umara_mail_sender_api_key") ||
+      localStorage.getItem("umara_resend_api_key") ||
+      import.meta.env.VITE_MAIL_SENDER_API_KEY ||
+      import.meta.env.VITE_RESEND_API_KEY ||
+      "",
   }));
   const [activities, setActivities] = useState(() =>
     JSON.parse(localStorage.getItem("umara_activity_log") ?? "[]"),
@@ -37,9 +46,11 @@ export function SettingsPage() {
   function saveSettings() {
     localStorage.setItem("umara_company", settings.company);
     localStorage.setItem("umara_smtp", settings.smtp);
-    localStorage.setItem("umara_email", settings.email);
-    addActivity("Settings company & SMTP disimpan");
-    toast.success("Settings disimpan");
+    localStorage.setItem("umara_email", settings.email.trim());
+    localStorage.setItem("umara_mail_sender_api_key", settings.resendApiKey.trim());
+    localStorage.setItem("umara_resend_api_key", settings.resendApiKey.trim());
+    addActivity("Settings company, SMTP & Mail Sender disimpan");
+    toast.success("Settings berhasil disimpan!");
   }
 
   function backup() {
@@ -127,16 +138,38 @@ export function SettingsPage() {
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                Email Pengirim
+                Email Pengirim (Sender Domain)
               </label>
               <Input
-                type="email"
-                placeholder="admin@example.com"
+                type="text"
+                placeholder="misal: MS_xxxx@trial-xxxx.mailersend.net atau notif@umara.tax"
                 value={settings.email}
                 onChange={(e) =>
                   setSettings({ ...settings, email: e.target.value })
                 }
               />
+              <p className="text-[11px] text-slate-400">
+                Untuk <span className="font-semibold">MailerSend</span>, masukkan alamat sender / trial domain dari menu Domains di dashboard MailerSend Anda (contoh: <code className="bg-slate-100 dark:bg-white/10 px-1 py-0.5 rounded text-[10px]">MS_xxxx@trial-xxxx.mailersend.net</code>).
+              </p>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center justify-between">
+                <span>Mail Sender API Key (MailerSend / Resend)</span>
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                  {settings.resendApiKey.startsWith("mlsn.") ? "MailerSend Terdeteksi ✓" : settings.resendApiKey.startsWith("re_") ? "Resend Terdeteksi ✓" : "Aktif"}
+                </span>
+              </label>
+              <Input
+                type="password"
+                placeholder="mlsn.xxxxxxxx atau re_xxxxxxxx"
+                value={settings.resendApiKey}
+                onChange={(e) =>
+                  setSettings({ ...settings, resendApiKey: e.target.value })
+                }
+              />
+              <p className="text-[11px] text-slate-400">
+                Mendukung API Key <span className="font-semibold">MailerSend</span> (<code className="text-[10px]">mlsn...</code>) atau <span className="font-semibold">Resend</span> (<code className="text-[10px]">re_...</code>) untuk pengiriman otomatis 1-klik di latar belakang.
+              </p>
             </div>
           </div>
           <Button className="mt-4" onClick={saveSettings}>

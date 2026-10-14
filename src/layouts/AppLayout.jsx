@@ -21,9 +21,11 @@ import { Input } from "../components/ui/Input";
 import { navigation } from "../constants/navigation";
 import { useAuth } from "../hooks/useAuth";
 import { cn } from "../utils/cn";
+import { StaffProfileModal } from "../components/StaffProfileModal";
 
 export function AppLayout() {
   const { user, logout } = useAuth();
+  const [showMyProfile, setShowMyProfile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [dark, setDark] = useState(
@@ -58,7 +60,7 @@ export function AppLayout() {
         "Task",
         "Tugas Magang",
         "Client",
-        "Absensi",
+        "Presensi",
         "Point",
       ].includes(item.label);
     }
@@ -71,7 +73,7 @@ export function AppLayout() {
         "Staff",
         "Task",
         "Tugas Magang",
-        "Absensi",
+        "Presensi",
         "Point",
       ].includes(item.label);
     }
@@ -84,7 +86,7 @@ export function AppLayout() {
         "Staff",
         "Task",
         "Tugas Magang",
-        "Absensi",
+        "Presensi",
         "Point",
         "Report",
         "Settings",
@@ -169,10 +171,28 @@ export function AppLayout() {
 
         {/* User info at bottom */}
         <div className="shrink-0 border-t border-slate-100 p-3 dark:border-white/8">
-          <div className={cn("flex items-center rounded-lg py-2", sidebarCollapsed ? "justify-center px-0" : "gap-2.5 px-2")}>
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white dark:bg-slate-100 dark:text-slate-900">
-              {userInitials}
-            </div>
+          <button
+            type="button"
+            onClick={() => setShowMyProfile(true)}
+            title="Klik untuk lihat & edit profil biodata saya"
+            className={cn(
+              "flex w-full items-center rounded-lg py-2 transition-colors hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer text-left",
+              sidebarCollapsed ? "justify-center px-0" : "gap-2.5 px-2",
+            )}
+          >
+            {user?.avatar &&
+            (user.avatar.startsWith("http") ||
+              user.avatar.startsWith("data:image")) ? (
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="h-8 w-8 rounded-full object-cover shrink-0 ring-1 ring-slate-200 dark:ring-white/10"
+              />
+            ) : (
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white dark:bg-slate-100 dark:text-slate-900">
+                {userInitials}
+              </div>
+            )}
             {!sidebarCollapsed && (
               <div className="min-w-0 flex-1 overflow-hidden">
                 <p className="truncate text-xs font-semibold text-slate-900 dark:text-slate-100">
@@ -183,7 +203,7 @@ export function AppLayout() {
                 </p>
               </div>
             )}
-          </div>
+          </button>
         </div>
       </aside>
 
@@ -309,7 +329,7 @@ export function AppLayout() {
             }
           >
             <CalendarCheck className="h-4 w-4 mb-0.5" />
-            <span>Absensi</span>
+            <span>Presensi</span>
           </NavLink>
 
           <NavLink
@@ -337,6 +357,14 @@ export function AppLayout() {
           </button>
         </nav>
       </div>
+
+      {/* Modal Biodata Profil Saya */}
+      <StaffProfileModal
+        user={user}
+        isOpen={showMyProfile}
+        onClose={() => setShowMyProfile(false)}
+        canEdit={true}
+      />
     </div>
   );
 }

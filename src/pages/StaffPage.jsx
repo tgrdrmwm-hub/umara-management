@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Bar,
@@ -9,7 +10,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { User, Eye } from "lucide-react";
 import { Badge } from "../components/ui/Badge";
+import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import {
   PALETTE,
@@ -19,9 +22,13 @@ import {
   animationProps,
 } from "../components/ui/ChartWrapper";
 import { useAppData } from "../hooks/useAppData";
+import { useAuth } from "../hooks/useAuth";
+import { StaffProfileModal } from "../components/StaffProfileModal";
 
 export function StaffPage() {
   const { data } = useAppData();
+  const { user: currentUser } = useAuth();
+  const [selectedStaff, setSelectedStaff] = useState(null);
 
   const staffUsers =
     data?.users?.filter((u) =>
@@ -34,6 +41,13 @@ export function StaffPage() {
         "developer",
       ].includes(u.role),
     ) || [];
+
+  // Hanya staf bersangkutan (sesuai akun login) yang bisa mengisi biodatanya,
+  // dan developer memiliki akses penuh untuk memeriksa & mengedit biodata semua staf.
+  const canEditStaff = Boolean(
+    currentUser?.role === "developer" ||
+      (selectedStaff && currentUser?.id === selectedStaff?.id),
+  );
 
   return (
     <div className="space-y-6">
@@ -49,7 +63,7 @@ export function StaffPage() {
             Staff
           </h1>
           <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-            Manager, staff, dan magang — point, absensi, dan ranking.
+            Manager, staff, dan magang — point, presensi, dan ranking.
           </p>
         </div>
         <Badge tone="blue">{staffUsers.length} anggota</Badge>
@@ -82,10 +96,13 @@ export function StaffPage() {
                     Point
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
-                    Absensi
+                    Presensi
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
                     Status
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400">
+                    Biodata
                   </th>
                 </tr>
               </thead>
@@ -96,12 +113,47 @@ export function StaffPage() {
                       ? "Developer & Staff"
                       : user.role.replace("_", " ");
                   return (
-                    <tr key={user.id}>
+                    <tr
+                      key={user.id}
+                      className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                      onClick={() => setSelectedStaff(user)}
+                    >
                       <td className="px-4 py-3 text-xs font-medium text-slate-400">
                         #{index + 1}
                       </td>
                       <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
-                        {user.name}
+                        <div className="flex items-center gap-2.5">
+                          {user.avatar &&
+                          (user.avatar.startsWith("http") ||
+                            user.avatar.startsWith("data:image")) ? (
+                            <img
+                              src={user.avatar}
+                              alt={user.name}
+                              className="h-8 w-8 rounded-full object-cover shrink-0 ring-1 ring-slate-200 dark:ring-white/10"
+                            />
+                          ) : (
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white dark:bg-slate-100 dark:text-slate-900">
+                              {user.name
+                                ? user.name
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")
+                                    .slice(0, 2)
+                                    .toUpperCase()
+                                : "U"}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <span className="font-semibold text-slate-900 dark:text-slate-100 block truncate">
+                              {user.name}
+                            </span>
+                            {user.phone && (
+                              <span className="text-[11px] text-slate-400 block truncate">
+                                {user.phone}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-xs text-slate-600 dark:text-slate-400">
                         {user.email}
@@ -125,6 +177,20 @@ export function StaffPage() {
                           {user.status || "Aktif"}
                         </Badge>
                       </td>
+                      <td className="px-4 py-3 text-center">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedStaff(user);
+                          }}
+                          className="text-xs gap-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          <span>Profil</span>
+                        </Button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -133,6 +199,14 @@ export function StaffPage() {
           </div>
         </Card>
       </motion.div>
+
+      {/* Staff Profile Modal */}
+      <StaffProfileModal
+        user={selectedStaff}
+        isOpen={Boolean(selectedStaff)}
+        onClose={() => setSelectedStaff(null)}
+        canEdit={canEditStaff}
+      />
 
       {/* Chart */}
       <motion.div

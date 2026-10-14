@@ -26,6 +26,9 @@ export default function App() {
     <>
       <Routes>
         <Route path="/login" element={<AuthPage mode="login" />} />
+        <Route path="/signup" element={<AuthPage mode="signup" />} />
+        <Route path="/register" element={<AuthPage mode="signup" />} />
+        <Route path="/forgot-password" element={<AuthPage mode="forgot" />} />
         <Route
           path="/change-password"
           element={

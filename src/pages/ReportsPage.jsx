@@ -12,8 +12,8 @@ const reportMeta = {
     desc: "Data lengkap staff — nama, role, point, dan kehadiran.",
     color: "text-violet-600 bg-violet-50 dark:bg-violet-500/10",
   },
-  Absensi: {
-    desc: "Log absensi — jam masuk, pulang, durasi, dan status.",
+  Presensi: {
+    desc: "Log presensi — jam masuk, pulang, durasi, dan status.",
     color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10",
   },
   Client: {
@@ -48,7 +48,7 @@ export function ReportsPage() {
         ]),
       ],
       Staff: [
-        ["Nama", "Email", "Role", "Status", "Point", "Absensi"],
+        ["Nama", "Email", "Role", "Status", "Point", "Presensi"],
         ...data.users.map((u) => [
           u.name,
           u.email,
@@ -58,7 +58,7 @@ export function ReportsPage() {
           String(u.attendanceRate),
         ]),
       ],
-      Absensi: [
+      Presensi: [
         ["Staff", "Tanggal", "Masuk", "Pulang", "Status"],
         ...data.attendance.map((r) => [
           r.staff,

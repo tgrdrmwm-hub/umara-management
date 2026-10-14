@@ -20,7 +20,7 @@ export const navigation = [
   { label: "Kategori & Layanan", href: "/tax", icon: ShieldCheck },
   { label: "Client", href: "/clients", icon: BriefcaseBusiness },
   { label: "Staff", href: "/staff", icon: Users },
-  { label: "Absensi", href: "/attendance", icon: CalendarCheck },
+  { label: "Presensi", href: "/attendance", icon: CalendarCheck },
   { label: "Point", href: "/points", icon: Medal },
   { label: "Task", href: "/tasks", icon: ClipboardList },
   { label: "Tugas Magang", href: "/intern-tasks", icon: FileText },

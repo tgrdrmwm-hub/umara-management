@@ -122,10 +122,10 @@ export function AttendancePage() {
       if (editing) {
         await updateAttendance(editing.id, payload, editing.status);
         setEditing(null);
-        await refresh("Absensi diperbarui");
+        await refresh("Presensi diperbarui");
       } else {
         await createAttendance(payload);
-        await refresh("Absensi ditambahkan");
+        await refresh("Presensi ditambahkan");
       }
       setForm(getEmptyAttendance());
       setShowForm(false);
@@ -246,7 +246,7 @@ export function AttendancePage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-              Absensi
+              Presensi
             </h1>
             <Badge tone="green">Realtime</Badge>
           </div>
@@ -320,7 +320,7 @@ export function AttendancePage() {
         <Card className="p-5">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-              {editing ? "Edit Absensi" : "Input Absensi Manual"}
+              {editing ? "Edit Presensi" : "Input Presensi Manual"}
             </h2>
             <button
               onClick={closeForm}
@@ -446,7 +446,7 @@ export function AttendancePage() {
               <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
                 {monthName} {now.getFullYear()}
               </h2>
-              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Log absensi bulan ini</p>
+              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">Log presensi bulan ini</p>
             </div>
           </div>
           
@@ -460,7 +460,7 @@ export function AttendancePage() {
             </span>
             <span className="flex items-center gap-1.5 sm:gap-2 px-2 py-1 rounded-md bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-white/5">
               <span className="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
-              Ada absensi
+              Ada presensi
             </span>
           </div>
         </div>
@@ -531,7 +531,7 @@ export function AttendancePage() {
             Jam Kerja Staff
           </h2>
           <p className="mt-0.5 text-xs text-slate-400">
-            Durasi jam kerja per sesi absensi
+            Durasi jam kerja per sesi presensi
           </p>
         </div>
         {attendanceChart.length === 0 ? (
@@ -642,7 +642,7 @@ export function AttendancePage() {
                     colSpan={isAdmin ? 7 : 6}
                     className="px-4 py-10 text-center text-sm text-slate-400"
                   >
-                    Belum ada data absensi
+                    Belum ada data presensi
                   </td>
                 </tr>
               ) : (
@@ -694,7 +694,7 @@ export function AttendancePage() {
                             className="px-2 md:px-3 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10"
                             onClick={() =>
                               void deleteAttendance(row.id).then(() =>
-                                refresh("Absensi dihapus"),
+                                refresh("Presensi dihapus"),
                               )
                             }
                           >
@@ -725,7 +725,7 @@ export function AttendancePage() {
                 Identitas Magang
               </h3>
               <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                Karena akun ini dipakai bersama, mohon ketik nama panggilan Anda sebelum melakukan absensi.
+                Karena akun ini dipakai bersama, mohon ketik nama panggilan Anda sebelum melakukan presensi.
               </p>
               <Input
                 placeholder="Nama panggilan (contoh: Budi)"

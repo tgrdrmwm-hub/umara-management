@@ -4,7 +4,7 @@ export const emptyAppData = {
   analytics: [],
   attendance: [],
   clients: [],
-  reportTypes: ["Pajak", "Staff", "Absensi", "Client", "Point", "Task"],
+  reportTypes: ["Pajak", "Staff", "Presensi", "Client", "Point", "Task"],
   tasks: [],
   internTasks: [],
   taxWorks: [],
@@ -147,6 +147,47 @@ export async function updateUserFirstLogin(id) {
     })
     .eq("id", id);
   if (error) throw error;
+}
+
+export async function updateUserBiodata(userId, data) {
+  if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
+
+  const updates = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (data.name !== undefined) updates.name = data.name.trim();
+  if (data.avatar !== undefined) updates.avatar = data.avatar;
+  if (data.phone !== undefined) updates.phone = data.phone.trim();
+  if (data.personalEmail !== undefined) updates.personal_email = data.personalEmail.trim();
+  if (data.address !== undefined) updates.address = data.address.trim();
+  if (data.emergencyContactName !== undefined) updates.emergency_contact_name = data.emergencyContactName.trim();
+  if (data.emergencyContactPhone !== undefined) updates.emergency_contact_phone = data.emergencyContactPhone.trim();
+
+  const { error } = await supabase.from("users").update(updates).eq("id", userId);
+  if (error) {
+    if (error.message && (error.message.includes("column") || error.message.includes("does not exist"))) {
+      const basicUpdates = { updated_at: new Date().toISOString() };
+      if (data.name !== undefined) basicUpdates.name = data.name.trim();
+      if (data.avatar !== undefined) basicUpdates.avatar = data.avatar;
+      if (data.phone !== undefined) basicUpdates.phone = data.phone.trim();
+
+      const { error: fallbackErr } = await supabase.from("users").update(basicUpdates).eq("id", userId);
+      if (fallbackErr) throw fallbackErr;
+      throw new Error("Kolom biodata (email pribadi, alamat, kontak saudara) belum dibuat di Supabase. Jalankan query ALTER TABLE di SQL Editor untuk mengaktifkannya.");
+    }
+    throw error;
+  }
+
+  // Jika nama diupdate dan user adalah auth user saat ini, update juga metadata auth
+  try {
+    const { data: authData } = await supabase.auth.getUser();
+    if (authData?.user?.id === userId && data.name) {
+      await supabase.auth.updateUser({ data: { name: data.name.trim() } });
+    }
+  } catch {}
+
+  return true;
 }
 
 export async function createClient(values) {
@@ -667,9 +708,13 @@ function toUser(row) {
     email: String(row.email ?? ""),
     role: String(row.role ?? "staff"),
     phone: String(row.phone ?? ""),
+    personalEmail: String(row.personal_email ?? row.email_pribadi ?? ""),
     avatar: String(
       row.avatar ?? initials(String(row.name ?? row.email ?? "U")),
     ),
+    address: String(row.address ?? row.alamat ?? ""),
+    emergencyContactName: String(row.emergency_contact_name ?? row.saudara_nama ?? ""),
+    emergencyContactPhone: String(row.emergency_contact_phone ?? row.saudara_nomor ?? ""),
     status: String(row.status ?? "active"),
     is_first_login: Boolean(row.is_first_login),
     password_changed_at: row.password_changed_at

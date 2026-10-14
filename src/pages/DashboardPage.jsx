@@ -368,7 +368,7 @@ export function DashboardPage() {
               { item: "Client", score: data.clients.length },
               { item: "Staff", score: staffCount },
               { item: "Task", score: data.tasks.length },
-              { item: "Absensi", score: data.attendance.length },
+              { item: "Presensi", score: data.attendance.length },
               {
                 item: "Point",
                 score: Math.max(

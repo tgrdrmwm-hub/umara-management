@@ -15,6 +15,10 @@ import {
   Calendar as CalendarIcon,
   Check,
   Search,
+  Mail,
+  BellRing,
+  Send,
+  Copy,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -30,6 +34,12 @@ import {
   updateCalendarEvent,
   deleteCalendarEvent,
 } from "../services/database";
+import {
+  resolveEventStaffRecipients,
+  getDaysUntilEvent,
+  sendEventMeetingReminder,
+  buildMeetingEmailTemplate,
+} from "../services/notificationService";
 
 const MONTH_NAMES = [
   "Januari",
@@ -82,6 +92,14 @@ export function CalendarPage() {
   const [editingEvent, setEditingEvent] = useState(null);
   const [form, setForm] = useState(emptyEventForm);
   const [eventToDelete, setEventToDelete] = useState(null);
+  const [reminderModalEvent, setReminderModalEvent] = useState(null);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [senderEmail, setSenderEmail] = useState(
+    () =>
+      localStorage.getItem("umara_email") ||
+      import.meta.env.VITE_MAIL_SENDER_FROM_EMAIL ||
+      "MS_noreply@test-p7kx4xw0ny7g9yjr.mlsender.net",
+  );
 
   // State untuk Multi-Select Dropdown PIC
   const [isPicDropdownOpen, setIsPicDropdownOpen] = useState(false);
@@ -264,6 +282,11 @@ export function CalendarPage() {
       .slice(0, 10);
   }, [events, todayStr]);
 
+  // Agenda yang persis jatuh pada H-3 hari dari hari ini
+  const h3Events = useMemo(() => {
+    return events.filter((e) => getDaysUntilEvent(e.eventDate) === 3);
+  }, [events]);
+
   function prevMonth() {
     setCurrentMonthDate(
       new Date(currentMonthDate.getFullYear(), currentMonthDate.getMonth() - 1, 1),
@@ -379,6 +402,68 @@ export function CalendarPage() {
     setForm({ ...form, pic: currentPics.join(", ") });
   }
 
+  async function handleSendDirectReminder(targetEvent) {
+    if (!targetEvent) return;
+    setIsSendingEmail(true);
+    const toastId = toast.loading(`Mengirim notifikasi email otomatis untuk "${targetEvent.title}"...`);
+    try {
+      const recipients = resolveEventStaffRecipients(targetEvent, allUsers);
+      const validRecipients = recipients.filter((r) => r.hasValidEmail);
+      if (validRecipients.length === 0) {
+        toast.error(`Tidak ada email staf valid untuk PIC: ${targetEvent.pic || "Belum diatur"}`, { id: toastId });
+        return;
+      }
+
+      await sendEventMeetingReminder(targetEvent, recipients, false, senderEmail);
+      const staffNames = validRecipients.map((r) => `${r.name} (${r.targetEmail})`).join(", ");
+      toast.success(`Berhasil! Notifikasi email otomatis terkirim ke PIC: ${staffNames}`, {
+        id: toastId,
+        duration: 6000,
+      });
+      setReminderModalEvent(null);
+    } catch (err) {
+      toast.error(err?.message || "Gagal mengirim notifikasi email otomatis", { id: toastId });
+    } finally {
+      setIsSendingEmail(false);
+    }
+  }
+
+  async function handleSendH3BannerEmails() {
+    if (h3Events.length === 0) return;
+    setIsSendingEmail(true);
+    const toastId = toast.loading(`Mengirim notifikasi email otomatis untuk ${h3Events.length} agenda H-3...`);
+    try {
+      let totalSent = 0;
+      const sentDetails = [];
+
+      for (const evt of h3Events) {
+        const recipients = resolveEventStaffRecipients(evt, allUsers);
+        const validRecipients = recipients.filter((r) => r.hasValidEmail);
+        if (validRecipients.length > 0) {
+          await sendEventMeetingReminder(evt, recipients, false, senderEmail);
+          totalSent += validRecipients.length;
+          for (const r of validRecipients) {
+            sentDetails.push(`${r.name} (${r.targetEmail})`);
+          }
+        }
+      }
+
+      if (totalSent > 0) {
+        const uniqueRecipients = [...new Set(sentDetails)].join(", ");
+        toast.success(`Berhasil! Notifikasi email H-3 terkirim otomatis ke ${totalSent} staf: ${uniqueRecipients}`, {
+          id: toastId,
+          duration: 6000,
+        });
+      } else {
+        toast.warning("Tidak ditemukan email staf PIC yang terdaftar pada agenda H-3 ini.", { id: toastId });
+      }
+    } catch (err) {
+      toast.error(err?.message || "Gagal mengirim notifikasi email otomatis", { id: toastId });
+    } finally {
+      setIsSendingEmail(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -403,6 +488,34 @@ export function CalendarPage() {
           </Button>
         </div>
       </div>
+
+      {/* Banner Peringatan Agenda H-3 Hari */}
+      {h3Events.length > 0 && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50/90 p-3.5 sm:p-4 text-xs sm:text-sm text-amber-900 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-400">
+              <BellRing className="h-5 w-5 animate-bounce" />
+            </div>
+            <div>
+              <p className="font-semibold text-slate-900 dark:text-slate-100">
+                Pengingat H-3 Meeting: {h3Events.length} Agenda Mendekati Jadwal
+              </p>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                Agenda {h3Events.map((e) => `"${e.title}"`).join(", ")} dijadwalkan dalam 3 hari ke depan. Siap kirim notifikasi email ke staf terkait.
+              </p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            onClick={handleSendH3BannerEmails}
+            disabled={isSendingEmail}
+            className="w-full sm:w-auto text-xs bg-amber-600 hover:bg-amber-700 text-white border-transparent gap-1.5 shrink-0 shadow-xs cursor-pointer"
+          >
+            <Send className="h-3.5 w-3.5" />
+            <span>{isSendingEmail ? "Mengirim Otomatis..." : "Kirim Notifikasi Email H-3"}</span>
+          </Button>
+        </div>
+      )}
 
       {/* Main Layout: Calendar Grid + Side Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -582,10 +695,28 @@ export function CalendarPage() {
                     className="p-3 rounded-xl border border-slate-200/80 bg-slate-50/50 dark:border-white/8 dark:bg-slate-800/40 space-y-2 group relative"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight">
-                        {evt.title}
-                      </h4>
+                      <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+                        <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight">
+                          {evt.title}
+                        </h4>
+                        {getDaysUntilEvent(evt.eventDate) === 3 && (
+                          <Badge tone="amber" className="text-[10px] px-1.5 py-0 font-medium">
+                            H-3 Meeting
+                          </Badge>
+                        )}
+                      </div>
                       <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSendDirectReminder(evt);
+                          }}
+                          disabled={isSendingEmail}
+                          className="p-1 rounded text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors cursor-pointer"
+                          title="Kirim Notifikasi Email H-3 Otomatis ke PIC"
+                        >
+                          <Mail className="h-3.5 w-3.5" />
+                        </button>
                         <button
                           onClick={() => openEditModal(evt)}
                           className="p-1 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10"
@@ -674,15 +805,35 @@ export function CalendarPage() {
                     className="p-2.5 rounded-xl border border-slate-100 hover:border-indigo-300 dark:border-white/5 dark:hover:border-indigo-500/30 bg-white dark:bg-slate-900/40 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <h5 className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
-                        {evt.title}
-                      </h5>
-                      <span className="text-[10px] font-medium text-slate-500 whitespace-nowrap">
-                        {new Date(evt.eventDate + "T00:00:00").toLocaleDateString("id-ID", {
-                          day: "numeric",
-                          month: "short",
-                        })}
-                      </span>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <h5 className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
+                          {evt.title}
+                        </h5>
+                        {getDaysUntilEvent(evt.eventDate) === 3 && (
+                          <Badge tone="amber" className="text-[9px] px-1 py-0 shrink-0 font-medium">
+                            H-3
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSendDirectReminder(evt);
+                          }}
+                          disabled={isSendingEmail}
+                          className="p-1 rounded text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 cursor-pointer"
+                          title="Kirim Notifikasi Email H-3 Otomatis ke PIC"
+                        >
+                          <Mail className="h-3 w-3" />
+                        </button>
+                        <span className="text-[10px] font-medium text-slate-500 whitespace-nowrap">
+                          {new Date(evt.eventDate + "T00:00:00").toLocaleDateString("id-ID", {
+                            day: "numeric",
+                            month: "short",
+                          })}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 dark:text-slate-400">
                       <span>{evt.isAllDay ? "Seharian" : evt.startTime}</span>
@@ -1033,6 +1184,229 @@ export function CalendarPage() {
                     className="flex-1 bg-rose-600 hover:bg-rose-700 text-white"
                   >
                     Ya, Hapus
+                  </Button>
+                </div>
+              </Card>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal Notifikasi Email Agenda H-3 Ke Staff */}
+      <AnimatePresence>
+        {reminderModalEvent && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/50 backdrop-blur-sm overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-lg my-auto"
+            >
+              <Card className="p-0 overflow-hidden shadow-2xl border-slate-200 dark:border-white/10">
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-white/8 bg-slate-50/70 dark:bg-slate-800/60">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
+                      <Mail className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                        Kirim Notifikasi Email Agenda
+                      </h2>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Pengingat H-3 hari ke staf yang terlibat
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setReminderModalEvent(null)}
+                    className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+                  {/* Status Banner H-3 */}
+                  {(() => {
+                    const daysLeft = getDaysUntilEvent(reminderModalEvent.eventDate);
+                    return (
+                      <div className="rounded-xl border border-amber-200/80 bg-amber-50/70 p-3 text-xs text-amber-900 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300 flex items-center gap-2.5">
+                        <BellRing className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                        <span>
+                          {daysLeft === 3 ? (
+                            <strong>🎯 Tepat H-3 Hari: Agenda ini berlangsung dalam 3 hari ke depan.</strong>
+                          ) : daysLeft > 0 ? (
+                            <span>Agenda ini berlangsung dalam <strong>{daysLeft} hari</strong> ke depan.</span>
+                          ) : daysLeft === 0 ? (
+                            <span>Agenda ini berlangsung <strong>HARI INI</strong>.</span>
+                          ) : (
+                            <span>Agenda ini telah selesai.</span>
+                          )}
+                        </span>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Ringkasan Agenda */}
+                  <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5 dark:border-white/8 dark:bg-white/4 space-y-2">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                      {reminderModalEvent.title}
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400">
+                      <div className="flex items-center gap-1.5">
+                        <CalendarDays className="h-3.5 w-3.5 text-indigo-500" />
+                        <span>
+                          {new Date(reminderModalEvent.eventDate + "T00:00:00").toLocaleDateString("id-ID", {
+                            weekday: "long",
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5 text-indigo-500" />
+                        <span>
+                          {reminderModalEvent.isAllDay
+                            ? "Sepanjang Hari"
+                            : `${reminderModalEvent.startTime || "09:00"} - ${reminderModalEvent.endTime || "Selesai"}`}
+                        </span>
+                      </div>
+                      {reminderModalEvent.location && (
+                        <div className="flex items-center gap-1.5 sm:col-span-2">
+                          <MapPin className="h-3.5 w-3.5 text-rose-500" />
+                          <span>{reminderModalEvent.location}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Daftar Staf Penerima Notifikasi */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <Users className="h-3.5 w-3.5 text-indigo-500" />
+                        <span>Daftar Staf Terlibat & Alamat Email Tujuan</span>
+                      </label>
+                    </div>
+
+                    {(() => {
+                      const recipients = resolveEventStaffRecipients(reminderModalEvent, allUsers);
+                      if (recipients.length === 0) {
+                        return (
+                          <div className="p-3 rounded-lg border border-slate-100 bg-slate-50 text-xs text-slate-500 dark:border-white/5 dark:bg-white/2 text-center">
+                            Belum ada nama PIC/staf yang ditentukan pada agenda ini.
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="space-y-2">
+                          {recipients.map((r) => (
+                            <div
+                              key={r.id}
+                              className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-lg border border-slate-200/80 bg-white dark:border-white/8 dark:bg-slate-900/60 gap-1.5"
+                            >
+                              <div>
+                                <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 block">
+                                  {r.name}
+                                </span>
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                                  {r.targetEmail}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                {r.isPersonalEmail ? (
+                                  <Badge tone="green" className="text-[10px]">
+                                    Email Pribadi
+                                  </Badge>
+                                ) : r.hasValidEmail ? (
+                                  <Badge tone="blue" className="text-[10px]">
+                                    Email Akun
+                                  </Badge>
+                                ) : (
+                                  <Badge tone="red" className="text-[10px]">
+                                    Belum Ada Email
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Preview Pesan Draf Email */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        Isi Draf Notifikasi Email:
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const { bodyText } = buildMeetingEmailTemplate(reminderModalEvent);
+                          navigator.clipboard.writeText(bodyText);
+                          toast.success("Draf teks pengingat disalin ke clipboard!");
+                        }}
+                        className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <Copy className="h-3 w-3" />
+                        <span>Salin Teks</span>
+                      </button>
+                    </div>
+                    <div className="p-3 rounded-lg bg-slate-950 text-slate-200 font-mono text-[11px] max-h-36 overflow-y-auto whitespace-pre-wrap leading-relaxed select-all">
+                      {buildMeetingEmailTemplate(reminderModalEvent).bodyText}
+                    </div>
+                  </div>
+
+                  {/* Pengaturan Email Pengirim untuk MailerSend */}
+                  <div className="space-y-1.5 p-3 rounded-lg bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-800/30">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-amber-900 dark:text-amber-200">
+                        Email Pengirim (Sender Domain):
+                      </label>
+                      <span className="text-[10px] text-amber-700/80 dark:text-amber-400">
+                        Dashboard MailerSend &gt; Domains
+                      </span>
+                    </div>
+                    <Input
+                      type="text"
+                      placeholder="Contoh: MS_xxxx@trial-xxxx.mailersend.net atau notif@umara.tax"
+                      value={senderEmail}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSenderEmail(val);
+                        localStorage.setItem("umara_email", val.trim());
+                      }}
+                      className="h-8 text-xs font-mono bg-white dark:bg-slate-900"
+                    />
+                    <p className="text-[10px] text-amber-800/80 dark:text-amber-300/80 leading-relaxed">
+                      Wajib diisi sesuai alamat sender / trial domain di dashboard MailerSend Anda agar pengiriman 1-klik di latar belakang berhasil.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer Actions */}
+                <div className="p-4 bg-slate-50/70 dark:bg-slate-800/60 border-t border-slate-100 dark:border-white/5 flex flex-col sm:flex-row gap-2 justify-end items-center">
+                  <Button
+                    variant="secondary"
+                    onClick={() => setReminderModalEvent(null)}
+                    disabled={isSendingEmail}
+                    className="w-full sm:w-auto"
+                  >
+                    Batal
+                  </Button>
+                  <Button
+                    onClick={() => handleSendDirectReminder(reminderModalEvent)}
+                    disabled={isSendingEmail}
+                    className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white border-transparent gap-2 cursor-pointer shadow-sm"
+                  >
+                    <Send className="h-4 w-4" />
+                    <span>{isSendingEmail ? "Mengirim Otomatis..." : "Kirim Notifikasi Otomatis (1-Klik)"}</span>
                   </Button>
                 </div>
               </Card>

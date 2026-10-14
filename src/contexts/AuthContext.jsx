@@ -61,15 +61,34 @@ export function AuthProvider({ children }) {
     () => ({
       user,
       isLoading,
-      async login(email, password, remember) {
+      async login(emailOrUsername, password, remember) {
         if (!supabase || !isSupabaseConfigured) {
           throw new Error(
             "Supabase belum dikonfigurasi. Isi VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY.",
           );
         }
 
+        const input = (emailOrUsername || "").trim().toLowerCase();
+        let targetEmail = input;
+
+        try {
+          const res = await fetch("/api/resolve-login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ input }),
+          });
+          if (res.ok) {
+            const resData = await res.json();
+            if (resData.email) targetEmail = resData.email;
+          }
+        } catch {
+          if (!input.includes("@")) {
+            targetEmail = `${input}@umaratax.com`;
+          }
+        }
+
         const { data, error } = await supabase.auth.signInWithPassword({
-          email,
+          email: targetEmail,
           password,
         });
         if (error) {
@@ -79,7 +98,7 @@ export function AuthProvider({ children }) {
               ? error.message
               : JSON.stringify(error);
           if (errorMsg.includes("Invalid login credentials")) {
-            throw new Error("Email atau password salah. Silakan coba lagi.");
+            throw new Error("Username/Email atau password salah. Silakan coba lagi.");
           } else if (errorMsg.includes("Email not confirmed")) {
             throw new Error(
               "Email belum dikonfirmasi. Periksa email Anda untuk link konfirmasi.",
@@ -97,7 +116,7 @@ export function AuthProvider({ children }) {
           }
         }
 
-        let profile = await fetchUserProfile(data.user.email ?? email);
+        let profile = await fetchUserProfile(data.user.email ?? targetEmail);
         if (!profile) {
           // If user exists in auth but not in public.users, create the profile automatically
           console.log(

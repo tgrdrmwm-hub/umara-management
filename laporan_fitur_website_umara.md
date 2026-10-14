@@ -120,4 +120,4 @@ Aplikasi dilengkapi dengan sistem otentikasi ketat dan pembagian hak akses berti
 1. **Zero Data Loss**: Data wajib pajak dan password DJP/Coretax klien tidak lagi tercecer di WhatsApp, buku tulis, atau sticky notes yang rawan hilang.
 2. **Kepatuhan Deadline (*Punctuality*)**: Sistem deadline tugas mencegah keterlambatan pelaporan SPT yang berisiko denda bagi klien.
 3. **Transparansi Kinerja**: Owner dapat melihat secara objektif siapa staf yang paling produktif melalui data poin dan riwayat tugas selesai.
-4. **Efisiensi Biaya**: Menggantikan kebutuhan banyak software terpisah (software CRM, absensi online, dan task manager berbayar) menjadi satu sistem milik sendiri tanpa biaya langganan pihak ketiga yang mahal.
+4. **Efisiensi Biaya**: Menggantikan kebutuhan banyak software terpisah (software CRM, presensi online, dan task manager berbayar) menjadi satu sistem milik sendiri tanpa biaya langganan pihak ketiga yang mahal.
