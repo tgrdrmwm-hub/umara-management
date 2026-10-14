@@ -4,10 +4,8 @@ import tailwindcss from '@tailwindcss/vite'
 import { createClient } from '@supabase/supabase-js'
 
 function emailSenderPlugin(env = {}) {
-  return {
-    name: 'email-sender-plugin',
-    configureServer(server) {
-      server.middlewares.use('/api/send-email', async (req, res) => {
+  const setupMiddlewares = (server) => {
+    server.middlewares.use('/api/send-email', async (req, res) => {
         if (req.method !== 'POST') {
           res.statusCode = 405;
           res.setHeader('Content-Type', 'application/json');
@@ -479,8 +477,17 @@ function emailSenderPlugin(env = {}) {
             res.setHeader('Content-Type', 'application/json');
             res.end(JSON.stringify({ error: err.message || 'Terjadi kesalahan saat pendaftaran' }));
           }
-        });
       });
+    });
+  };
+
+  return {
+    name: 'email-sender-plugin',
+    configureServer(server) {
+      setupMiddlewares(server);
+    },
+    configurePreviewServer(server) {
+      setupMiddlewares(server);
     },
   };
 }

@@ -110,9 +110,23 @@ export function AuthPage({ mode = "login" }) {
         }),
       });
 
-      const data = await res.json();
+      let data = {};
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        try {
+          data = await res.json();
+        } catch {
+          data = {};
+        }
+      }
+
       if (!res.ok) {
-        throw new Error(data.error || "Gagal mendaftar akun baru.");
+        throw new Error(
+          data.error ||
+          (res.status === 404 || res.status === 405
+            ? "Layanan server pendaftaran tidak merespons (Status " + res.status + "). Pastikan backend/serverless function telah aktif."
+            : `Gagal mendaftar akun baru (Status: ${res.status}).`)
+        );
       }
 
       setSignupSuccessData(data);
