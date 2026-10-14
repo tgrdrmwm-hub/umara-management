@@ -204,6 +204,8 @@ export function TasksPage() {
     }
   }
 
+  const handleSubmit = submit;
+
   function startEdit(task) {
     setEditing(task);
     setForm({
@@ -532,7 +534,7 @@ export function TasksPage() {
               <X className="h-4 w-4" />
             </button>
           </div>
-          <form onSubmit={handleSubmit} className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+          <form onSubmit={submit} className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
             <div className="space-y-1 sm:col-span-2">
               <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
                 Judul Task
