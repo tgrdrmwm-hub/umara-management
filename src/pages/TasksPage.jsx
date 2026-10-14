@@ -453,13 +453,24 @@ export function TasksPage() {
             Pekerjaan bulanan reguler terhitung dalam gaji pokok. Tambahan poin reward diperoleh apabila tugas diselesaikan tepat waktu dan dikerjakan secara lembur/ekstra.
           </p>
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Button variant="secondary" onClick={() => setShowHistory(true)} className="flex-1 sm:flex-initial text-xs sm:text-sm">
-            <History className="h-4 w-4" />
+        <div className="flex items-center gap-2.5 w-full sm:w-auto shrink-0">
+          <Button
+            variant="secondary"
+            onClick={() => setShowHistory(true)}
+            className="flex-1 sm:flex-initial px-3.5 sm:px-4 text-xs sm:text-sm shrink-0 whitespace-nowrap"
+          >
+            <History className="h-4 w-4 shrink-0" />
             <span>Riwayat</span>
           </Button>
-          <Button onClick={() => { setEditing(null); setForm(emptyTask); setShowForm(true); }} className="flex-1 sm:flex-initial text-xs sm:text-sm">
-            <Plus className="h-4 w-4" />
+          <Button
+            onClick={() => {
+              setEditing(null);
+              setForm(emptyTask);
+              setShowForm(true);
+            }}
+            className="flex-1 sm:flex-initial px-3.5 sm:px-4 text-xs sm:text-sm shrink-0 whitespace-nowrap"
+          >
+            <Plus className="h-4 w-4 shrink-0" />
             <span>Tambah Task</span>
           </Button>
         </div>
