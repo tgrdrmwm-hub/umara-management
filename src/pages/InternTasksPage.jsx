@@ -68,6 +68,7 @@ export function InternTasksPage() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyTask);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [mobileActiveCol, setMobileActiveCol] = useState("all");
 
   const tasks = data?.internTasks ?? [];
@@ -79,10 +80,12 @@ export function InternTasksPage() {
 
   async function submit(event) {
     event.preventDefault();
+    if (isSubmitting) return;
     if (!form.title.trim()) return toast.error("Judul tugas wajib diisi");
     if (!form.assigner.trim()) return toast.error("Pemberi tugas wajib diisi");
 
     try {
+      setIsSubmitting(true);
       if (editing) {
         await updateInternTask(editing.id, form);
         setEditing(null);
@@ -95,6 +98,8 @@ export function InternTasksPage() {
       setShowForm(false);
     } catch {
       toast.error("Gagal menyimpan tugas magang");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -239,8 +244,8 @@ export function InternTasksPage() {
               />
             </div>
             <div className="flex flex-wrap gap-2 sm:col-span-2 pt-1">
-              <Button type="submit" className="flex-1 sm:flex-initial">
-                {editing ? "Simpan Perubahan" : "Tambah Tugas"}
+              <Button type="submit" disabled={isSubmitting} loading={isSubmitting} className="flex-1 sm:flex-initial">
+                {isSubmitting ? "Menyimpan..." : (editing ? "Simpan Perubahan" : "Tambah Tugas")}
               </Button>
               <Button type="button" variant="secondary" onClick={closeForm} className="flex-1 sm:flex-initial">
                 Batal

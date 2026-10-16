@@ -168,3 +168,16 @@ tbody tr:hover {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Proteksi Anti Double-Click / Spam-Click */
+button[data-click-locked="true"],
+[role="button"][data-click-locked="true"],
+input[type="submit"][data-click-locked="true"],
+input[type="button"][data-click-locked="true"],
+form[data-submit-locked="true"] button[type="submit"],
+form[data-submit-locked="true"] input[type="submit"],
+button[data-executing="true"] {
+  pointer-events: none !important;
+  user-select: none !important;
+}
+

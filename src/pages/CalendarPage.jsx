@@ -94,6 +94,8 @@ export function CalendarPage() {
   const [eventToDelete, setEventToDelete] = useState(null);
   const [reminderModalEvent, setReminderModalEvent] = useState(null);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [senderEmail, setSenderEmail] = useState(
     () =>
       localStorage.getItem("umara_email") ||
@@ -337,6 +339,7 @@ export function CalendarPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!form.title.trim()) {
       return toast.error("Nama kegiatan wajib diisi");
     }
@@ -345,6 +348,7 @@ export function CalendarPage() {
     }
 
     try {
+      setIsSubmitting(true);
       if (editingEvent) {
         await updateCalendarEvent(editingEvent.id, form);
         await refresh("Agenda berhasil diperbarui");
@@ -361,6 +365,8 @@ export function CalendarPage() {
     } catch (err) {
       console.error("Error saving calendar event:", err);
       toast.error(err?.message || "Gagal menyimpan agenda. Pastikan tabel calendar_events sudah dibuat di Supabase.");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -369,13 +375,16 @@ export function CalendarPage() {
   }
 
   async function handleDelete() {
-    if (!eventToDelete) return;
+    if (!eventToDelete || isDeleting) return;
     try {
+      setIsDeleting(true);
       await deleteCalendarEvent(eventToDelete.id, eventToDelete.title);
       await refresh("Agenda dihapus");
       setEventToDelete(null);
     } catch {
       toast.error("Gagal menghapus agenda");
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -1133,8 +1142,17 @@ export function CalendarPage() {
                     >
                       Batal
                     </Button>
-                    <Button type="submit" className="w-full sm:w-auto">
-                      {editingEvent ? "Simpan Perubahan" : "Tambah Agenda"}
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      loading={isSubmitting}
+                      className="w-full sm:w-auto"
+                    >
+                      {isSubmitting
+                        ? "Menyimpan..."
+                        : editingEvent
+                          ? "Simpan Perubahan"
+                          : "Tambah Agenda"}
                     </Button>
                   </div>
                 </form>
@@ -1175,15 +1193,18 @@ export function CalendarPage() {
                   <Button
                     variant="secondary"
                     onClick={() => setEventToDelete(null)}
+                    disabled={isDeleting}
                     className="flex-1"
                   >
                     Batal
                   </Button>
                   <Button
                     onClick={handleDelete}
+                    disabled={isDeleting}
+                    loading={isDeleting}
                     className="flex-1 bg-rose-600 hover:bg-rose-700 text-white"
                   >
-                    Ya, Hapus
+                    {isDeleting ? "Menghapus..." : "Ya, Hapus"}
                   </Button>
                 </div>
               </Card>
@@ -1403,6 +1424,7 @@ export function CalendarPage() {
                   <Button
                     onClick={() => handleSendDirectReminder(reminderModalEvent)}
                     disabled={isSendingEmail}
+                    loading={isSendingEmail}
                     className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white border-transparent gap-2 cursor-pointer shadow-sm"
                   >
                     <Send className="h-4 w-4" />

@@ -20,7 +20,8 @@ export function TaxPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
-    const [form, setForm] = useState({
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [form, setForm] = useState({
     category: "",
     service_name: "",
     base_points: 0.25,
@@ -47,11 +48,13 @@ export function TaxPage() {
 
   async function submit(e) {
     e.preventDefault();
+    if (isSubmitting) return;
     if (!form.category.trim() || !form.service_name.trim()) {
       return toast.error("Kategori dan Nama Layanan wajib diisi");
     }
 
     try {
+      setIsSubmitting(true);
       if (editing) {
         await updateTaxService(editing.id, form);
         await refresh("Layanan diperbarui");
@@ -64,6 +67,8 @@ export function TaxPage() {
       setForm({ category: "", service_name: "", base_points: 0.25 });
     } catch (err) {
       toast.error("Gagal menyimpan layanan");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -162,8 +167,8 @@ export function TaxPage() {
               />
             </div>
             <div className="sm:col-span-3 flex flex-wrap gap-2 pt-1">
-              <Button type="submit" className="flex-1 sm:flex-initial">
-                {editing ? "Simpan Perubahan" : "Tambah"}
+              <Button type="submit" disabled={isSubmitting} loading={isSubmitting} className="flex-1 sm:flex-initial">
+                {isSubmitting ? "Menyimpan..." : (editing ? "Simpan Perubahan" : "Tambah")}
               </Button>
               <Button type="button" variant="secondary" onClick={() => setShowForm(false)} className="flex-1 sm:flex-initial">
                 Batal

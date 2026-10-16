@@ -1,8 +1,10 @@
+import { useState, useRef } from "react";
 import { cva } from "class-variance-authority";
+import { Loader2 } from "lucide-react";
 import { cn } from "../../utils/cn";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-medium transition-all duration-150 disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-800/25 active:scale-[0.98] whitespace-nowrap",
+  "inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-medium transition-all duration-150 disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-800/25 active:scale-[0.98] whitespace-nowrap cursor-pointer",
   {
     variants: {
       variant: {
@@ -30,11 +32,63 @@ const buttonVariants = cva(
   },
 );
 
-export function Button({ className, variant, size, ...props }) {
+export function Button({
+  className,
+  variant,
+  size,
+  onClick,
+  disabled = false,
+  loading = false,
+  children,
+  type,
+  ...props
+}) {
+  const [isExecuting, setIsExecuting] = useState(false);
+  const lastClickRef = useRef(0);
+
+  const handleClick = async (e) => {
+    const now = Date.now();
+    // Cegah double-click jika jarak antar klik < 650ms atau tombol sedang sibuk
+    if (disabled || loading || isExecuting || now - lastClickRef.current < 650) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    lastClickRef.current = now;
+
+    if (typeof onClick === "function") {
+      const result = onClick(e);
+      // Auto proteksi jika onClick merupakan fungsi async / return Promise
+      if (result && typeof result.then === "function") {
+        try {
+          setIsExecuting(true);
+          await result;
+        } finally {
+          setIsExecuting(false);
+        }
+      }
+    }
+  };
+
+  const isBusy = Boolean(loading || isExecuting);
+  const isDisabled = Boolean(disabled || isBusy);
+
   return (
     <button
-      className={cn(buttonVariants({ variant, size }), className)}
+      type={type}
+      disabled={isDisabled}
+      aria-busy={isBusy}
+      data-executing={isBusy ? "true" : undefined}
+      className={cn(
+        buttonVariants({ variant, size }),
+        isDisabled && "cursor-not-allowed opacity-60",
+        className,
+      )}
+      onClick={handleClick}
       {...props}
-    />
+    >
+      {isBusy && <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />}
+      {children}
+    </button>
   );
 }

@@ -155,6 +155,8 @@ export function TasksPage() {
   const [completionOvertime, setCompletionOvertime] = useState(false);
   const [invoiceFile, setInvoiceFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmittingAction, setIsSubmittingAction] = useState(false);
   const [startingTask, setStartingTask] = useState(null);
   const [approvedStartPics, setApprovedStartPics] = useState([]);
   const [approvedCompletePics, setApprovedCompletePics] = useState([]);
@@ -185,8 +187,10 @@ export function TasksPage() {
 
   async function submit(event) {
     event.preventDefault();
+    if (isSubmitting) return;
     if (!form.title.trim()) return toast.error("Judul task wajib diisi");
     try {
+      setIsSubmitting(true);
       if (editing) {
         const currentApprovals = parseTaskApprovals(editing.notes);
         const mergedNotes = encodeTaskApprovals(form.notes, currentApprovals);
@@ -201,6 +205,8 @@ export function TasksPage() {
       setShowForm(false);
     } catch {
       toast.error("Gagal menyimpan task");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -247,8 +253,9 @@ export function TasksPage() {
   }
 
   async function saveStartApprovals() {
-    if (!startingTask) return;
+    if (!startingTask || isSubmittingAction) return;
     try {
+      setIsSubmittingAction(true);
       const currentApprovals = parseTaskApprovals(startingTask.notes);
       const newNotes = encodeTaskApprovals(startingTask.notes, {
         ...currentApprovals,
@@ -271,12 +278,14 @@ export function TasksPage() {
     } catch (err) {
       console.error(err);
       toast.error("Gagal menyimpan persetujuan: " + (err?.message || "Unknown error"));
+    } finally {
+      setIsSubmittingAction(false);
     }
   }
 
   async function confirmStartTask(e) {
     e.preventDefault();
-    if (!startingTask) return;
+    if (!startingTask || isSubmittingAction) return;
     const pics = getTaskPics(startingTask.pic);
     if (
       pics.length >= 2 &&
@@ -288,6 +297,7 @@ export function TasksPage() {
     }
 
     try {
+      setIsSubmittingAction(true);
       const currentApprovals = parseTaskApprovals(startingTask.notes);
       const newNotes = encodeTaskApprovals(startingTask.notes, {
         ...currentApprovals,
@@ -313,6 +323,8 @@ export function TasksPage() {
     } catch (err) {
       console.error(err);
       toast.error("Gagal memulai task: " + (err?.message || "Unknown error"));
+    } finally {
+      setIsSubmittingAction(false);
     }
   }
 
@@ -762,8 +774,12 @@ export function TasksPage() {
               />
             </div>
             <div className="flex gap-2 sm:col-span-2">
-              <Button type="submit">
-                {editing ? "Simpan Perubahan" : "Tambah Task"}
+              <Button type="submit" disabled={isSubmitting} loading={isSubmitting}>
+                {isSubmitting
+                  ? "Menyimpan..."
+                  : editing
+                    ? "Simpan Perubahan"
+                    : "Tambah Task"}
               </Button>
               <Button type="button" variant="secondary" onClick={closeForm}>
                 Batal
@@ -919,16 +935,24 @@ export function TasksPage() {
                     <Button 
                       type="button" 
                       onClick={saveStartApprovals}
+                      disabled={isSubmittingAction}
+                      loading={isSubmittingAction}
                       className="w-full sm:flex-1 font-semibold text-xs sm:text-sm"
                     >
-                      Simpan Konfirmasi ({approvedStartPics.length}/{pics.length} PIC)
+                      {isSubmittingAction
+                        ? "Menyimpan..."
+                        : `Simpan Konfirmasi (${approvedStartPics.length}/${pics.length} PIC)`}
                     </Button>
                   ) : (
                     <Button 
                       type="submit" 
+                      disabled={isSubmittingAction}
+                      loading={isSubmittingAction}
                       className="w-full sm:flex-1 font-semibold bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm"
                     >
-                      Mulai Kerjakan ({pics.length}/{pics.length} PIC Siap)
+                      {isSubmittingAction
+                        ? "Memulai..."
+                        : `Mulai Kerjakan (${pics.length}/${pics.length} PIC Siap)`}
                     </Button>
                   )}
                 </div>

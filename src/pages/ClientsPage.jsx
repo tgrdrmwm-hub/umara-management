@@ -220,6 +220,8 @@ export function ClientsPage() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50); // 25, 50, 100, "all"
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmittingDelegate, setIsSubmittingDelegate] = useState(false);
 
   // Delegation state (Mendukung multi-layanan sekaligus)
   const [delegating, setDelegating] = useState(null);
@@ -394,8 +396,10 @@ export function ClientsPage() {
 
   async function submit(event) {
     event.preventDefault();
+    if (isSubmitting) return;
     if (!form.name.trim()) return toast.error("Nama client wajib diisi");
     try {
+      setIsSubmitting(true);
       if (editing) {
         await updateClient(editing.id, form);
         setEditing(null);
@@ -408,11 +412,14 @@ export function ClientsPage() {
       setShowForm(false);
     } catch {
       toast.error("Gagal menyimpan client");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
   async function submitDelegate(e) {
     e.preventDefault();
+    if (isSubmittingDelegate) return;
     if (!delegateForm.services || delegateForm.services.length === 0) {
       return toast.error("Silakan pilih minimal satu jenis layanan untuk didelegasikan");
     }
@@ -421,6 +428,7 @@ export function ClientsPage() {
     }
 
     try {
+      setIsSubmittingDelegate(true);
       // Hitung akumulasi poin dari semua layanan yang dipilih
       const totalPoints = delegateForm.services.reduce((sum, srvName) => {
         const srvObj = taxServices.find((i) => i.name === srvName);
@@ -458,6 +466,8 @@ export function ClientsPage() {
       toast.error(
         "Gagal mendelegasikan pekerjaan: " + (err?.message || "Unknown error"),
       );
+    } finally {
+      setIsSubmittingDelegate(false);
     }
   }
 
@@ -1038,8 +1048,12 @@ export function ClientsPage() {
             </div>
 
             <div className="flex gap-2 pt-3 sticky bottom-0 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-white/10 mt-2 pb-1">
-              <Button type="submit">
-                {editing ? "Simpan Perubahan" : "Simpan Klien"}
+              <Button type="submit" disabled={isSubmitting} loading={isSubmitting}>
+                {isSubmitting
+                  ? "Menyimpan..."
+                  : editing
+                    ? "Simpan Perubahan"
+                    : "Simpan Klien"}
               </Button>
               <Button type="button" variant="secondary" onClick={closeForm}>
                 Batal
@@ -1990,16 +2004,17 @@ export function ClientsPage() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={delegateForm.services.length === 0}
+                  disabled={delegateForm.services.length === 0 || isSubmittingDelegate}
+                  loading={isSubmittingDelegate}
                   className="w-full sm:flex-1 h-10 px-3 text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 whitespace-nowrap"
                 >
                   <Send className="h-3.5 w-3.5 shrink-0" />
                   <span>
-                    {delegateForm.services.length === 0 ? (
-                      "Pilih Layanan"
-                    ) : (
-                      `Buat Task (${delegateForm.services.length} Layanan)`
-                    )}
+                    {isSubmittingDelegate
+                      ? "Mendelegasikan..."
+                      : delegateForm.services.length === 0
+                        ? "Pilih Layanan"
+                        : `Buat Task (${delegateForm.services.length} Layanan)`}
                   </span>
                 </Button>
               </div>

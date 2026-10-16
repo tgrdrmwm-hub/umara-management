@@ -65,14 +65,20 @@ export function PointsPage() {
   const topStaff = ranked[0];
   const avgPoints = ranked.length ? Math.round((totalPoints / ranked.length) * 100) / 100 : 0;
 
+  const [savingUserId, setSavingUserId] = useState(null);
+
   async function savePoints(user) {
+    if (savingUserId) return;
     const newPoints = draftPoints[user.id] ?? user.points;
     try {
+      setSavingUserId(user.id);
       await updateUserPoints(user.id, newPoints);
       await queryClient.invalidateQueries({ queryKey: ["umara-dashboard"] });
       toast.success("Point diperbarui");
     } catch {
       toast.error("Gagal memperbarui point");
+    } finally {
+      setSavingUserId(null);
     }
   }
 
@@ -342,10 +348,14 @@ export function PointsPage() {
                             size="sm"
                             variant="secondary"
                             className="px-2 sm:px-3 text-xs"
+                            disabled={savingUserId === user.id}
+                            loading={savingUserId === user.id}
                             onClick={() => void savePoints(user)}
                           >
                             <Save className="h-3.5 w-3.5 sm:mr-1" />
-                            <span className="hidden sm:inline">Simpan</span>
+                            <span className="hidden sm:inline">
+                              {savingUserId === user.id ? "Menyimpan..." : "Simpan"}
+                            </span>
                           </Button>
                         </td>
                       )}

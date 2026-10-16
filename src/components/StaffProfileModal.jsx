@@ -122,6 +122,7 @@ export function StaffProfileModal({ user, isOpen, onClose, canEdit = true }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSaving) return;
     if (!userCanEdit) {
       toast.error("Anda tidak memiliki izin untuk mengubah biodata staf ini.");
       return;
@@ -439,6 +440,7 @@ export function StaffProfileModal({ user, isOpen, onClose, canEdit = true }) {
               <Button
                 type="submit"
                 disabled={isSaving}
+                loading={isSaving}
                 className="w-full sm:w-auto"
               >
                 {isSaving ? "Menyimpan..." : "Simpan Biodata"}

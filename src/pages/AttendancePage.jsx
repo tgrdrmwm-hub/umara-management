@@ -68,6 +68,7 @@ export function AttendancePage() {
   const [form, setForm] = useState(getEmptyAttendance());
   const [activeTab, setActiveTab] = useState(isMagangRole ? "magang" : "staff");
   const [internPrompt, setInternPrompt] = useState({ show: false, type: null, name: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const allAttendance = data?.attendance ?? [];
   const users = data?.users ?? [];
@@ -105,11 +106,13 @@ export function AttendancePage() {
 
   async function submit(e) {
     e.preventDefault();
+    if (isSubmitting) return;
     try {
       if (!form.staff.trim()) return toast.error("Nama staff wajib diisi");
       if (!form.date) return toast.error("Tanggal wajib diisi");
       if (!form.checkIn) return toast.error("Jam masuk wajib diisi");
 
+      setIsSubmitting(true);
       const isSharedMagang =
         user?.role === "magang" || user?.role === "staff_magang";
       let finalStaff = form.staff.trim();
@@ -131,6 +134,8 @@ export function AttendancePage() {
       setShowForm(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Gagal menyimpan");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -389,8 +394,8 @@ export function AttendancePage() {
               </select>
             </div>
             <div className="flex items-end gap-2">
-              <Button type="submit" className="flex-1">
-                {editing ? "Simpan" : "Tambah"}
+              <Button type="submit" disabled={isSubmitting} loading={isSubmitting} className="flex-1">
+                {isSubmitting ? "Menyimpan..." : (editing ? "Simpan" : "Tambah")}
               </Button>
               <Button type="button" variant="secondary" onClick={closeForm}>
                 Batal

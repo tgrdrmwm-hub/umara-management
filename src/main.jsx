@@ -6,6 +6,10 @@ import "./index.css";
 import App from "./App.jsx";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
 import { ErrorBoundary } from "./components/ErrorBoundary.jsx";
+import { initAntiDoubleClick } from "./utils/antiDoubleClick.js";
+
+// Inisialisasi pengaman tombol anti-double-click global di level sistem
+initAntiDoubleClick(650);
 
 const queryClient = new QueryClient();
 
