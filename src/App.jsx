@@ -12,6 +12,8 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { MediaPage } from "./pages/MediaPage";
 import { PointsPage } from "./pages/PointsPage";
 import { ReportsPage } from "./pages/ReportsPage";
+import { DailyReportsPage } from "./pages/DailyReportsPage";
+import { MonitoringPage } from "./pages/MonitoringPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { StaffPage } from "./pages/StaffPage";
 import { SuratLuarPage } from "./pages/SuratLuarPage";
@@ -54,6 +56,10 @@ export default function App() {
           <Route path="/clients" element={<ClientsPage />} />
           <Route path="/staff" element={<StaffPage />} />
           <Route path="/attendance" element={<AttendancePage />} />
+          <Route path="/daily-reports" element={<DailyReportsPage />} />
+          <Route path="/staff-reports" element={<Navigate to="/daily-reports" replace />} />
+          <Route path="/monitoring" element={<MonitoringPage />} />
+          <Route path="/staff-monitoring" element={<Navigate to="/monitoring" replace />} />
           <Route path="/points" element={<PointsPage />} />
           <Route path="/tasks" element={<TasksPage />} />
           <Route path="/intern-tasks" element={<InternTasksPage />} />

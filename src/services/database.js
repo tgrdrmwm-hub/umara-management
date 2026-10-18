@@ -4,7 +4,7 @@ export const emptyAppData = {
   analytics: [],
   attendance: [],
   clients: [],
-  reportTypes: ["Pajak", "Staff", "Presensi", "Client", "Point", "Task"],
+  reportTypes: ["Pajak", "Staff", "Presensi", "Client", "Point", "Task", "Laporan Harian"],
   tasks: [],
   internTasks: [],
   taxWorks: [],
@@ -12,7 +12,25 @@ export const emptyAppData = {
   activityLogs: [],
   taxServices: [],
   calendarEvents: [],
+  dailyReports: [],
 };
+
+const LOCAL_DAILY_REPORTS_KEY = "umara_daily_reports_fallback";
+
+function getLocalDailyReports() {
+  try {
+    const raw = localStorage.getItem(LOCAL_DAILY_REPORTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalDailyReports(list) {
+  try {
+    localStorage.setItem(LOCAL_DAILY_REPORTS_KEY, JSON.stringify(list));
+  } catch {}
+}
 
 export async function fetchAppData() {
   if (!supabase) {
@@ -28,6 +46,7 @@ export async function fetchAppData() {
       analytics: [],
       taxServices: [],
       calendarEvents: [],
+      dailyReports: getLocalDailyReports(),
     };
   }
 
@@ -41,6 +60,7 @@ export async function fetchAppData() {
     activityResult,
     taxServicesResult,
     calendarResult,
+    dailyReportsResult,
   ] = await Promise.all([
     supabase
       .from("users")
@@ -71,6 +91,11 @@ export async function fetchAppData() {
       .from("calendar_events")
       .select("*")
       .order("event_date", { ascending: true }),
+    supabase
+      .from("daily_reports")
+      .select("*")
+      .order("report_date", { ascending: false })
+      .order("created_at", { ascending: false }),
   ]);
 
   if (usersResult.error) console.error("Supabase users error:", usersResult.error);
@@ -82,6 +107,7 @@ export async function fetchAppData() {
   if (activityResult.error) console.error("Supabase activity error:", activityResult.error);
   if (taxServicesResult.error) console.warn("Supabase tax_services notice:", taxServicesResult.error?.message);
   if (calendarResult.error) console.warn("Supabase calendar_events notice:", calendarResult.error?.message);
+  if (dailyReportsResult.error) console.warn("Supabase daily_reports notice:", dailyReportsResult.error?.message);
 
   const users = (usersResult.data ?? []).map(toUser);
   const tasks = (tasksResult.data ?? []).map(toTask);
@@ -92,6 +118,24 @@ export async function fetchAppData() {
   const activityLogs = activityResult.data ?? [];
   const taxServices = (taxServicesResult.data ?? []).map(toTaxService);
   const calendarEvents = (calendarResult.data ?? []).map(toCalendarEvent);
+
+  const dbReports = (dailyReportsResult.data ?? []).map(toDailyReport);
+  let localReports = getLocalDailyReports();
+
+  // If supabase query succeeded and we have local reports pending, attempt auto-sync
+  if (!dailyReportsResult.error && localReports.length > 0) {
+    try {
+      await syncLocalDailyReportsToSupabase();
+      localReports = getLocalDailyReports();
+    } catch (e) {
+      console.warn("Auto-sync local reports notice:", e);
+    }
+  }
+
+  // Combine dbReports with any still-unpersisted localReports (avoid duplicates)
+  const dbIds = new Set(dbReports.map((r) => r.id));
+  const pendingLocal = localReports.filter((r) => !dbIds.has(r.id));
+  const dailyReports = [...pendingLocal, ...dbReports];
 
   return {
     analytics: buildAnalytics(
@@ -111,6 +155,7 @@ export async function fetchAppData() {
     activityLogs,
     taxServices,
     calendarEvents,
+    dailyReports,
   };
 }
 
@@ -597,6 +642,197 @@ export async function deleteCalendarEvent(id, title = "Agenda") {
   await logActivity("Menghapus Agenda", `Agenda: ${title}`);
 }
 
+// ==========================================
+// Daily Reports (Laporan Harian Staff)
+// ==========================================
+export async function syncLocalDailyReportsToSupabase() {
+  if (!supabase) return { synced: 0, failed: 0 };
+  const localList = getLocalDailyReports();
+  if (localList.length === 0) return { synced: 0, failed: 0 };
+
+  const remaining = [];
+  let synced = 0;
+
+  for (const item of localList) {
+    const payload = {
+      staff: item.staff,
+      user_id: item.userId || null,
+      report_date: item.reportDate || item.report_date || new Date().toISOString().slice(0, 10),
+      report_time: item.reportTime || item.report_time || null,
+      tasks_summary: item.tasksSummary || item.tasks_summary || "-",
+      client_name: item.clientName || item.client_name || null,
+      status: item.status || "Selesai",
+      obstacles: item.obstacles || null,
+      tomorrow_plan: item.tomorrowPlan || null,
+      attachment_url: item.attachmentUrl || null,
+      notes: item.notes || null,
+    };
+
+    let { error } = await supabase.from("daily_reports").insert(payload);
+    // If daily_reports table not found, try fallback table laporan_harian
+    if (error && (error.code === "PGRST205" || error.code === "42P01")) {
+      const fb = await supabase.from("laporan_harian").insert(payload);
+      error = fb.error;
+    }
+
+    if (!error) {
+      synced++;
+    } else {
+      remaining.push(item);
+    }
+  }
+
+  saveLocalDailyReports(remaining);
+  return { synced, failed: remaining.length };
+}
+
+export async function createDailyReport(values) {
+  const payload = {
+    staff: values.staff,
+    user_id: values.userId || null,
+    report_date: values.reportDate || new Date().toISOString().slice(0, 10),
+    report_time: values.reportTime || new Date().toTimeString().slice(0, 5),
+    tasks_summary: values.tasksSummary,
+    client_name: values.clientName || null,
+    status: values.status || "Selesai",
+    obstacles: values.obstacles || null,
+    tomorrow_plan: values.tomorrowPlan || null,
+    attachment_url: values.attachmentUrl || null,
+    notes: values.notes || null,
+  };
+
+  if (supabase) {
+    let result = await supabase
+      .from("daily_reports")
+      .insert(payload)
+      .select()
+      .single();
+
+    // If daily_reports table not found, try fallback table laporan_harian
+    if (result.error && (result.error.code === "PGRST205" || result.error.code === "42P01")) {
+      const fallbackResult = await supabase
+        .from("laporan_harian")
+        .insert(payload)
+        .select()
+        .single();
+      if (!fallbackResult.error && fallbackResult.data) {
+        result = fallbackResult;
+      }
+    }
+
+    if (!result.error && result.data) {
+      await logActivity("Mengisi Laporan Harian", `Staff: ${values.staff} (${payload.report_date})`);
+      return toDailyReport(result.data);
+    }
+
+    console.error("Supabase insert daily_reports failed:", result.error);
+
+    // Save to local storage as safety backup so staff work is not lost
+    const localList = getLocalDailyReports();
+    const newReport = {
+      ...payload,
+      id: "local-" + Date.now(),
+      reportDate: payload.report_date,
+      reportTime: payload.report_time,
+      tasksSummary: payload.tasks_summary,
+      clientName: payload.client_name,
+      status: payload.status,
+      obstacles: payload.obstacles,
+      tomorrowPlan: payload.tomorrow_plan,
+      attachmentUrl: payload.attachment_url,
+      notes: payload.notes,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    saveLocalDailyReports([newReport, ...localList]);
+
+    let friendlyMsg = result.error?.message || "Akses ditolak";
+    if (result.error?.code === "42501") {
+      friendlyMsg = "Izin database Supabase belum diberikan (Permission Denied). Silakan jalankan script SQL fix_permissions di Supabase SQL Editor.";
+    }
+    throw new Error(`Gagal menyimpan ke database Supabase: ${friendlyMsg}`);
+  }
+
+  // Fallback to local storage if supabase not configured
+  const localList = getLocalDailyReports();
+  const newReport = {
+    ...payload,
+    id: "local-" + Date.now(),
+    reportDate: payload.report_date,
+    reportTime: payload.report_time,
+    tasksSummary: payload.tasks_summary,
+    clientName: payload.client_name,
+    status: payload.status,
+    obstacles: payload.obstacles,
+    tomorrowPlan: payload.tomorrow_plan,
+    attachmentUrl: payload.attachment_url,
+    notes: payload.notes,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  saveLocalDailyReports([newReport, ...localList]);
+  await logActivity("Mengisi Laporan Harian", `Staff: ${values.staff} (${payload.report_date})`);
+  return newReport;
+}
+
+export async function updateDailyReport(id, values) {
+  const updates = {
+    staff: values.staff,
+    report_date: values.reportDate,
+    report_time: values.reportTime,
+    tasks_summary: values.tasksSummary,
+    client_name: values.clientName || null,
+    status: values.status || "Selesai",
+    obstacles: values.obstacles || null,
+    tomorrow_plan: values.tomorrowPlan || null,
+    attachment_url: values.attachmentUrl || null,
+    notes: values.notes || null,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (supabase && !id.startsWith("local-")) {
+    let { error } = await supabase.from("daily_reports").update(updates).eq("id", id);
+    if (error && (error.code === "PGRST205" || error.code === "42P01")) {
+      const fb = await supabase.from("laporan_harian").update(updates).eq("id", id);
+      error = fb.error;
+    }
+    if (!error) {
+      await logActivity("Mengubah Laporan Harian", `Staff: ${values.staff} (${values.reportDate})`);
+      return;
+    }
+    console.error("Supabase update daily_reports failed:", error.message);
+    throw new Error(`Gagal memperbarui di database Supabase: ${error.message}`);
+  }
+
+  // Fallback local
+  const localList = getLocalDailyReports();
+  const nextList = localList.map((r) =>
+    r.id === id ? { ...r, ...values, updatedAt: new Date().toISOString() } : r,
+  );
+  saveLocalDailyReports(nextList);
+  await logActivity("Mengubah Laporan Harian", `Staff: ${values.staff} (${values.reportDate})`);
+}
+
+export async function deleteDailyReport(id, staff = "Staff") {
+  if (supabase && !id.startsWith("local-")) {
+    let { error } = await supabase.from("daily_reports").delete().eq("id", id);
+    if (error && (error.code === "PGRST205" || error.code === "42P01")) {
+      const fb = await supabase.from("laporan_harian").delete().eq("id", id);
+      error = fb.error;
+    }
+    if (!error) {
+      await logActivity("Menghapus Laporan Harian", `Laporan oleh: ${staff}`);
+      return;
+    }
+    console.error("Supabase delete daily_reports failed:", error.message);
+    throw new Error(`Gagal menghapus di database Supabase: ${error.message}`);
+  }
+
+  const localList = getLocalDailyReports();
+  saveLocalDailyReports(localList.filter((r) => r.id !== id));
+  await logActivity("Menghapus Laporan Harian", `Laporan oleh: ${staff}`);
+}
+
 export async function updateUserPoints(id, points) {
   if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
   const numericPoints = Math.round(Number(points || 0) * 100) / 100;
@@ -850,6 +1086,25 @@ function toCalendarEvent(row) {
     notes: String(row.notes ?? ""),
     createdBy: String(row.created_by ?? ""),
     createdAt: String(row.created_at ?? ""),
+  };
+}
+
+function toDailyReport(row) {
+  return {
+    id: String(row.id),
+    staff: String(row.staff ?? ""),
+    userId: row.user_id ? String(row.user_id) : null,
+    reportDate: String(row.report_date ?? ""),
+    reportTime: String(row.report_time ?? ""),
+    tasksSummary: String(row.tasks_summary ?? ""),
+    clientName: String(row.client_name ?? ""),
+    status: String(row.status ?? "Selesai"),
+    obstacles: String(row.obstacles ?? ""),
+    tomorrowPlan: String(row.tomorrow_plan ?? ""),
+    attachmentUrl: String(row.attachment_url ?? ""),
+    notes: String(row.notes ?? ""),
+    createdAt: String(row.created_at ?? ""),
+    updatedAt: String(row.updated_at ?? ""),
   };
 }
 

@@ -28,6 +28,10 @@ const reportMeta = {
     desc: "Rekap task kanban — judul, PIC, deadline, status, point.",
     color: "text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10",
   },
+  "Laporan Harian": {
+    desc: "Rekap aktivitas harian staff — tanggal, staff, pekerjaan, status, kendala.",
+    color: "text-teal-600 bg-teal-50 dark:bg-teal-500/10",
+  },
 };
 
 export function ReportsPage() {
@@ -92,6 +96,19 @@ export function ReportsPage() {
           t.deadline,
           t.status,
           String(t.points),
+        ]),
+      ],
+      "Laporan Harian": [
+        ["Tanggal", "Jam", "Staff", "Klien", "Status", "Pekerjaan", "Kendala", "Rencana Besok"],
+        ...(data.dailyReports ?? []).map((r) => [
+          r.reportDate,
+          r.reportTime || "-",
+          r.staff,
+          r.clientName || "-",
+          r.status,
+          r.tasksSummary,
+          r.obstacles || "-",
+          r.tomorrowPlan || "-",
         ]),
       ],
     };

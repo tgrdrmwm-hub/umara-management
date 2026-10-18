@@ -43,8 +43,13 @@ export function AppLayout() {
     );
 
     const isDeveloper = user?.role === "developer";
+    const isOwnerOrDev = user?.role === "owner" || user?.role === "developer";
 
     if (item.label === "Users" && !isDeveloper) {
+      return false;
+    }
+
+    if (item.label === "Monitoring" && !isOwnerOrDev) {
       return false;
     }
 
@@ -61,6 +66,7 @@ export function AppLayout() {
         "Tugas Magang",
         "Client",
         "Presensi",
+        "Laporan Harian",
         "Point",
       ].includes(item.label);
     }
@@ -74,6 +80,7 @@ export function AppLayout() {
         "Task",
         "Tugas Magang",
         "Presensi",
+        "Laporan Harian",
         "Point",
       ].includes(item.label);
     }
@@ -84,10 +91,12 @@ export function AppLayout() {
         "Kategori & Layanan",
         "Client",
         "Staff",
+        "Monitoring",
+        "Presensi",
+        "Laporan Harian",
+        "Point",
         "Task",
         "Tugas Magang",
-        "Presensi",
-        "Point",
         "Report",
         "Settings",
       ].includes(item.label);

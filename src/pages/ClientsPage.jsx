@@ -22,6 +22,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
+import { ConfirmModal } from "../components/ui/ConfirmModal";
 import { Input } from "../components/ui/Input";
 import { useAppData } from "../hooks/useAppData";
 import {
@@ -216,6 +217,8 @@ export function ClientsPage() {
   const [form, setForm] = useState(emptyClient);
   const [showForm, setShowForm] = useState(false);
   const [viewingDetail, setViewingDetail] = useState(null);
+  const [deletingClient, setDeletingClient] = useState(null);
+  const [isDeletingClient, setIsDeletingClient] = useState(false);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -1312,17 +1315,7 @@ export function ClientsPage() {
                             <button
                               type="button"
                               title="Hapus Klien"
-                              onClick={() => {
-                                if (
-                                  confirm(
-                                    `Apakah Anda yakin ingin menghapus "${client.name}"?`,
-                                  )
-                                ) {
-                                  void deleteClient(client.id).then(() =>
-                                    refresh("Klien dihapus"),
-                                  );
-                                }
-                              }}
+                              onClick={() => setDeletingClient(client)}
                               className="inline-flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -2022,6 +2015,47 @@ export function ClientsPage() {
           </Card>
         </div>
       )}
+
+      {/* CONFIRM DELETE MODAL */}
+      <ConfirmModal
+        isOpen={Boolean(deletingClient)}
+        onClose={() => !isDeletingClient && setDeletingClient(null)}
+        onConfirm={async () => {
+          if (!deletingClient) return;
+          try {
+            setIsDeletingClient(true);
+            await deleteClient(deletingClient.id);
+            await refresh("Klien berhasil dihapus");
+            setDeletingClient(null);
+          } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Gagal menghapus klien");
+          } finally {
+            setIsDeletingClient(false);
+          }
+        }}
+        isLoading={isDeletingClient}
+        title="Hapus Klien"
+        message={
+          deletingClient ? (
+            <div className="space-y-1.5 text-slate-600 dark:text-slate-300">
+              <p>
+                Apakah Anda yakin ingin menghapus klien{" "}
+                <span className="font-semibold text-slate-900 dark:text-slate-100">
+                  {deletingClient.name}
+                </span>
+                ?
+              </p>
+              <p className="text-xs text-rose-600 dark:text-rose-400">
+                Data klien beserta riwayat konfigurasi layanannya akan dihapus.
+              </p>
+            </div>
+          ) : null
+        }
+        confirmText="Ya, Hapus Klien"
+        cancelText="Batal"
+        variant="danger"
+        icon="trash"
+      />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { Badge } from "../components/ui/Badge";
+import { ConfirmModal } from "../components/ui/ConfirmModal";
 import { taxServiceDefinitions } from "../constants/taxServices";
 import { createTaxService, updateTaxService, deleteTaxService } from "../services/database";
 
@@ -21,6 +22,8 @@ export function TaxPage() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingService, setDeletingService] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [form, setForm] = useState({
     category: "",
     service_name: "",
@@ -226,12 +229,7 @@ export function TaxPage() {
                             <Pencil className="h-3 w-3" />
                           </button>
                           <button
-                            onClick={async () => {
-                              if (confirm(`Hapus layanan ${service.name}?`)) {
-                                await deleteTaxService(service.id, service.name);
-                                await refresh("Layanan dihapus");
-                              }
-                            }}
+                            onClick={() => setDeletingService(service)}
                             className="rounded p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
                             title="Hapus"
                           >
@@ -258,6 +256,47 @@ export function TaxPage() {
           </div>
         )}
       </div>
+
+      {/* CONFIRM DELETE MODAL */}
+      <ConfirmModal
+        isOpen={Boolean(deletingService)}
+        onClose={() => !isDeleting && setDeletingService(null)}
+        onConfirm={async () => {
+          if (!deletingService) return;
+          try {
+            setIsDeleting(true);
+            await deleteTaxService(deletingService.id, deletingService.name);
+            await refresh("Layanan berhasil dihapus");
+            setDeletingService(null);
+          } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Gagal menghapus layanan");
+          } finally {
+            setIsDeleting(false);
+          }
+        }}
+        isLoading={isDeleting}
+        title="Hapus Layanan Pajak"
+        message={
+          deletingService ? (
+            <div className="space-y-1.5 text-slate-600 dark:text-slate-300">
+              <p>
+                Apakah Anda yakin ingin menghapus layanan{" "}
+                <span className="font-semibold text-slate-900 dark:text-slate-100">
+                  {deletingService.name}
+                </span>
+                ?
+              </p>
+              <p className="text-xs text-rose-600 dark:text-rose-400">
+                Layanan ini akan dihapus dari daftar master layanan kantor.
+              </p>
+            </div>
+          ) : null
+        }
+        confirmText="Ya, Hapus Layanan"
+        cancelText="Batal"
+        variant="danger"
+        icon="trash"
+      />
     </div>
   );
 }

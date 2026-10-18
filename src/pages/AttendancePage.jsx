@@ -1,5 +1,6 @@
-import { CalendarDays, Clock, Plus, X, Pencil, Trash2 } from "lucide-react";
+import { CalendarDays, Clock, Plus, X, Pencil, Trash2, ClipboardCheck } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -56,6 +57,7 @@ const STATUS_COLOR = {
 };
 
 export function AttendancePage() {
+  const navigate = useNavigate();
   const { data } = useAppData();
   const { user } = useAuth();
   const isAdmin = ["owner", "developer", "manager", "admin"].includes(
@@ -206,6 +208,13 @@ export function AttendancePage() {
         existing.status,
       );
       await refresh("Check out tercatat");
+      toast.info("Sudah mengisi Laporan Harian pekerjaan sebelum pulang?", {
+        action: {
+          label: "Isi Laporan",
+          onClick: () => navigate("/daily-reports"),
+        },
+        duration: 8000,
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Gagal memproses");
     }
@@ -292,6 +301,32 @@ export function AttendancePage() {
             <span>Tambah</span>
           </Button>
         </div>
+      </div>
+
+      {/* Reminder Banner Laporan Harian */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-gradient-to-r from-blue-50 to-indigo-50/60 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200/70 dark:border-blue-900/40 rounded-xl">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300">
+            <ClipboardCheck className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">
+              Laporan Harian Sebelum Pulang
+            </p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Staff diharapkan mengisi ringkasan pekerjaan apa saja yang dilakukan hari ini sebelum jam kepulangan kantor.
+            </p>
+          </div>
+        </div>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => navigate("/daily-reports")}
+          className="text-xs h-8 shrink-0 self-start sm:self-auto shadow-xs border-blue-200 hover:bg-white dark:border-blue-900/50"
+        >
+          <span>Isi Laporan Harian</span>
+          <span className="ml-1 text-slate-400">→</span>
+        </Button>
       </div>
 
       {/* Tabs */}

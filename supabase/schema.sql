@@ -240,3 +240,29 @@ BEGIN
 EXCEPTION WHEN duplicate_object THEN RAISE NOTICE 'Policy already exists';
 END $$;
 
+create table if not exists public.daily_reports (
+  id uuid primary key default gen_random_uuid(),
+  staff text not null,
+  user_id uuid references public.users(id) on delete set null,
+  report_date date not null default current_date,
+  report_time text,
+  tasks_summary text not null,
+  client_name text,
+  status text not null default 'Selesai',
+  obstacles text,
+  tomorrow_plan text,
+  attachment_url text,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.daily_reports enable row level security;
+
+DO $$
+BEGIN
+  EXECUTE 'CREATE POLICY "authenticated users can manage daily reports" ON public.daily_reports FOR ALL TO authenticated USING (true) WITH CHECK (true)';
+EXCEPTION WHEN duplicate_object THEN RAISE NOTICE 'Policy already exists';
+END $$;
+
+
