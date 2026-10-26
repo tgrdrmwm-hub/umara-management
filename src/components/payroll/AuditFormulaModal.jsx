@@ -188,7 +188,7 @@ export function AuditFormulaModal({ isOpen, onClose, payrollItem, monthStr }) {
                 <br />
                 • Basis Upah per Jam = {formatRupiah(item.upahDasarLembur)} / 173 = <strong className="text-slate-800 dark:text-slate-200">{formatRupiah(item.rateLemburPerJam)} / jam</strong>.
                 <br />
-                • Total Jam Lembur: <strong className="text-slate-800 dark:text-slate-200">{item.jamLembur} Jam</strong>.
+                • Total Jam Lembur: <strong className="text-slate-800 dark:text-slate-200">{item.jamLembur} Jam</strong> (dihitung mulai dari jam 18:00 ke atas).
                 <br />
                 • <strong>Perhitungan:</strong> {item.jamLembur} jam x {formatRupiah(item.rateLemburPerJam)} = {formatRupiah(item.uangLembur)}
               </p>

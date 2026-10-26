@@ -59,6 +59,16 @@ video {
   color: #f1f5f9;
 }
 
+/* Fix browser autofill on white inputs */
+input.bg-white:-webkit-autofill,
+input.bg-white:-webkit-autofill:hover,
+input.bg-white:-webkit-autofill:focus,
+input.bg-white:-webkit-autofill:active {
+  -webkit-text-fill-color: #0f172a !important;
+  -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
+  box-shadow: 0 0 0 30px #ffffff inset !important;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

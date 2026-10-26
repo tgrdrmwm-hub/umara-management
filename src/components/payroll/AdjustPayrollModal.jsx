@@ -87,7 +87,7 @@ export function AdjustPayrollModal({
               />
             </div>
             <p className="text-[11px] text-slate-400 mt-1">
-              Tarif: {formatRupiah(estimatedRate)}/jam. Total uang lembur: <strong className="text-slate-700 dark:text-slate-300">{formatRupiah(estimatedOvertimeTotal)}</strong>.
+              Tarif: {formatRupiah(estimatedRate)}/jam. Total uang lembur: <strong className="text-slate-700 dark:text-slate-300">{formatRupiah(estimatedOvertimeTotal)}</strong>. (Lembur presensi dihitung otomatis mulai dari jam 18:00 ke atas).
             </p>
           </div>
 

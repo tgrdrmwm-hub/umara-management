@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { KeyRound } from "lucide-react";
+import { KeyRound, Eye, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -27,6 +28,8 @@ const schema = z
 export function ChangePasswordPage() {
   const { changePassword, logout } = useAuth();
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const {
     register,
     handleSubmit,
@@ -66,11 +69,23 @@ export function ChangePasswordPage() {
               <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                 Password Baru
               </label>
-              <Input
-                type="password"
-                placeholder="Min. 8 karakter, huruf besar, angka, simbol"
-                {...register("password")}
-              />
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Min. 8 karakter, huruf besar, angka, simbol"
+                  className="pr-10"
+                  {...register("password")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer p-1"
+                  aria-label={showPassword ? "Sembunyikan password" : "Lihat password"}
+                  title={showPassword ? "Sembunyikan password" : "Lihat password"}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
               {errors.password && (
                 <p className="text-xs text-red-500">
                   {errors.password.message}
@@ -82,11 +97,23 @@ export function ChangePasswordPage() {
               <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                 Konfirmasi Password
               </label>
-              <Input
-                type="password"
-                placeholder="Ulangi password baru"
-                {...register("confirm")}
-              />
+              <div className="relative">
+                <Input
+                  type={showConfirm ? "text" : "password"}
+                  placeholder="Ulangi password baru"
+                  className="pr-10"
+                  {...register("confirm")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer p-1"
+                  aria-label={showConfirm ? "Sembunyikan password" : "Lihat password"}
+                  title={showConfirm ? "Sembunyikan password" : "Lihat password"}
+                >
+                  {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
               {errors.confirm && (
                 <p className="text-xs text-red-500">{errors.confirm.message}</p>
               )}

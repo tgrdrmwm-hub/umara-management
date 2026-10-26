@@ -244,7 +244,8 @@ export function filterStaffAttendance(attendanceList = [], staffIdentifier = "",
 }
 
 /**
- * Menghitung jam lembur otomatis dari jam pulang presensi jika melebihi jam 17:00
+ * Menghitung jam lembur otomatis dari jam pulang presensi jika melebihi jam 18:00
+ * Aturan: Lembur dihitung mulai dari jam 18:00 (setelah itu baru dihitung lembur).
  */
 export function estimateOvertimeFromAttendance(staffAttendance = []) {
   let overtimeHours = 0;
@@ -255,9 +256,9 @@ export function estimateOvertimeFromAttendance(staffAttendance = []) {
       const outHour = parseInt(parts[0], 10);
       const outMin = parseInt(parts[1], 10);
       const totalMinutes = outHour * 60 + outMin;
-      // Normal checkout is 17:00 (1020 mins). Jeda 30 menit toleransi (17:30 = 1050 mins)
-      if (totalMinutes > 1050) {
-        const extraHours = (totalMinutes - 1020) / 60;
+      // Lembur dihitung mulai jam 18:00 (1080 menit). Setelah jam 18:00 baru dihitung lembur.
+      if (totalMinutes > 1080) {
+        const extraHours = (totalMinutes - 1080) / 60;
         overtimeHours += Math.floor(extraHours * 2) / 2; // kelipatan 0.5 jam
       }
     }

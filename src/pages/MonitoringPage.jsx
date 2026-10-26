@@ -64,9 +64,20 @@ export function MonitoringPage() {
   const allAttendance = data?.attendance ?? [];
   const allDailyReports = data?.dailyReports ?? [];
 
+  // Helper matcher: periksa apakah staf adalah user yang sedang login
+  const isCurrentUser = (u) => {
+    if (!currentUser || !u) return false;
+    if (currentUser.id && u.id && String(currentUser.id) === String(u.id)) return true;
+    if (currentUser.email && u.email && currentUser.email.toLowerCase() === u.email.toLowerCase()) return true;
+    const curName = (currentUser.name || "").toLowerCase().trim();
+    const uName = (u.name || "").toLowerCase().trim();
+    if (curName && uName && (curName === uName || curName.includes(uName) || uName.includes(curName))) return true;
+    return false;
+  };
+
   // Staff users list (Hanya menampilkan staff kantor & magang, atau bisa semua)
   const staffList = useMemo(() => {
-    return users.filter((u) => {
+    const list = users.filter((u) => {
       if (u.status !== "active") return false;
       const r = u.role?.toLowerCase();
       // Bisa memilih staff, staff magang, magang, manager, bahkan developer/owner
@@ -74,7 +85,20 @@ export function MonitoringPage() {
       if (roleFilter === "magang") return r === "magang" || r === "staff_magang";
       return ["staff", "magang", "staff_magang", "manager", "developer", "owner"].includes(r);
     });
-  }, [users, roleFilter]);
+
+    // Posisikan user yang sedang login di urutan pertama (paling kiri)
+    if (currentUser) {
+      return [...list].sort((a, b) => {
+        const aIsMe = isCurrentUser(a);
+        const bIsMe = isCurrentUser(b);
+        if (aIsMe && !bIsMe) return -1;
+        if (!aIsMe && bIsMe) return 1;
+        return 0;
+      });
+    }
+
+    return list;
+  }, [users, roleFilter, currentUser]);
 
   // Filtered staff list by search query
   const searchedStaffList = useMemo(() => {
@@ -88,14 +112,19 @@ export function MonitoringPage() {
     );
   }, [staffList, staffSearch]);
 
-  // Auto-select first staff if none selected or if selected staff no longer in list
+  // Auto-select staff: utamakan selectedStaffId jika dipilih manual,
+  // atau user yang sedang login, atau staff pertama di list
   const activeStaff = useMemo(() => {
     if (selectedStaffId) {
       const found = staffList.find((s) => s.id === selectedStaffId);
       if (found) return found;
     }
+    if (currentUser) {
+      const myStaff = staffList.find((s) => isCurrentUser(s));
+      if (myStaff) return myStaff;
+    }
     return staffList[0] || null;
-  }, [selectedStaffId, staffList]);
+  }, [selectedStaffId, staffList, currentUser]);
 
   // Helper matcher: cocokan catatan dengan staf terpilih
   const matchesStaff = (staffUser, recordStaffName, recordUserId) => {
@@ -461,7 +490,12 @@ export function MonitoringPage() {
 
           <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
             {searchedStaffList.map((staff) => {
-              const isSelected = activeStaff?.id === staff.id;
+              const isSelected =
+                activeStaff &&
+                (activeStaff.id
+                  ? activeStaff.id === staff.id
+                  : activeStaff.name === staff.name);
+              const isMe = isCurrentUser(staff);
               // Cek apakah staf ini sudah lapor hari ini
               const hasReportedToday = allDailyReports.some(
                 (r) => r.reportDate === todayStr && matchesStaff(staff, r.staff, r.userId),
@@ -482,6 +516,11 @@ export function MonitoringPage() {
                     {staff.name ? staff.name.charAt(0) : "S"}
                   </div>
                   <span>{staff.name}</span>
+                  {isMe && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 font-semibold">
+                      Anda
+                    </span>
+                  )}
                   {hasReportedToday && (
                     <span
                       title="Sudah mengisi laporan harian hari ini"

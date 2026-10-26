@@ -521,7 +521,12 @@ export function PayrollPage() {
                 <th className="py-3 px-4 min-w-[180px]">Staff & Jabatan</th>
                 <th className="py-3 px-3 min-w-[140px]">Skenario Gaji</th>
                 <th className="py-3 px-3 min-w-[130px]">Simbol Jabatan</th>
-                <th className="py-3 px-3 text-center min-w-[110px]">Presensi Bulan Ini</th>
+                <th className="py-2.5 px-3 text-center min-w-[125px]">
+                  <div>Presensi Bulan Ini</div>
+                  <div className="text-[10px] font-normal text-slate-400 dark:text-slate-400">
+                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">H</span>: Hadir • <span className="text-rose-600 dark:text-rose-400 font-semibold">T</span>: Telat • <span className="font-semibold">d</span>: Hari
+                  </div>
+                </th>
                 <th className="py-3 px-3 text-right">Gaji Pokok</th>
                 <th className="py-3 px-3 text-right">Uang Makan</th>
                 <th className="py-3 px-3 text-right">Transport</th>

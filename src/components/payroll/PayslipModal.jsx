@@ -303,7 +303,7 @@ export function PayslipModal({ isOpen, onClose, payrollItem, monthStr }) {
 
               <div>
                 <p className="text-slate-500 mb-16">
-                  Yogyakarta, {new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
+                  Surakarta, {new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
                   <br />
                   <span className="font-semibold text-slate-700">UMARA TAX CONSULTANT</span>
                 </p>

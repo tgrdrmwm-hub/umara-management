@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { z } from "zod";
-import { CheckCircle2, Mail, UserPlus, LogIn, ArrowLeft, KeyRound, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Mail, UserPlus, LogIn, ArrowLeft, KeyRound, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 
 const loginSchema = z.object({
@@ -31,6 +31,7 @@ export function AuthPage({ mode = "login" }) {
   const [activeTab, setActiveTab] = useState(() => (mode === "signup" ? "signup" : mode === "forgot" ? "forgot" : "login"));
   const [signupSuccessData, setSignupSuccessData] = useState(null);
   const [isSigningUp, setIsSigningUp] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Form Login
   const {
@@ -255,7 +256,7 @@ export function AuthPage({ mode = "login" }) {
                       type="text"
                       placeholder="Username atau Email Akun"
                       {...registerLogin("email")}
-                      className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800"
+                      className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800"
                     />
                     {loginErrors.email && (
                       <span className="mt-1 block text-xs text-red-500">
@@ -277,12 +278,27 @@ export function AuthPage({ mode = "login" }) {
                         Lupa sandi?
                       </button>
                     </div>
-                    <input
-                      type="password"
-                      placeholder="Kata Sandi"
-                      {...registerLogin("password")}
-                      className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Kata Sandi"
+                        {...registerLogin("password")}
+                        className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-3.5 pr-11 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition cursor-pointer"
+                        aria-label={showPassword ? "Sembunyikan password" : "Lihat password"}
+                        title={showPassword ? "Sembunyikan password" : "Lihat password"}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4.5 w-4.5 text-slate-600" />
+                        ) : (
+                          <Eye className="h-4.5 w-4.5 text-slate-600" />
+                        )}
+                      </button>
+                    </div>
                     {loginErrors.password && (
                       <span className="mt-1 block text-xs text-red-500">
                         {loginErrors.password.message}
@@ -367,7 +383,7 @@ export function AuthPage({ mode = "login" }) {
                           type="text"
                           placeholder="Masukkan nama / username (misal: budi_santoso)"
                           {...registerSignup("username")}
-                          className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800"
+                          className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800"
                         />
                         {signupErrors.username && (
                           <span className="mt-1 block text-xs text-red-500">
@@ -387,7 +403,7 @@ export function AuthPage({ mode = "login" }) {
                           type="email"
                           placeholder="misal: nama.staf@gmail.com"
                           {...registerSignup("personalEmail")}
-                          className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800"
+                          className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800"
                         />
                         {signupErrors.personalEmail && (
                           <span className="mt-1 block text-xs text-red-500">
@@ -455,7 +471,7 @@ export function AuthPage({ mode = "login" }) {
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
                       placeholder="Email Akun atau Email Pribadi"
-                      className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800"
+                      className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800"
                     />
                   </div>
 

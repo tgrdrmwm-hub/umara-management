@@ -30,17 +30,30 @@ export function StaffPage() {
   const { user: currentUser } = useAuth();
   const [selectedStaff, setSelectedStaff] = useState(null);
 
-  const staffUsers =
-    data?.users?.filter((u) =>
-      [
-        "staff",
-        "manager",
-        "staff_magang",
-        "magang",
-        "owner",
-        "developer",
-      ].includes(u.role),
-    ) || [];
+  const staffUsers = useMemo(() => {
+    const list =
+      data?.users?.filter((u) =>
+        [
+          "staff",
+          "manager",
+          "staff_magang",
+          "magang",
+          "owner",
+          "developer",
+        ].includes(u.role),
+      ) || [];
+
+    if (currentUser) {
+      return [...list].sort((a, b) => {
+        const aIsMe = a.id === currentUser.id || a.email === currentUser.email;
+        const bIsMe = b.id === currentUser.id || b.email === currentUser.email;
+        if (aIsMe && !bIsMe) return -1;
+        if (!aIsMe && bIsMe) return 1;
+        return 0;
+      });
+    }
+    return list;
+  }, [data?.users, currentUser]);
 
   // Hanya staf bersangkutan (sesuai akun login) yang bisa mengisi biodatanya,
   // dan developer memiliki akses penuh untuk memeriksa & mengedit biodata semua staf.
