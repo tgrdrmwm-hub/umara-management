@@ -181,3 +181,27 @@ button[data-executing="true"] {
   user-select: none !important;
 }
 
+/* Print Stylesheet for Payslip */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  aside, nav, header, .print\:hidden {
+    display: none !important;
+  }
+  .payslip-printable {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  @page {
+    size: A4 portrait;
+    margin: 1.5cm;
+  }
+}
+
+

@@ -208,6 +208,18 @@ export async function updateUserBiodata(userId, data) {
   if (data.address !== undefined) updates.address = data.address.trim();
   if (data.emergencyContactName !== undefined) updates.emergency_contact_name = data.emergencyContactName.trim();
   if (data.emergencyContactPhone !== undefined) updates.emergency_contact_phone = data.emergencyContactPhone.trim();
+  if (data.joinDate !== undefined) {
+    const cleanDate = data.joinDate ? String(data.joinDate).slice(0, 10) : null;
+    updates.join_date = cleanDate;
+    try {
+      const localJoinDates = JSON.parse(localStorage.getItem("umara_user_join_dates") || "{}");
+      localJoinDates[String(userId)] = cleanDate;
+      if (data.name) localJoinDates[String(data.name).toLowerCase().trim()] = cleanDate;
+      localStorage.setItem("umara_user_join_dates", JSON.stringify(localJoinDates));
+    } catch (e) {
+      console.warn("Save local join date error:", e);
+    }
+  }
 
   const { error } = await supabase.from("users").update(updates).eq("id", userId);
   if (error) {
@@ -219,9 +231,9 @@ export async function updateUserBiodata(userId, data) {
 
       const { error: fallbackErr } = await supabase.from("users").update(basicUpdates).eq("id", userId);
       if (fallbackErr) throw fallbackErr;
-      throw new Error("Kolom biodata (email pribadi, alamat, kontak saudara) belum dibuat di Supabase. Jalankan query ALTER TABLE di SQL Editor untuk mengaktifkannya.");
+    } else {
+      throw error;
     }
-    throw error;
   }
 
   // Jika nama diupdate dan user adalah auth user saat ini, update juga metadata auth
@@ -960,6 +972,16 @@ function toUser(row) {
     updated_at: String(row.updated_at ?? ""),
     points: Number(row.points ?? 0),
     attendanceRate: Number(row.attendance_rate ?? row.attendanceRate ?? 0),
+    joinDate: (() => {
+      if (row.join_date) return String(row.join_date).slice(0, 10);
+      if (row.tanggal_bergabung) return String(row.tanggal_bergabung).slice(0, 10);
+      try {
+        const localJoinDates = JSON.parse(localStorage.getItem("umara_user_join_dates") || "{}");
+        const val = localJoinDates[String(row.id)] || localJoinDates[String(row.name).toLowerCase().trim()];
+        if (val) return String(val).slice(0, 10);
+      } catch {}
+      return "";
+    })(),
   };
 }
 

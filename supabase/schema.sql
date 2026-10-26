@@ -265,6 +265,53 @@ BEGIN
 EXCEPTION WHEN duplicate_object THEN RAISE NOTICE 'Policy already exists';
 END $$;
 
+create table if not exists public.staff_salary_settings (
+  id uuid primary key default gen_random_uuid(),
+  staff_name text not null unique,
+  job_title text,
+  scenario text not null default 'tahap_1',
+  position_symbol text not null default 'A',
+  custom_position_allowance numeric,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.payroll_records (
+  id uuid primary key default gen_random_uuid(),
+  month text not null,
+  staff_name text not null,
+  scenario text not null default 'tahap_1',
+  position_symbol text not null default 'A',
+  jam_lembur numeric not null default 0,
+  bonus numeric not null default 0,
+  potongan numeric not null default 0,
+  notes text,
+  status text not null default 'Draft',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (month, staff_name)
+);
+
+alter table public.staff_salary_settings enable row level security;
+alter table public.payroll_records enable row level security;
+
+DO $$
+BEGIN
+  DROP POLICY IF EXISTS "authenticated users can manage salary settings" ON public.staff_salary_settings;
+  CREATE POLICY "authenticated users can manage salary settings"
+    ON public.staff_salary_settings FOR ALL TO authenticated USING (true) WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  DROP POLICY IF EXISTS "authenticated users can manage payroll records" ON public.payroll_records;
+  CREATE POLICY "authenticated users can manage payroll records"
+    ON public.payroll_records FOR ALL TO authenticated USING (true) WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+
 -- Berikan hak akses skema dan tabel ke role Supabase API
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;

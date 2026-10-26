@@ -14,6 +14,7 @@ import {
   Users,
   FileText,
   UserCog,
+  Wallet,
 } from "lucide-react";
 
 export const navigation = [
@@ -25,6 +26,7 @@ export const navigation = [
   { label: "Presensi", href: "/attendance", icon: CalendarCheck },
   { label: "Laporan Harian", href: "/daily-reports", icon: ClipboardCheck },
   { label: "Monitoring", href: "/monitoring", icon: Activity },
+  { label: "Gaji Staff", href: "/payroll", icon: Wallet },
   { label: "Point", href: "/points", icon: Medal },
   { label: "Task", href: "/tasks", icon: ClipboardList },
   { label: "Tugas Magang", href: "/intern-tasks", icon: FileText },

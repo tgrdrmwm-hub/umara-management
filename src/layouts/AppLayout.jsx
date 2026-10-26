@@ -13,6 +13,9 @@ import {
   CalendarCheck,
   Medal,
   MoreHorizontal,
+  User,
+  AlertTriangle,
+  Calendar,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
@@ -57,6 +60,10 @@ export function AppLayout() {
       return false;
     }
 
+    if (item.label === "Gaji Staff" && !isAdmin) {
+      return false;
+    }
+
     if (user?.role === "magang" || user?.role === "staff_magang") {
       return [
         "Dashboard",
@@ -92,6 +99,7 @@ export function AppLayout() {
         "Client",
         "Staff",
         "Monitoring",
+        "Gaji Staff",
         "Presensi",
         "Laporan Harian",
         "Point",
@@ -246,6 +254,20 @@ export function AppLayout() {
           </div>
 
           <div className="ml-auto flex items-center gap-1 sm:gap-1.5 shrink-0">
+            {/* Tombol Cepat Profil Saya */}
+            <button
+              type="button"
+              onClick={() => setShowMyProfile(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-700 dark:text-slate-200 cursor-pointer"
+              title="Edit & Lengkapi Profil Biodata Saya"
+            >
+              <User className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+              <span className="hidden sm:inline">Profil Saya</span>
+              {(!user?.joinDate || !user?.phone) && (
+                <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" title="Tanggal bergabung/biodata belum lengkap" />
+              )}
+            </button>
+
             <Button
               variant="ghost"
               size="icon"
@@ -276,6 +298,30 @@ export function AppLayout() {
         </header>
 
         <main className="mx-auto w-full max-w-screen-xl min-w-0 px-3 py-4 sm:px-5 sm:py-6 lg:px-8 pb-20 lg:pb-8">
+          {/* Banner Pengingat Kelengkapan Profil & Tanggal Bergabung */}
+          {user && user.role !== "owner" && (!user.joinDate || !user.phone || !user.address) && (
+            <div className="mb-4 rounded-xl border border-amber-300/80 bg-amber-50/90 dark:border-amber-500/30 dark:bg-amber-950/40 p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-950 dark:text-amber-200 shadow-2xs">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-amber-200/80 dark:bg-amber-800/50 text-amber-800 dark:text-amber-300 shrink-0">
+                  <AlertTriangle className="h-4 w-4" />
+                </div>
+                <div>
+                  <span className="font-bold">Lengkapi Tanggal Bergabung & Profil Anda:</span>
+                  <span className="ml-1 text-slate-700 dark:text-slate-300">
+                    Halo {user.name}, tanggal bergabung dan biodata Anda di profil pribadi belum lengkap. Lengkapi sekarang agar skenario gaji dan presensi Anda tercatat otomatis.
+                  </span>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => setShowMyProfile(true)}
+                className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs h-7 px-3"
+              >
+                Lengkapi Profil Sekarang →
+              </Button>
+            </div>
+          )}
+
           <Outlet />
         </main>
 

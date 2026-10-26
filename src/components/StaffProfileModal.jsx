@@ -10,8 +10,10 @@ import {
   HeartHandshake,
   Award,
   CalendarCheck,
+  Calendar,
   Check,
   Shield,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,6 +23,7 @@ import { Badge } from "./ui/Badge";
 import { Card } from "./ui/Card";
 import { updateUserBiodata } from "../services/database";
 import { useAuth } from "../hooks/useAuth";
+import { determineScenarioFromJoinDate, calculateTenure } from "../utils/payrollCalculator";
 
 export function StaffProfileModal({ user, isOpen, onClose, canEdit = true }) {
   const { user: currentUser } = useAuth();
@@ -29,7 +32,8 @@ export function StaffProfileModal({ user, isOpen, onClose, canEdit = true }) {
 
   const isSelf = Boolean(currentUser && user && currentUser.id === user.id);
   const isDeveloper = currentUser?.role === "developer";
-  const userCanEdit = Boolean(canEdit && (isSelf || isDeveloper));
+  const isOwner = currentUser?.role === "owner";
+  const userCanEdit = Boolean(canEdit && (isSelf || isDeveloper || isOwner));
 
   const [formData, setFormData] = useState({
     name: "",
@@ -39,6 +43,7 @@ export function StaffProfileModal({ user, isOpen, onClose, canEdit = true }) {
     emergencyContactName: "",
     emergencyContactPhone: "",
     avatar: "",
+    joinDate: "",
   });
 
   const [avatarPreview, setAvatarPreview] = useState("");
@@ -54,6 +59,7 @@ export function StaffProfileModal({ user, isOpen, onClose, canEdit = true }) {
         emergencyContactName: user.emergencyContactName || "",
         emergencyContactPhone: user.emergencyContactPhone || "",
         avatar: user.avatar || "",
+        joinDate: user.joinDate || user.join_date || "",
       });
       setAvatarPreview(user.avatar || "");
     }
@@ -272,11 +278,19 @@ export function StaffProfileModal({ user, isOpen, onClose, canEdit = true }) {
             <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3 text-xs text-slate-600 dark:border-white/8 dark:bg-white/4 dark:text-slate-300 flex items-center gap-2.5">
               <Shield className="h-4 w-4 text-slate-400 shrink-0" />
               <span>
-                <strong>Mode Hanya Lihat:</strong> Biodata ini hanya dapat diisi dan diubah oleh staf yang bersangkutan ({user.name}) atau Developer.
+                <strong>Mode Hanya Lihat:</strong> Biodata ini hanya dapat diisi dan diubah oleh staf yang bersangkutan ({user.name}), Bu Uma (Owner), atau Developer.
               </span>
             </div>
           )}
-          {isDeveloper && !isSelf && (
+          {isOwner && !isSelf && (
+            <div className="rounded-xl border border-purple-200/80 bg-purple-50/70 p-3 text-xs text-purple-900 dark:border-purple-500/20 dark:bg-purple-500/10 dark:text-purple-300 flex items-center gap-2.5">
+              <Shield className="h-4 w-4 text-purple-600 dark:text-purple-400 shrink-0" />
+              <span>
+                <strong>Akses Owner (Bu Uma):</strong> Anda memiliki wewenang penuh untuk memeriksa dan menetapkan tanggal bergabung serta biodata staf ini.
+              </span>
+            </div>
+          )}
+          {isDeveloper && !isSelf && !isOwner && (
             <div className="rounded-xl border border-blue-200/80 bg-blue-50/70 p-3 text-xs text-blue-800 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-300 flex items-center gap-2.5">
               <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
               <span>
@@ -288,7 +302,7 @@ export function StaffProfileModal({ user, isOpen, onClose, canEdit = true }) {
             <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/70 p-3 text-xs text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300 flex items-center gap-2.5">
               <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span>
-                <strong>Profil Akun Anda:</strong> Silakan lengkapi foto profil, email pribadi, alamat lengkap, dan kontak saudara Anda.
+                <strong>Profil Akun Anda:</strong> Silakan lengkapi tanggal bergabung, foto profil, email pribadi, alamat lengkap, dan kontak saudara Anda.
               </span>
             </div>
           )}
@@ -298,8 +312,51 @@ export function StaffProfileModal({ user, isOpen, onClose, canEdit = true }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex items-center gap-2 mb-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
             <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            <span>Biodata Pribadi</span>
+            <span>Biodata Pribadi & Masa Kerja</span>
           </div>
+
+          {/* Section Tanggal Bergabung */}
+          {(() => {
+            const tenurePreview = formData.joinDate
+              ? determineScenarioFromJoinDate(formData.joinDate)
+              : null;
+
+            return (
+              <div className="p-3.5 bg-blue-50/60 dark:bg-blue-950/30 rounded-xl border border-blue-200/80 dark:border-blue-900/50 space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <label className="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <span>Tanggal Bergabung (Mulai Bekerja di Umara)</span>
+                  </label>
+                  {tenurePreview?.tenure?.hasJoined && (
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-bold bg-white text-blue-800 dark:bg-slate-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shadow-2xs">
+                      <Sparkles className="h-3 w-3 text-amber-500" />
+                      Masa Kerja: {tenurePreview.tenure.tenureText}
+                    </span>
+                  )}
+                </div>
+                <Input
+                  type="date"
+                  value={formData.joinDate}
+                  onChange={(e) =>
+                    setFormData({ ...formData, joinDate: e.target.value })
+                  }
+                  disabled={!userCanEdit || isSaving}
+                  className="bg-white dark:bg-slate-800 text-xs font-medium"
+                />
+                <div className="flex flex-wrap items-center justify-between gap-1 pt-0.5 text-[11px]">
+                  <p className="text-slate-500 dark:text-slate-400">
+                    Sistem otomatis: &lt; 3 bln (Training) • 3-6 bln (Tahap 2) • ≥ 6 bln (Tahap 1).
+                  </p>
+                  {tenurePreview?.tenure?.hasJoined && (
+                    <span className="font-semibold text-emerald-700 dark:text-emerald-400">
+                      Rekomendasi → {tenurePreview.badgeText}
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">

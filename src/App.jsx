@@ -14,6 +14,7 @@ import { PointsPage } from "./pages/PointsPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import { DailyReportsPage } from "./pages/DailyReportsPage";
 import { MonitoringPage } from "./pages/MonitoringPage";
+import { PayrollPage } from "./pages/PayrollPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { StaffPage } from "./pages/StaffPage";
 import { SuratLuarPage } from "./pages/SuratLuarPage";
@@ -60,6 +61,9 @@ export default function App() {
           <Route path="/staff-reports" element={<Navigate to="/daily-reports" replace />} />
           <Route path="/monitoring" element={<MonitoringPage />} />
           <Route path="/staff-monitoring" element={<Navigate to="/monitoring" replace />} />
+          <Route path="/payroll" element={<PayrollPage />} />
+          <Route path="/gaji-staff" element={<Navigate to="/payroll" replace />} />
+          <Route path="/gaji" element={<Navigate to="/payroll" replace />} />
           <Route path="/points" element={<PointsPage />} />
           <Route path="/tasks" element={<TasksPage />} />
           <Route path="/intern-tasks" element={<InternTasksPage />} />
