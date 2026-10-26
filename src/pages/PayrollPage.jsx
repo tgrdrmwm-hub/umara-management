@@ -57,6 +57,7 @@ function getInitialYearMonth() {
 export function PayrollPage() {
   const { data } = useAppData();
   const { user: currentUser } = useAuth();
+  const canEditPayroll = currentUser?.role === "owner" || currentUser?.role === "developer";
 
   const [selectedMonth, setSelectedMonth] = useState(getInitialYearMonth());
   const [searchTerm, setSearchTerm] = useState("");
@@ -231,6 +232,9 @@ export function PayrollPage() {
 
   // Ubah Skenario Gaji Staf
   const handleScenarioChange = async (staffKey, newScenario) => {
+    if (!canEditPayroll) {
+      return toast.error("Akses ditolak: Hanya Owner dan Developer yang dapat mengubah skenario gaji.");
+    }
     try {
       const updated = await updateStaffSalarySetting(staffKey, {
         scenario: newScenario,
@@ -244,6 +248,9 @@ export function PayrollPage() {
 
   // Ubah Simbol Jabatan Staf (Bu Uma tinggal milih simbol)
   const handleSymbolChange = async (staffKey, newSymbol) => {
+    if (!canEditPayroll) {
+      return toast.error("Akses ditolak: Hanya Owner dan Developer yang dapat mengubah simbol jabatan.");
+    }
     try {
       const updated = await updateStaffSalarySetting(staffKey, {
         symbol: newSymbol,
@@ -258,6 +265,9 @@ export function PayrollPage() {
 
   // Simpan Penyesuaian (Lembur, Bonus, Potongan)
   const handleSaveAdjustment = async (values) => {
+    if (!canEditPayroll) {
+      return toast.error("Akses ditolak: Hanya Owner dan Developer yang dapat mengubah penyesuaian gaji.");
+    }
     if (!activeAdjustItem) return;
     try {
       await saveMonthlyAdjustment(
@@ -344,14 +354,21 @@ export function PayrollPage() {
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
         <div>
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-blue-600 text-white shadow-xs">
-              <Wallet className="h-5 w-5" />
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-blue-600 text-white shadow-xs">
+                <Wallet className="h-5 w-5" />
+              </div>
+              <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                Gaji & Penggajian Staff
+              </h1>
+              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${
+                canEditPayroll
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800"
+                  : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
+              }`}>
+                {canEditPayroll ? "Akses Edit: Owner & Developer" : "Mode Hanya Baca"}
+              </span>
             </div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              Gaji & Penggajian Staff
-            </h1>
-          </div>
           <p className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             Kalkulasi otomatis terintegrasi presensi, 3 skenario bertahap, dan simbol jabatan Bu Uma.
           </p>
@@ -603,8 +620,14 @@ export function PayrollPage() {
                       <td className="py-3.5 px-3">
                         <select
                           value={item.scenarioId}
+                          disabled={!canEditPayroll}
                           onChange={(e) => handleScenarioChange(item.staffKey, e.target.value)}
-                          className="w-full text-xs font-semibold py-1 px-2 rounded-lg border border-slate-200 bg-white text-slate-800 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 outline-none cursor-pointer hover:border-slate-400 focus:border-blue-500"
+                          className={`w-full text-xs font-semibold py-1 px-2 rounded-lg border border-slate-200 bg-white text-slate-800 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 outline-none ${
+                            canEditPayroll
+                              ? "cursor-pointer hover:border-slate-400 focus:border-blue-500"
+                              : "cursor-not-allowed opacity-80 bg-slate-50 dark:bg-slate-800/50"
+                          }`}
+                          title={!canEditPayroll ? "Hanya Owner dan Developer yang dapat mengubah skenario gaji" : undefined}
                         >
                           <option value="tahap_1">Tahap 1 (2.5jt)</option>
                           <option value="tahap_2">Tahap 2 (1.5jt)</option>
@@ -623,8 +646,14 @@ export function PayrollPage() {
                         <div className="flex items-center gap-1.5">
                           <select
                             value={item.positionSymbol}
+                            disabled={!canEditPayroll}
                             onChange={(e) => handleSymbolChange(item.staffKey, e.target.value)}
-                            className="text-xs font-black py-1 px-2 rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 outline-none cursor-pointer hover:border-slate-400 focus:border-blue-500"
+                            className={`text-xs font-black py-1 px-2 rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 outline-none ${
+                              canEditPayroll
+                                ? "cursor-pointer hover:border-slate-400 focus:border-blue-500"
+                                : "cursor-not-allowed opacity-80 bg-slate-50 dark:bg-slate-800/50"
+                            }`}
+                            title={!canEditPayroll ? "Hanya Owner dan Developer yang dapat mengubah simbol jabatan" : undefined}
                           >
                             <option value="A">Simbol A (250rb)</option>
                             <option value="B">Simbol B (400rb)</option>
@@ -769,15 +798,17 @@ export function PayrollPage() {
                             <Eye className="h-4 w-4" />
                           </button>
 
-                          {/* Edit Penyesuaian */}
-                          <button
-                            type="button"
-                            onClick={() => setActiveAdjustItem(item)}
-                            title="Edit Jam Lembur & Bonus"
-                            className="p-1.5 rounded-lg text-slate-600 hover:text-amber-600 hover:bg-amber-50 dark:text-slate-300 dark:hover:bg-slate-800 transition"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
+                          {/* Edit Penyesuaian (Hanya Owner & Developer) */}
+                          {canEditPayroll && (
+                            <button
+                              type="button"
+                              onClick={() => setActiveAdjustItem(item)}
+                              title="Edit Jam Lembur & Bonus"
+                              className="p-1.5 rounded-lg text-slate-600 hover:text-amber-600 hover:bg-amber-50 dark:text-slate-300 dark:hover:bg-slate-800 transition cursor-pointer"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -923,12 +954,12 @@ export function PayrollPage() {
         </div>
       )}
 
-      {/* Modal Edit Profil & Tanggal Bergabung Staf (Dapat diakses Bu Uma & Admin) */}
+      {/* Modal Edit Profil & Tanggal Bergabung Staf (Hanya Owner & Developer) */}
       <StaffProfileModal
         user={profileModalStaff}
         isOpen={Boolean(profileModalStaff)}
         onClose={() => setProfileModalStaff(null)}
-        canEdit={true}
+        canEdit={canEditPayroll}
       />
     </div>
   );
