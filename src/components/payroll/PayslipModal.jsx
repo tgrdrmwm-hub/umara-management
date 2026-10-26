@@ -72,7 +72,7 @@ export function PayslipModal({ isOpen, onClose, payrollItem, monthStr }) {
                     UMARA TAX CONSULTANT
                   </h1>
                   <p className="text-xs text-slate-500 font-medium">
-                    Kantor Konsultan Pajak & Manajemen Keuangan
+                    Jasa Konsultasi Perpajakan, Akuntansi & Perizinan Usaha
                   </p>
                   <p className="text-[11px] text-slate-400">
                     Website: umaratax.com • Email: info@umaratax.com
