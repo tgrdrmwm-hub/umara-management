@@ -63,9 +63,9 @@ export function PayslipModal({ isOpen, onClose, payrollItem, monthStr }) {
             <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between pb-5 border-b-2 border-slate-900 gap-4">
               <div className="flex items-center gap-3">
                 <img
-                  src="https://umaratax.com/wp-content/uploads/2025/07/image-1.png"
+                  src="/logo-umara-horizontal.png"
                   alt="Umaratax Logo"
-                  className="h-12 w-auto object-contain"
+                  className="h-10 w-auto object-contain"
                 />
                 <div>
                   <h1 className="text-lg font-bold tracking-tight text-slate-950 uppercase">

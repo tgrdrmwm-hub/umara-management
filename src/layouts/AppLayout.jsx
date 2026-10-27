@@ -143,12 +143,16 @@ export function AppLayout() {
         <div className="flex h-14 shrink-0 items-center justify-between border-b border-slate-100 px-4 dark:border-white/8 overflow-hidden">
           <div className="flex items-center w-full justify-center lg:justify-start">
             <img 
-              src="https://umaratax.com/wp-content/uploads/2025/07/image-1.png" 
+              src="/logo-umara-horizontal.png" 
               alt="Umaratax Logo" 
-              className={cn("h-10 w-auto object-contain transition-opacity duration-200", sidebarCollapsed ? "hidden lg:hidden" : "block")} 
+              className={cn("h-7 w-auto object-contain transition-opacity duration-200 dark:brightness-0 dark:invert", sidebarCollapsed ? "hidden lg:hidden" : "block")} 
             />
             {sidebarCollapsed && (
-              <div className="hidden lg:flex mx-auto font-bold text-xl text-slate-900 dark:text-white">U</div>
+              <img 
+                src="/logo-umara.png" 
+                alt="Umaratax Logo" 
+                className="hidden lg:block h-7 w-7 rounded-md object-contain mx-auto" 
+              />
             )}
           </div>
           <button

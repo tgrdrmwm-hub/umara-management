@@ -26,8 +26,6 @@ export function SettingsPage() {
     resendApiKey:
       localStorage.getItem("umara_mail_sender_api_key") ||
       localStorage.getItem("umara_resend_api_key") ||
-      import.meta.env.VITE_MAIL_SENDER_API_KEY ||
-      import.meta.env.VITE_RESEND_API_KEY ||
       "",
   }));
   const [activities, setActivities] = useState(() =>

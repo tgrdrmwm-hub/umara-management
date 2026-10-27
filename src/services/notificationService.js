@@ -208,16 +208,25 @@ export async function sendEventMeetingReminder(event, recipients = [], forceDire
   const savedApiKey =
     localStorage.getItem("umara_mail_sender_api_key") ||
     localStorage.getItem("umara_resend_api_key") ||
-    import.meta.env.VITE_MAIL_SENDER_API_KEY ||
-    import.meta.env.VITE_RESEND_API_KEY ||
     "";
   const effectiveSenderEmail =
     (customSenderEmail || localStorage.getItem("umara_email") || "").trim();
 
   // 1. Kirim via Background Mail Sender (/api/send-email)
+  let authToken = localStorage.getItem("umara_token") || sessionStorage.getItem("umara_token");
+  if (!authToken && supabase) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    authToken = sessionData?.session?.access_token;
+  }
+
+  const reqHeaders = { "Content-Type": "application/json" };
+  if (authToken) {
+    reqHeaders["Authorization"] = `Bearer ${authToken}`;
+  }
+
   const apiRes = await fetch("/api/send-email", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: reqHeaders,
     body: JSON.stringify({
       to: emailList,
       subject,

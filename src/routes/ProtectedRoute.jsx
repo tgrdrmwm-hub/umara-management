@@ -19,3 +19,15 @@ export function RequireFreshPassword({ children }) {
   if (user?.is_first_login) return <Navigate to="/change-password" replace />;
   return children;
 }
+
+export function RequireRole({ allowedRoles = [], children }) {
+  const { isLoading, user } = useAuth();
+  if (isLoading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+
+  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return children;
+}
+

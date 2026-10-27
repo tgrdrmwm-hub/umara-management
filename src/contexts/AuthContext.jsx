@@ -164,26 +164,32 @@ export function AuthProvider({ children }) {
       async logout() {
         await supabase?.auth.signOut();
         localStorage.removeItem("umara_token");
+        sessionStorage.removeItem("umara_token");
         setUser(null);
       },
       async changePassword(password) {
-        if (!user) return;
         if (!supabase) {
           throw new Error("Supabase belum dikonfigurasi.");
         }
 
-        const { error } = await supabase.auth.updateUser({ password });
+        const { data: authData, error } = await supabase.auth.updateUser({ password });
         if (error) throw error;
 
-        await updateUserFirstLogin(user.id);
+        const effectiveUserId = user?.id || authData?.user?.id;
+        if (effectiveUserId) {
+          await updateUserFirstLogin(effectiveUserId);
+        }
+
         const changedAt = new Date().toISOString();
-        const nextUser = {
-          ...user,
-          is_first_login: false,
-          password_changed_at: changedAt,
-          updated_at: changedAt,
-        };
-        setUser(nextUser);
+        if (user) {
+          const nextUser = {
+            ...user,
+            is_first_login: false,
+            password_changed_at: changedAt,
+            updated_at: changedAt,
+          };
+          setUser(nextUser);
+        }
       },
       async sendPasswordReset(email) {
         if (!supabase) throw new Error("Supabase belum dikonfigurasi.");

@@ -1,3 +1,5 @@
+import { createClient } from '@supabase/supabase-js';
+
 async function parseBody(req) {
   if (req.body) {
     if (typeof req.body === 'string') {
@@ -39,6 +41,24 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Verifikasi Token Otentikasi Supabase
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+    const anonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (supabaseUrl && (serviceKey || anonKey)) {
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Akses ditolak: Autentikasi akun diperlukan untuk mengirim email.' });
+      }
+      const bearerToken = authHeader.split(' ')[1];
+      const supabaseAdmin = createClient(supabaseUrl, serviceKey || anonKey);
+      const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(bearerToken);
+      if (authErr || !user) {
+        return res.status(401).json({ error: 'Akses ditolak: Sesi login tidak valid atau telah kedaluwarsa.' });
+      }
+    }
+
     const parsed = await parseBody(req);
     const { to, subject, html, text, apiKey, senderEmail } = parsed;
     const token =

@@ -1,19 +1,19 @@
 -- ==============================================================================
--- SCRIPT SETUP RPC ADMIN USER MANAGEMENT
+-- SCRIPT SETUP RPC ADMIN USER MANAGEMENT (SECURED)
 -- Jalankan seluruh script ini di Supabase Dashboard -> SQL Editor -> Run
 -- ==============================================================================
 
 -- 1. Pastikan ekstensi pgcrypto tersedia untuk hashing password
 CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 
--- 2. Tambahkan kolom biodata staff (email pribadi, alamat, kontak saudara yang bisa dihubungi) ke tabel users jika belum ada
+-- 2. Tambahkan kolom biodata staff ke tabel users jika belum ada
 ALTER TABLE public.users 
 ADD COLUMN IF NOT EXISTS personal_email text,
 ADD COLUMN IF NOT EXISTS address text,
 ADD COLUMN IF NOT EXISTS emergency_contact_name text,
 ADD COLUMN IF NOT EXISTS emergency_contact_phone text;
 
--- 2. Fungsi untuk membuat user baru secara aman dari frontend
+-- 3. Fungsi untuk membuat user baru secara aman dari frontend
 CREATE OR REPLACE FUNCTION public.admin_create_user(
   p_email text,
   p_password text,
@@ -24,6 +24,16 @@ DECLARE
   new_user_id uuid := gen_random_uuid();
   clean_email text := lower(trim(p_email));
 BEGIN
+  -- Validasi Izin: Hanya akun 'owner' atau 'developer' yang diizinkan
+  IF auth.uid() IS NULL OR NOT EXISTS (
+    SELECT 1 FROM public.users 
+    WHERE id = auth.uid() 
+      AND role IN ('owner', 'developer')
+      AND status = 'active'
+  ) THEN
+    RAISE EXCEPTION 'Akses ditolak: Anda tidak memiliki izin administratif.';
+  END IF;
+
   -- Cek jika email sudah terdaftar di auth.users
   IF EXISTS (SELECT 1 FROM auth.users WHERE email = clean_email) THEN
     RAISE EXCEPTION 'Email % already exists', clean_email;
@@ -65,7 +75,7 @@ BEGIN
     ''
   );
 
-  -- B. Insert ke auth.identities (Wajib agar user bisa login dengan email & password)
+  -- B. Insert ke auth.identities
   INSERT INTO auth.identities (
     id,
     user_id,
@@ -111,29 +121,46 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 3. Fungsi untuk menghapus user secara permanen
+-- 4. Fungsi untuk menghapus user secara permanen
 CREATE OR REPLACE FUNCTION public.admin_delete_user(
   p_user_id uuid
 ) RETURNS void AS $$
 BEGIN
-  -- Menghapus dari auth.users (otomatis cascade ke auth.identities dan public.users)
+  -- Validasi Izin: Hanya akun 'owner' atau 'developer' yang diizinkan
+  IF auth.uid() IS NULL OR NOT EXISTS (
+    SELECT 1 FROM public.users 
+    WHERE id = auth.uid() 
+      AND role IN ('owner', 'developer')
+      AND status = 'active'
+  ) THEN
+    RAISE EXCEPTION 'Akses ditolak: Anda tidak memiliki izin administratif.';
+  END IF;
+
   DELETE FROM auth.users WHERE id = p_user_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 4. Fungsi untuk mereset password user kembali ke password awal / default
+-- 5. Fungsi untuk mereset password user kembali ke password default
 CREATE OR REPLACE FUNCTION public.admin_reset_password(
   p_user_id uuid,
   p_new_password text DEFAULT '12345678'
 ) RETURNS void AS $$
 BEGIN
-  -- A. Update encrypted_password di auth.users
+  -- Validasi Izin: Hanya akun 'owner' atau 'developer' yang diizinkan
+  IF auth.uid() IS NULL OR NOT EXISTS (
+    SELECT 1 FROM public.users 
+    WHERE id = auth.uid() 
+      AND role IN ('owner', 'developer')
+      AND status = 'active'
+  ) THEN
+    RAISE EXCEPTION 'Akses ditolak: Anda tidak memiliki izin administratif.';
+  END IF;
+
   UPDATE auth.users
   SET encrypted_password = extensions.crypt(p_new_password, extensions.gen_salt('bf')),
       updated_at = now()
   WHERE id = p_user_id;
 
-  -- B. Update status di public.users agar kembali ke kondisi awal (wajib ganti password saat login)
   UPDATE public.users
   SET is_first_login = true,
       password_changed_at = NULL,
@@ -142,7 +169,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 5. Fungsi untuk mengupdate nama, email, dan role user secara sinkron di auth dan public
+-- 6. Fungsi untuk mengupdate user secara sinkron
 CREATE OR REPLACE FUNCTION public.admin_update_user(
   p_user_id uuid,
   p_name text,
@@ -153,12 +180,20 @@ DECLARE
   clean_email text := lower(trim(p_email));
   clean_name text := trim(p_name);
 BEGIN
-  -- A. Validasi jika email baru sudah digunakan oleh akun lain
+  -- Validasi Izin: Hanya akun 'owner' atau 'developer' yang diizinkan
+  IF auth.uid() IS NULL OR NOT EXISTS (
+    SELECT 1 FROM public.users 
+    WHERE id = auth.uid() 
+      AND role IN ('owner', 'developer')
+      AND status = 'active'
+  ) THEN
+    RAISE EXCEPTION 'Akses ditolak: Anda tidak memiliki izin administratif.';
+  END IF;
+
   IF EXISTS (SELECT 1 FROM auth.users WHERE email = clean_email AND id != p_user_id) THEN
     RAISE EXCEPTION 'Email % already exists', clean_email;
   END IF;
 
-  -- B. Update di auth.users (Supabase Authentication)
   UPDATE auth.users
   SET email = clean_email,
       raw_user_meta_data = jsonb_set(
@@ -169,7 +204,6 @@ BEGIN
       updated_at = now()
   WHERE id = p_user_id;
 
-  -- C. Update di auth.identities agar email login sinkron
   UPDATE auth.identities
   SET identity_data = jsonb_set(
         coalesce(identity_data, '{}'::jsonb),
@@ -179,7 +213,6 @@ BEGIN
       updated_at = now()
   WHERE user_id = p_user_id;
 
-  -- D. Update di public.users (Tabel Profil Aplikasi)
   UPDATE public.users
   SET name = clean_name,
       email = clean_email,
@@ -189,8 +222,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 6. Berikan izin eksekusi fungsi ke role authenticated, anon, dan service_role
-GRANT EXECUTE ON FUNCTION public.admin_create_user(text, text, text, text) TO authenticated, anon, service_role;
-GRANT EXECUTE ON FUNCTION public.admin_delete_user(uuid) TO authenticated, anon, service_role;
-GRANT EXECUTE ON FUNCTION public.admin_reset_password(uuid, text) TO authenticated, anon, service_role;
-GRANT EXECUTE ON FUNCTION public.admin_update_user(uuid, text, text, text) TO authenticated, anon, service_role;
+-- 7. Berikan izin eksekusi HANYA ke authenticated dan service_role (Cabut dari anon & public)
+REVOKE EXECUTE ON FUNCTION public.admin_create_user(text, text, text, text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.admin_delete_user(uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.admin_reset_password(uuid, text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.admin_update_user(uuid, text, text, text) FROM anon, public;
+
+GRANT EXECUTE ON FUNCTION public.admin_create_user(text, text, text, text) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.admin_delete_user(uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.admin_reset_password(uuid, text) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.admin_update_user(uuid, text, text, text) TO authenticated, service_role;

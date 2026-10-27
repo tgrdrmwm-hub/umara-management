@@ -1,15 +1,13 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AppLayout } from "./layouts/AppLayout";
-import { RequireAuth, RequireFreshPassword } from "./routes/ProtectedRoute";
-import { AdminDosenPage } from "./pages/AdminDosenPage";
+import { RequireAuth, RequireFreshPassword, RequireRole } from "./routes/ProtectedRoute";
 import { AttendancePage } from "./pages/AttendancePage";
 import { AuthPage } from "./pages/AuthPage";
 import { CalendarPage } from "./pages/CalendarPage";
 import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 import { ClientsPage } from "./pages/ClientsPage";
 import { DashboardPage } from "./pages/DashboardPage";
-import { MediaPage } from "./pages/MediaPage";
 import { PointsPage } from "./pages/PointsPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import { DailyReportsPage } from "./pages/DailyReportsPage";
@@ -17,7 +15,6 @@ import { MonitoringPage } from "./pages/MonitoringPage";
 import { PayrollPage } from "./pages/PayrollPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { StaffPage } from "./pages/StaffPage";
-import { SuratLuarPage } from "./pages/SuratLuarPage";
 import { TasksPage } from "./pages/TasksPage";
 import { TaxPage } from "./pages/TaxPage";
 import { InternTasksPage } from "./pages/InternTasksPage";
@@ -32,6 +29,14 @@ export default function App() {
         <Route path="/signup" element={<AuthPage mode="signup" />} />
         <Route path="/register" element={<AuthPage mode="signup" />} />
         <Route path="/forgot-password" element={<AuthPage mode="forgot" />} />
+        <Route
+          path="/reset-password"
+          element={
+            <RequireAuth>
+              <ChangePasswordPage />
+            </RequireAuth>
+          }
+        />
         <Route
           path="/change-password"
           element={
@@ -59,20 +64,52 @@ export default function App() {
           <Route path="/attendance" element={<AttendancePage />} />
           <Route path="/daily-reports" element={<DailyReportsPage />} />
           <Route path="/staff-reports" element={<Navigate to="/daily-reports" replace />} />
-          <Route path="/monitoring" element={<MonitoringPage />} />
+          <Route
+            path="/monitoring"
+            element={
+              <RequireRole allowedRoles={["owner", "developer"]}>
+                <MonitoringPage />
+              </RequireRole>
+            }
+          />
           <Route path="/staff-monitoring" element={<Navigate to="/monitoring" replace />} />
-          <Route path="/payroll" element={<PayrollPage />} />
+          <Route
+            path="/payroll"
+            element={
+              <RequireRole allowedRoles={["owner", "developer", "manager", "admin"]}>
+                <PayrollPage />
+              </RequireRole>
+            }
+          />
           <Route path="/gaji-staff" element={<Navigate to="/payroll" replace />} />
           <Route path="/gaji" element={<Navigate to="/payroll" replace />} />
           <Route path="/points" element={<PointsPage />} />
           <Route path="/tasks" element={<TasksPage />} />
           <Route path="/intern-tasks" element={<InternTasksPage />} />
-          <Route path="/admin-dosen" element={<AdminDosenPage />} />
-          <Route path="/surat-keluar" element={<SuratLuarPage />} />
-          <Route path="/media" element={<MediaPage />} />
-          <Route path="/reports" element={<ReportsPage />} />
-          <Route path="/users-management" element={<UsersManagementPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
+          <Route
+            path="/reports"
+            element={
+              <RequireRole allowedRoles={["owner", "developer", "manager", "admin"]}>
+                <ReportsPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/users-management"
+            element={
+              <RequireRole allowedRoles={["developer"]}>
+                <UsersManagementPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <RequireRole allowedRoles={["owner", "developer"]}>
+                <SettingsPage />
+              </RequireRole>
+            }
+          />
         </Route>
         
         {/* Fallback 404 */}

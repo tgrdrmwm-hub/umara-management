@@ -164,11 +164,11 @@ export function AuthPage({ mode = "login" }) {
       <div className="flex w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl sm:rounded-3xl lg:max-w-5xl xl:max-w-[1100px]">
         {/* ── Left: Image Panel ── */}
         <section className="relative hidden w-[46%] shrink-0 items-center justify-center overflow-hidden bg-slate-50 p-8 lg:flex xl:p-12 border-r border-slate-100">
-          <div className="flex flex-col items-center text-center max-w-xs">
+          <div className="flex flex-col items-center text-center max-w-sm">
             <img
-              src="https://umaratax.com/wp-content/uploads/2025/07/image-1.png"
+              src="/logo-umara-horizontal.png"
               alt="Umara Tax Logo"
-              className="w-full max-w-[85%] object-contain drop-shadow-sm mb-6"
+              className="w-full max-w-[280px] object-contain drop-shadow-xs mb-7"
             />
             <div className="space-y-2">
               <h3 className="text-lg font-bold text-slate-800">
