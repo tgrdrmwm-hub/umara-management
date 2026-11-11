@@ -6,6 +6,7 @@ import { AttendancePage } from "./pages/AttendancePage";
 import { AuthPage } from "./pages/AuthPage";
 import { CalendarPage } from "./pages/CalendarPage";
 import { ChangePasswordPage } from "./pages/ChangePasswordPage";
+import { ClientMonitoringPage } from "./pages/ClientMonitoringPage";
 import { ClientsPage } from "./pages/ClientsPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { PointsPage } from "./pages/PointsPage";
@@ -60,6 +61,8 @@ export default function App() {
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/tax" element={<TaxPage />} />
           <Route path="/clients" element={<ClientsPage />} />
+          <Route path="/client-monitoring" element={<ClientMonitoringPage />} />
+          <Route path="/monitoring-client" element={<Navigate to="/client-monitoring" replace />} />
           <Route path="/staff" element={<StaffPage />} />
           <Route path="/attendance" element={<AttendancePage />} />
           <Route path="/daily-reports" element={<DailyReportsPage />} />
