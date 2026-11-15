@@ -18,3 +18,7 @@
    - Gunakan pengecekan data eksisting atau `UPSERT` bertarget (berdasarkan ID atau kombinasi kunci unik) agar record lama tidak terhapus atau tertimpa secara tidak sengaja.
 5. **Backward Compatibility**:
    - Fitur atau modul lama jangan dihilangkan saat membuat modul baru, agar data input lama staff tetap bisa diakses dan tidak hilang.
+
+## PREFERENSI KOMUNIKASI & PENGGUNA
+- **Panggilan User**: King IDK
+
