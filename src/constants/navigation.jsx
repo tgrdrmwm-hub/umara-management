@@ -16,6 +16,7 @@ import {
   FileText,
   UserCog,
   Wallet,
+  FolderKanban,
 } from "lucide-react";
 
 export const navigation = [
@@ -24,6 +25,15 @@ export const navigation = [
   { label: "Kategori & Layanan", href: "/tax", icon: ShieldCheck },
   { label: "Client", href: "/clients", icon: BriefcaseBusiness },
   { label: "Monitoring Client", href: "/client-monitoring", icon: MonitorCheck },
+  {
+    label: "Client Case",
+    href: "/client-cases",
+    icon: FolderKanban,
+    children: [
+      { label: "Case Berjalan", href: "/client-cases?status=berjalan" },
+      { label: "Case Close", href: "/client-cases?status=close" },
+    ],
+  },
   { label: "Staff", href: "/staff", icon: Users },
   { label: "Presensi", href: "/attendance", icon: CalendarCheck },
   { label: "Laporan Harian", href: "/daily-reports", icon: ClipboardCheck },

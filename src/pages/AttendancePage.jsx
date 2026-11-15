@@ -1,5 +1,25 @@
-import { CalendarDays, Clock, Plus, X, Pencil, Trash2, ClipboardCheck } from "lucide-react";
-import { useState } from "react";
+import {
+  CalendarDays,
+  Clock,
+  Plus,
+  X,
+  Pencil,
+  Trash2,
+  ClipboardCheck,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Search,
+  Filter,
+  CalendarRange,
+  Check,
+  CheckCircle2,
+  RotateCcw,
+  Info,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -29,6 +49,7 @@ import {
   createAttendance,
   deleteAttendance,
   updateAttendance,
+  bulkSaveAttendance,
 } from "../services/database";
 import { useAuth } from "../hooks/useAuth";
 
@@ -56,6 +77,76 @@ const STATUS_COLOR = {
   Remote: "#0d9488", // teal-600
 };
 
+const INDO_DAYS = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+const INDO_MONTHS_SHORT = [
+  "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
+  "Jul", "Agu", "Sep", "Okt", "Nov", "Des"
+];
+
+function toISODate(d) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getMondayOfDate(dateStr) {
+  const [y, m, d] = (dateStr || getToday()).split("-").map(Number);
+  const dateObj = new Date(y, m - 1, d);
+  const day = dateObj.getDay(); // 0: Sun, 1: Mon
+  const diff = dateObj.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(dateObj.setDate(diff));
+  return toISODate(monday);
+}
+
+function addDaysToDate(dateStr, days) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dateObj = new Date(y, m - 1, d);
+  dateObj.setDate(dateObj.getDate() + days);
+  return toISODate(dateObj);
+}
+
+function formatDisplayDate(dateStr) {
+  if (!dateStr) return "—";
+  try {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    if (!y || !m || !d) return dateStr;
+    const dateObj = new Date(y, m - 1, d);
+    const dayName = INDO_DAYS[dateObj.getDay()];
+    const monthName = INDO_MONTHS_SHORT[m - 1];
+    return `${dayName}, ${d} ${monthName} ${y}`;
+  } catch (e) {
+    return dateStr;
+  }
+}
+
+function generateWeekDays(mondayStr, includeSat, currentStaff, existingAttendanceList) {
+  const count = includeSat ? 6 : 5;
+  const days = [];
+  for (let i = 0; i < count; i++) {
+    const curDate = addDaysToDate(mondayStr, i);
+    const [y, m, d] = curDate.split("-").map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    const dayName = INDO_DAYS[dateObj.getDay()];
+
+    const found = existingAttendanceList?.find(
+      (r) => r.staff === currentStaff && r.date === curDate
+    );
+
+    days.push({
+      date: curDate,
+      dayName,
+      enabled: true,
+      checkIn: found?.checkIn || "08:00",
+      checkOut: found?.checkOut || "17:00",
+      status: found?.status || "Hadir",
+      isExisting: !!found,
+      existingId: found?.id,
+    });
+  }
+  return days;
+}
+
 export function AttendancePage() {
   const navigate = useNavigate();
   const { data } = useAppData();
@@ -72,6 +163,25 @@ export function AttendancePage() {
   const [internPrompt, setInternPrompt] = useState({ show: false, type: null, name: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Filter & Sort States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStaff, setFilterStaff] = useState("ALL");
+  const [filterPeriod, setFilterPeriod] = useState("ALL");
+  const [sortOrder, setSortOrder] = useState("desc"); // 'desc' | 'asc'
+
+  // Weekly Bulk Modal States
+  const [showWeeklyModal, setShowWeeklyModal] = useState(false);
+  const [weeklyStaff, setWeeklyStaff] = useState("");
+  const [selectedWeekMonday, setSelectedWeekMonday] = useState(getMondayOfDate(getToday()));
+  const [includeSaturday, setIncludeSaturday] = useState(false);
+  const [weeklyDays, setWeeklyDays] = useState([]);
+  const [isSubmittingWeekly, setIsSubmittingWeekly] = useState(false);
+  const [quickFill, setQuickFill] = useState({
+    checkIn: "08:00",
+    checkOut: "17:00",
+    status: "Hadir",
+  });
+
   const allAttendance = data?.attendance ?? [];
   const users = data?.users ?? [];
 
@@ -86,9 +196,174 @@ export function AttendancePage() {
     );
   };
 
+  const staffList = useMemo(() => {
+    const set = new Set();
+    users.forEach((u) => {
+      if (u.name) set.add(u.name);
+      else if (u.email) set.add(u.email);
+    });
+    allAttendance.forEach((r) => {
+      if (r.staff) set.add(r.staff);
+    });
+    return Array.from(set).sort();
+  }, [users, allAttendance]);
+
+  const currentTabStaffList = useMemo(() => {
+    return staffList.filter((s) => (activeTab === "magang" ? isMagang(s) : !isMagang(s)));
+  }, [staffList, activeTab]);
+
   const attendance = allAttendance.filter((r) =>
     activeTab === "magang" ? isMagang(r.staff) : !isMagang(r.staff),
   );
+
+  const processedAttendance = useMemo(() => {
+    let list = [...attendance];
+
+    // Filter search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter((r) => r.staff?.toLowerCase().includes(q) || r.date?.includes(q));
+    }
+
+    // Filter staff
+    if (filterStaff && filterStaff !== "ALL") {
+      list = list.filter((r) => r.staff === filterStaff);
+    }
+
+    // Filter period
+    if (filterPeriod && filterPeriod !== "ALL") {
+      const todayStr = getToday();
+      const [tYear, tMonth] = todayStr.split("-").map(Number);
+      const thisMonthPrefix = `${tYear}-${String(tMonth).padStart(2, "0")}`;
+
+      if (filterPeriod === "TODAY") {
+        list = list.filter((r) => r.date === todayStr);
+      } else if (filterPeriod === "THIS_MONTH") {
+        list = list.filter((r) => r.date?.startsWith(thisMonthPrefix));
+      } else if (filterPeriod === "LAST_MONTH") {
+        const lastMonthDate = new Date(tYear, tMonth - 2, 1);
+        const lastMonthPrefix = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, "0")}`;
+        list = list.filter((r) => r.date?.startsWith(lastMonthPrefix));
+      } else if (filterPeriod === "THIS_WEEK") {
+        const monday = getMondayOfDate(todayStr);
+        const sunday = addDaysToDate(monday, 6);
+        list = list.filter((r) => r.date >= monday && r.date <= sunday);
+      }
+    }
+
+    // Sort by date
+    list.sort((a, b) => {
+      const dateComp = (a.date || "").localeCompare(b.date || "");
+      if (dateComp !== 0) {
+        return sortOrder === "asc" ? dateComp : -dateComp;
+      }
+      return (a.checkIn || "").localeCompare(b.checkIn || "");
+    });
+
+    return list;
+  }, [attendance, searchQuery, filterStaff, filterPeriod, sortOrder]);
+
+  function openWeeklyModal() {
+    const defaultStaff = user?.name || user?.email || currentTabStaffList[0] || "";
+    const monday = getMondayOfDate(getToday());
+    setWeeklyStaff(defaultStaff);
+    setSelectedWeekMonday(monday);
+    setIncludeSaturday(false);
+    setWeeklyDays(generateWeekDays(monday, false, defaultStaff, allAttendance));
+    setShowWeeklyModal(true);
+  }
+
+  function handleStaffChange(newStaff) {
+    setWeeklyStaff(newStaff);
+    setWeeklyDays(generateWeekDays(selectedWeekMonday, includeSaturday, newStaff, allAttendance));
+  }
+
+  function handleMondayChange(newDate) {
+    const newMonday = getMondayOfDate(newDate);
+    setSelectedWeekMonday(newMonday);
+    setWeeklyDays(generateWeekDays(newMonday, includeSaturday, weeklyStaff, allAttendance));
+  }
+
+  function handleIncludeSaturdayToggle(checked) {
+    setIncludeSaturday(checked);
+    setWeeklyDays(generateWeekDays(selectedWeekMonday, checked, weeklyStaff, allAttendance));
+  }
+
+  function handlePrevWeek() {
+    const prevMonday = addDaysToDate(selectedWeekMonday, -7);
+    setSelectedWeekMonday(prevMonday);
+    setWeeklyDays(generateWeekDays(prevMonday, includeSaturday, weeklyStaff, allAttendance));
+  }
+
+  function handleNextWeek() {
+    const nextMonday = addDaysToDate(selectedWeekMonday, 7);
+    setSelectedWeekMonday(nextMonday);
+    setWeeklyDays(generateWeekDays(nextMonday, includeSaturday, weeklyStaff, allAttendance));
+  }
+
+  function updateDayField(index, field, value) {
+    setWeeklyDays((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  }
+
+  function applyQuickFillToAll() {
+    setWeeklyDays((prev) =>
+      prev.map((d) => ({
+        ...d,
+        status: quickFill.status,
+        checkIn: quickFill.checkIn,
+        checkOut: quickFill.checkOut,
+        enabled: true,
+      }))
+    );
+    toast.info("Jam dan status diterapkan ke semua hari.");
+  }
+
+  async function submitWeeklyAttendance() {
+    if (isSubmittingWeekly) return;
+    if (!weeklyStaff.trim()) {
+      return toast.error("Nama staff wajib diisi.");
+    }
+
+    const activeDays = weeklyDays.filter((d) => d.enabled);
+    if (activeDays.length === 0) {
+      return toast.error("Pilih minimal satu hari yang akan disimpan.");
+    }
+
+    for (const d of activeDays) {
+      if (d.status !== "Izin" && !d.checkIn) {
+        return toast.error(`Jam masuk untuk hari ${d.dayName} (${d.date}) belum diisi.`);
+      }
+    }
+
+    try {
+      setIsSubmittingWeekly(true);
+      let finalStaff = weeklyStaff.trim();
+      const isSharedMagang = user?.role === "magang" || user?.role === "staff_magang";
+      if (isSharedMagang && !finalStaff.toLowerCase().includes("(magang)")) {
+        finalStaff = `${finalStaff} (Magang)`;
+      }
+
+      const records = activeDays.map((d) => ({
+        staff: finalStaff,
+        date: d.date,
+        checkIn: d.checkIn || "",
+        checkOut: d.checkOut || "",
+        status: d.status,
+      }));
+
+      await bulkSaveAttendance(records);
+      await refresh(`Berhasil menyimpan presensi seminggu (${records.length} hari) untuk ${finalStaff}`);
+      setShowWeeklyModal(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Gagal menyimpan presensi seminggu");
+    } finally {
+      setIsSubmittingWeekly(false);
+    }
+  }
   const completeAttendance = attendance.filter((r) => r.checkIn && r.checkOut);
   const attendanceChart = completeAttendance.map((r) => ({
     staff: r.staff,
@@ -283,6 +558,15 @@ export function AttendancePage() {
           >
             <Clock className="h-4 w-4 mr-1.5 shrink-0" />
             <span>Check Out</span>
+          </Button>
+          <Button
+            variant="secondary"
+            className="flex-1 sm:flex-initial px-3 sm:px-4 text-xs sm:text-sm border-indigo-200 text-indigo-700 bg-indigo-50/60 hover:bg-indigo-100/80 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-300 dark:hover:bg-indigo-900/50"
+            onClick={openWeeklyModal}
+            title="Isi presensi manual satu minggu kerja sekaligus"
+          >
+            <CalendarRange className="h-4 w-4 mr-1.5 shrink-0" />
+            <span>Input Seminggu</span>
           </Button>
           <Button
             variant="secondary"
@@ -645,7 +929,109 @@ export function AttendancePage() {
       </Card>
 
       {/* Table */}
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden border border-slate-200/80 dark:border-white/10 shadow-xs">
+        {/* Table Filter Toolbar */}
+        <div className="p-4 border-b border-slate-100 dark:border-white/8 bg-slate-50/50 dark:bg-slate-900/50 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                Riwayat Presensi
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Menampilkan {processedAttendance.length} dari {attendance.length} catatan presensi
+              </p>
+            </div>
+
+            {/* Quick Sort Toggle Button */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="text-xs h-8 px-2.5 flex items-center gap-1.5"
+                onClick={() => setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))}
+                title="Ubah urutan tanggal presensi"
+              >
+                {sortOrder === "desc" ? (
+                  <>
+                    <ArrowDown className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+                    <span>Urutan: Terbaru</span>
+                  </>
+                ) : (
+                  <>
+                    <ArrowUp className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+                    <span>Urutan: Terlama</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid gap-2 grid-cols-1 sm:grid-cols-12 items-center">
+            {/* Search Input */}
+            <div className="relative sm:col-span-5">
+              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Cari nama staff atau tanggal (YYYY-MM-DD)..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-8.5 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-3 text-xs text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100"
+              />
+            </div>
+
+            {/* Staff Filter */}
+            <div className="sm:col-span-3">
+              <select
+                value={filterStaff}
+                onChange={(e) => setFilterStaff(e.target.value)}
+                className="h-8.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100"
+              >
+                <option value="ALL">Semua Staff</option>
+                {currentTabStaffList.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Period Filter */}
+            <div className="sm:col-span-3">
+              <select
+                value={filterPeriod}
+                onChange={(e) => setFilterPeriod(e.target.value)}
+                className="h-8.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100"
+              >
+                <option value="ALL">Semua Waktu</option>
+                <option value="TODAY">Hari Ini</option>
+                <option value="THIS_WEEK">Minggu Ini</option>
+                <option value="THIS_MONTH">Bulan Ini</option>
+                <option value="LAST_MONTH">Bulan Lalu</option>
+              </select>
+            </div>
+
+            {/* Reset Filter Button */}
+            {(searchQuery || filterStaff !== "ALL" || filterPeriod !== "ALL") && (
+              <div className="sm:col-span-1 flex justify-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8.5 w-full text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-2"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setFilterStaff("ALL");
+                    setFilterPeriod("ALL");
+                  }}
+                  title="Reset Filter"
+                >
+                  <RotateCcw className="h-3 w-3 mr-1" />
+                  Reset
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] text-xs sm:min-w-[640px] sm:text-sm">
             <thead>
@@ -653,8 +1039,21 @@ export function AttendancePage() {
                 <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
                   Staff
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
-                  Tanggal
+                <th
+                  className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 cursor-pointer select-none hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
+                  onClick={() => setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))}
+                  title="Klik untuk mengubah urutan tanggal"
+                >
+                  <div className="flex items-center gap-1.5 group">
+                    <span>Tanggal</span>
+                    <span className="p-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:bg-indigo-50 group-hover:text-indigo-600 dark:group-hover:bg-indigo-950 dark:group-hover:text-indigo-400">
+                      {sortOrder === "desc" ? (
+                        <ArrowDown className="h-3.5 w-3.5" />
+                      ) : (
+                        <ArrowUp className="h-3.5 w-3.5" />
+                      )}
+                    </span>
+                  </div>
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400">
                   Masuk
@@ -676,23 +1075,30 @@ export function AttendancePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-white/8">
-              {attendance.length === 0 ? (
+              {processedAttendance.length === 0 ? (
                 <tr>
                   <td
                     colSpan={isAdmin ? 7 : 6}
                     className="px-4 py-10 text-center text-sm text-slate-400"
                   >
-                    Belum ada data presensi
+                    {attendance.length === 0
+                      ? "Belum ada data presensi"
+                      : "Tidak ada data presensi yang sesuai filter pencarian"}
                   </td>
                 </tr>
               ) : (
-                attendance.map((row) => (
+                processedAttendance.map((row) => (
                   <tr key={row.id}>
                     <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
                       {row.staff}
                     </td>
                     <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
-                      {row.date}
+                      <div className="font-medium text-slate-800 dark:text-slate-200">
+                        {formatDisplayDate(row.date)}
+                      </div>
+                      <div className="text-[11px] font-mono text-slate-400">
+                        {row.date}
+                      </div>
                     </td>
                     <td className="px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-400">
                       {row.checkIn || "—"}
@@ -751,6 +1157,283 @@ export function AttendancePage() {
           </table>
         </div>
       </Card>
+
+      {/* Weekly Bulk Input Modal */}
+      {showWeeklyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity dark:bg-slate-900/80"
+            onClick={() => !isSubmittingWeekly && setShowWeeklyModal(false)}
+          />
+          <div className="relative w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-white/10 flex flex-col my-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 px-5 py-4 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                  <CalendarRange className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                    Input Presensi Seminggu
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Isi dan simpan presensi satu minggu kerja sekaligus untuk tanggal masing-masing.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowWeeklyModal(false)}
+                disabled={isSubmittingWeekly}
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Modal Scrollable Body */}
+            <div className="p-5 overflow-y-auto space-y-4">
+              {/* Configuration: Staff & Week Navigation */}
+              <div className="grid gap-3 sm:grid-cols-2 bg-slate-50 dark:bg-slate-800/40 p-3.5 rounded-xl border border-slate-200/70 dark:border-white/5">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                    Nama Staff *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      list="weekly-staff-list"
+                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100"
+                      placeholder="Pilih atau ketik nama staff"
+                      value={weeklyStaff}
+                      onChange={(e) => handleStaffChange(e.target.value)}
+                    />
+                    <datalist id="weekly-staff-list">
+                      {currentTabStaffList.map((name) => (
+                        <option key={name} value={name} />
+                      ))}
+                    </datalist>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                    Pilih Minggu (Pilih Tanggal Acuan)
+                  </label>
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      className="h-9 px-2 shrink-0"
+                      onClick={handlePrevWeek}
+                      title="Minggu Sebelumnya"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <input
+                      type="date"
+                      className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100"
+                      value={selectedWeekMonday}
+                      onChange={(e) => handleMondayChange(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      className="h-9 px-2 shrink-0"
+                      onClick={handleNextWeek}
+                      title="Minggu Berikutnya"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Week Info & Saturday Toggle */}
+              <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+                <div className="text-xs font-medium text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2.5 py-1 rounded-md border border-indigo-100 dark:border-indigo-900/40">
+                  Periode: {formatDisplayDate(selectedWeekMonday)} s/d{" "}
+                  {formatDisplayDate(addDaysToDate(selectedWeekMonday, includeSaturday ? 5 : 4))}
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-700 dark:text-slate-300">
+                  <input
+                    type="checkbox"
+                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                    checked={includeSaturday}
+                    onChange={(e) => handleIncludeSaturdayToggle(e.target.checked)}
+                  />
+                  <span>Sertakan hari Sabtu (6 hari kerja)</span>
+                </label>
+              </div>
+
+              {/* Quick Fill Toolbar */}
+              <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-slate-100/70 dark:bg-slate-800/60 border border-slate-200/60 dark:border-white/5 text-xs">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium text-slate-600 dark:text-slate-400">
+                    Isi Cepat Semua:
+                  </span>
+                  <input
+                    type="time"
+                    className="h-7 rounded border border-slate-200 bg-white px-2 text-xs text-slate-800 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
+                    value={quickFill.checkIn}
+                    onChange={(e) => setQuickFill({ ...quickFill, checkIn: e.target.value })}
+                  />
+                  <span className="text-slate-400">-</span>
+                  <input
+                    type="time"
+                    className="h-7 rounded border border-slate-200 bg-white px-2 text-xs text-slate-800 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
+                    value={quickFill.checkOut}
+                    onChange={(e) => setQuickFill({ ...quickFill, checkOut: e.target.value })}
+                  />
+                  <select
+                    className="h-7 rounded border border-slate-200 bg-white px-2 text-xs text-slate-800 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200"
+                    value={quickFill.status}
+                    onChange={(e) => setQuickFill({ ...quickFill, status: e.target.value })}
+                  >
+                    <option value="Hadir">Hadir</option>
+                    <option value="Terlambat">Terlambat</option>
+                    <option value="Izin">Izin</option>
+                    <option value="Remote">Remote</option>
+                  </select>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2.5 text-xs text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40"
+                  onClick={applyQuickFillToAll}
+                >
+                  <Check className="h-3.5 w-3.5 mr-1" />
+                  Terapkan ke Semua
+                </Button>
+              </div>
+
+              {/* Day-by-Day Table */}
+              <div className="border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs sm:text-sm">
+                    <thead>
+                      <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400">
+                        <th className="py-2.5 px-3 text-center w-10">Aktif</th>
+                        <th className="py-2.5 px-3 text-left">Hari & Tanggal</th>
+                        <th className="py-2.5 px-3 text-left w-32">Status</th>
+                        <th className="py-2.5 px-3 text-left w-24">Masuk</th>
+                        <th className="py-2.5 px-3 text-left w-24">Pulang</th>
+                        <th className="py-2.5 px-3 text-left w-20">Durasi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                      {weeklyDays.map((day, idx) => {
+                        const dur = calcHours(day.checkIn, day.checkOut);
+                        return (
+                          <tr
+                            key={day.date}
+                            className={`transition-colors ${
+                              !day.enabled
+                                ? "bg-slate-50/50 opacity-50 dark:bg-slate-800/20"
+                                : "hover:bg-slate-50/70 dark:hover:bg-slate-800/40"
+                            }`}
+                          >
+                            <td className="py-2.5 px-3 text-center">
+                              <input
+                                type="checkbox"
+                                checked={day.enabled}
+                                onChange={(e) => updateDayField(idx, "enabled", e.target.checked)}
+                                className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                              />
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <div className="font-semibold text-slate-900 dark:text-slate-100">
+                                {day.dayName}
+                              </div>
+                              <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                                <span>{day.date}</span>
+                                {day.isExisting && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 font-medium">
+                                    Sudah ada di DB
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <select
+                                disabled={!day.enabled}
+                                value={day.status}
+                                onChange={(e) => updateDayField(idx, "status", e.target.value)}
+                                className="h-8 w-full rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-900 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 disabled:opacity-50"
+                              >
+                                <option value="Hadir">Hadir</option>
+                                <option value="Terlambat">Terlambat</option>
+                                <option value="Izin">Izin</option>
+                                <option value="Remote">Remote</option>
+                              </select>
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <input
+                                type="time"
+                                disabled={!day.enabled || day.status === "Izin"}
+                                value={day.checkIn}
+                                onChange={(e) => updateDayField(idx, "checkIn", e.target.value)}
+                                className="h-8 w-full rounded-md border border-slate-200 bg-white px-2 font-mono text-xs text-slate-900 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 disabled:opacity-50"
+                              />
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <input
+                                type="time"
+                                disabled={!day.enabled || day.status === "Izin"}
+                                value={day.checkOut}
+                                onChange={(e) => updateDayField(idx, "checkOut", e.target.value)}
+                                className="h-8 w-full rounded-md border border-slate-200 bg-white px-2 font-mono text-xs text-slate-900 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 disabled:opacity-50"
+                              />
+                            </td>
+                            <td className="py-2.5 px-3 text-xs text-slate-600 dark:text-slate-400 font-mono">
+                              {day.status === "Izin" ? "—" : `${dur.toFixed(1)} jam`}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Informational alert */}
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40 text-blue-800 dark:text-blue-300 text-xs">
+                <Info className="h-4 w-4 shrink-0 mt-0.5" />
+                <span>
+                  Hari yang dicentang ({weeklyDays.filter((d) => d.enabled).length} hari) akan disimpan ke database presensi untuk staff{" "}
+                  <strong>{weeklyStaff || "..."}</strong>. Hari libur/tidak masuk dapat di-uncheck.
+                </span>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end gap-2 border-t border-slate-100 dark:border-white/10 px-5 py-3.5 bg-slate-50/50 dark:bg-slate-800/40 shrink-0">
+              <Button
+                variant="outline"
+                onClick={() => setShowWeeklyModal(false)}
+                disabled={isSubmittingWeekly}
+              >
+                Batal
+              </Button>
+              <Button
+                onClick={() => void submitWeeklyAttendance()}
+                disabled={isSubmittingWeekly}
+                loading={isSubmittingWeekly}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                <CheckCircle2 className="h-4 w-4 mr-1.5" />
+                <span>
+                  {isSubmittingWeekly
+                    ? "Menyimpan..."
+                    : `Simpan Presensi (${weeklyDays.filter((d) => d.enabled).length} Hari)`}
+                </span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Intern Prompt Modal */}
       {internPrompt.show && (

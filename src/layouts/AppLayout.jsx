@@ -16,9 +16,10 @@ import {
   User,
   AlertTriangle,
   Calendar,
+  ChevronDown,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { navigation } from "../constants/navigation";
@@ -28,12 +29,22 @@ import { StaffProfileModal } from "../components/StaffProfileModal";
 
 export function AppLayout() {
   const { user, logout } = useAuth();
+  const location = useLocation();
   const [showMyProfile, setShowMyProfile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [openDropdowns, setOpenDropdowns] = useState(() => ({
+    "Client Case": location.pathname.startsWith("/client-cases"),
+  }));
   const [dark, setDark] = useState(
     () => localStorage.getItem("umara_theme") === "dark",
   );
+
+  useEffect(() => {
+    if (location.pathname.startsWith("/client-cases")) {
+      setOpenDropdowns((prev) => ({ ...prev, "Client Case": true }));
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
@@ -73,6 +84,7 @@ export function AppLayout() {
         "Tugas Magang",
         "Client",
         "Monitoring Client",
+        "Client Case",
         "Presensi",
         "Laporan Harian",
         "Point",
@@ -85,6 +97,7 @@ export function AppLayout() {
         "Kategori & Layanan",
         "Client",
         "Monitoring Client",
+        "Client Case",
         "Staff",
         "Task",
         "Tugas Magang",
@@ -100,6 +113,7 @@ export function AppLayout() {
         "Kategori & Layanan",
         "Client",
         "Monitoring Client",
+        "Client Case",
         "Staff",
         "Monitoring",
         "Gaji Staff",
@@ -170,26 +184,135 @@ export function AppLayout() {
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-3 py-3 overflow-x-hidden">
           <div className="space-y-1">
-            {filteredNav.map((item) => (
-              <NavLink
-                key={item.href}
-                to={item.href}
-                onClick={() => setSidebarOpen(false)}
-                title={sidebarCollapsed ? item.label : undefined}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center rounded-lg transition-colors overflow-hidden",
-                    sidebarCollapsed ? "justify-center py-3 px-0" : "gap-2.5 px-3 py-2.5",
-                    isActive
-                      ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/8 dark:hover:text-slate-100",
-                  )
-                }
-              >
-                <item.icon className={cn("shrink-0", sidebarCollapsed ? "h-5 w-5" : "h-4 w-4")} />
-                {!sidebarCollapsed && <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>}
-              </NavLink>
-            ))}
+            {filteredNav.map((item) => {
+              if (item.children && item.children.length > 0) {
+                const isParentActive = location.pathname.startsWith(item.href);
+                const isOpen = Boolean(openDropdowns[item.label]);
+
+                return (
+                  <div key={item.label} className="space-y-1">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenDropdowns((prev) => ({
+                          ...prev,
+                          [item.label]: !prev[item.label],
+                        }))
+                      }
+                      title={sidebarCollapsed ? item.label : undefined}
+                      className={cn(
+                        "flex w-full items-center rounded-lg transition-colors overflow-hidden text-left",
+                        sidebarCollapsed
+                          ? "justify-center py-3 px-0"
+                          : "justify-between px-3 py-2.5",
+                        isParentActive
+                          ? "bg-slate-100 text-slate-900 font-semibold dark:bg-slate-800 dark:text-slate-100"
+                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/8 dark:hover:text-slate-100",
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "flex items-center",
+                          sidebarCollapsed ? "justify-center" : "gap-2.5",
+                        )}
+                      >
+                        <item.icon
+                          className={cn(
+                            "shrink-0",
+                            sidebarCollapsed ? "h-5 w-5" : "h-4 w-4",
+                          )}
+                        />
+                        {!sidebarCollapsed && (
+                          <span className="text-sm font-medium whitespace-nowrap">
+                            {item.label}
+                          </span>
+                        )}
+                      </div>
+                      {!sidebarCollapsed && (
+                        <ChevronDown
+                          className={cn(
+                            "h-4 w-4 shrink-0 transition-transform duration-200 text-slate-400",
+                            isOpen ? "rotate-180" : "",
+                          )}
+                        />
+                      )}
+                    </button>
+
+                    {/* Submenu Dropdown */}
+                    {isOpen && !sidebarCollapsed && (
+                      <div className="pl-6 pr-1 space-y-1 py-0.5 animate-in slide-in-from-top-1 duration-150">
+                        {item.children.map((sub) => {
+                          const subUrl = new URL(sub.href, "http://localhost");
+                          const targetStatus = subUrl.searchParams.get("status");
+                          const currentStatus =
+                            new URLSearchParams(location.search).get("status") ||
+                            "berjalan";
+                          const isSubActive =
+                            location.pathname.startsWith(subUrl.pathname) &&
+                            targetStatus === currentStatus;
+
+                          return (
+                            <NavLink
+                              key={sub.href}
+                              to={sub.href}
+                              onClick={() => setSidebarOpen(false)}
+                              className={cn(
+                                "flex items-center rounded-lg px-3 py-2 text-xs transition-colors",
+                                isSubActive
+                                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold shadow-xs"
+                                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/8 dark:hover:text-slate-100",
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  "mr-2 h-1.5 w-1.5 rounded-full shrink-0",
+                                  targetStatus === "close"
+                                    ? "bg-emerald-500"
+                                    : "bg-blue-500",
+                                )}
+                              />
+                              <span className="truncate">{sub.label}</span>
+                            </NavLink>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              return (
+                <NavLink
+                  key={item.href}
+                  to={item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  title={sidebarCollapsed ? item.label : undefined}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center rounded-lg transition-colors overflow-hidden",
+                      sidebarCollapsed
+                        ? "justify-center py-3 px-0"
+                        : "gap-2.5 px-3 py-2.5",
+                      isActive
+                        ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs"
+                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/8 dark:hover:text-slate-100",
+                    )
+                  }
+                >
+                  <item.icon
+                    className={cn(
+                      "shrink-0",
+                      sidebarCollapsed ? "h-5 w-5" : "h-4 w-4",
+                    )}
+                  />
+                  {!sidebarCollapsed && (
+                    <span className="text-sm font-medium whitespace-nowrap">
+                      {item.label}
+                    </span>
+                  )}
+                </NavLink>
+              );
+            })}
           </div>
         </nav>
 

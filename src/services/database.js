@@ -574,6 +574,41 @@ export async function deleteAttendance(id) {
   if (error) throw error;
 }
 
+export async function bulkSaveAttendance(records) {
+  if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
+  const results = [];
+  for (const item of records) {
+    if (!item.staff || !item.date) continue;
+    // Cek apakah sudah ada presensi staff ini di tanggal tersebut
+    const { data: existing, error: fetchErr } = await supabase
+      .from("attendance")
+      .select("id")
+      .eq("staff", item.staff)
+      .eq("date", item.date)
+      .limit(1);
+
+    if (!fetchErr && existing && existing.length > 0) {
+      const { error: updateErr } = await supabase
+        .from("attendance")
+        .update({
+          ...toAttendanceRow(item),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existing[0].id);
+      if (updateErr) throw updateErr;
+      results.push({ ...item, id: existing[0].id, type: "updated" });
+    } else {
+      const { data: inserted, error: insertErr } = await supabase
+        .from("attendance")
+        .insert(toAttendanceRow(item))
+        .select();
+      if (insertErr) throw insertErr;
+      results.push({ ...item, id: inserted?.[0]?.id, type: "created" });
+    }
+  }
+  return results;
+}
+
 export async function createTaxService(values) {
   if (!supabase) throw new Error("Supabase belum dikonfigurasi.");
   const { error } = await supabase.from("tax_services_catalog").insert({
